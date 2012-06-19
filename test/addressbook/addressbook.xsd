@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<xsd:schema
+ version="1.0"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns="http://ns.example.com/2012/addressbook"
+ targetNamespace="http://ns.example.com/2012/addressbook"
+ elementFormDefault="qualified"
+ attributeFormDefault="unqualified">
+
+  <xsd:complexType name="phoneType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="type" use="required" type="xsd:string"/>
+        <xsd:attribute name="Class" use="required" type="xsd:string"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <xsd:element name="person">
+    <xsd:complexType>
+      <xsd:sequence>
+	<xsd:element name="name" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+	<xsd:element name="phone" minOccurs="0" maxOccurs="unbounded" type="phoneType"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+  <xsd:complexType name="companyType">
+    <xsd:sequence>
+      <xsd:element name="companyName" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="Phone" minOccurs="0" maxOccurs="unbounded" type="phoneType"/>
+      <xsd:element name="EMAIL" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+
+  <xsd:complexType name="addressbookType">
+    <xsd:choice maxOccurs="unbounded">
+      <xsd:element ref="person"/>
+      <xsd:element name="company" type="companyType"/>
+    </xsd:choice>
+  </xsd:complexType>
+
+  <xsd:element name="addressbook" type="addressbookType"/>
+
+</xsd:schema>

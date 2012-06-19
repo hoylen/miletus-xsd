@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<xsd:schema
+ version="1.0"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns="http://ns.example.com/2012/xsd-features/element-ref"
+ targetNamespace="http://ns.example.com/2012/xsd-features/element-ref"
+ elementFormDefault="qualified"
+ attributeFormDefault="unqualified">
+
+  <!-- This schema tests the use of element references and also uses
+       element names that start with a capital, are all-caps, have
+       full stops and hyphens in them (all things that might not be
+       allowed in class, method and member names. -->
+
+  <xsd:element name="book">
+    <xsd:complexType>
+      <xsd:sequence>
+	<xsd:element name="Title" type="xsd:string"/>
+	<xsd:element name="book.author">
+	  <xsd:complexType>
+	    <xsd:sequence>
+	      <xsd:element name="given-name" type="xsd:string"/>
+	      <xsd:element name="surname" type="xsd:string"/>
+	    </xsd:sequence>
+	  </xsd:complexType>
+	</xsd:element>
+	<xsd:element name="ISBN" type="xsd:string"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+
+</xsd:schema>

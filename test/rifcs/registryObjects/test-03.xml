@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<!-- A fully populated RIF-CS registryObject -->
+
+<registryObjects xmlns="http://ands.org.au/standards/rif-cs/registryObjects">
+
+  <registryObject group="test-group">
+     <key>test-key-1</key>
+     <originatingSource type='originating-source-type'>http://example.com</originatingSource>   
+     <collection type="test-collection-type"
+		 dateModified="2012-06-01"
+		 dateAccessioned="2012-06-01"/>
+  </registryObject>
+
+
+  <registryObject group="test-group">
+     <key>test-key-2</key>
+     <originatingSource>http://example.com</originatingSource>   
+     <party type="test-party-type"/>
+  </registryObject>
+
+  <registryObject group="test-group">
+     <key>test-key-3</key>
+     <originatingSource>http://example.com</originatingSource>   
+     <activity type="test-activity-type"/>
+  </registryObject>
+
+  <registryObject group="test-group">
+     <key>test-key-4</key>
+     <originatingSource>http://example.com</originatingSource>   
+     <service type="test-service-type"/>
+  </registryObject>
+
+</registryObjects>

@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+
+<root xmlns="http://ns.example.com/2012/test/attributeGroup"
+      foo="abc">
+</root>

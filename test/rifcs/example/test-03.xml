@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+
+<!-- from http://services.ands.org.au/documentation/rifcs/example/rif.xml -->
+
+<registryObjects xmlns="http://ands.org.au/standards/rif-cs/registryObjects"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://ands.org.au/standards/rif-cs/registryObjects http://services.ands.org.au/documentation/rifcs/schema/registryObjects.xsd">
+
+  <registryObject group="The Australian National University">
+      <key>au.edu.anu.dspace.1885/42756</key>
+    <originatingSource>http://dspace.anu.edu.au</originatingSource>
+
+    <collection type="collection">
+      <identifier type="handle&amp;">&amp;hdl:1885/42756</identifier>
+
+      <identifier xmlns:h='http://ns.hoylen.com/abc' h:foo="bar" type="handle&amp;">&amp;hdl:1885/42756</identifier>
+
+      <name type="primary">
+        <namePart>Aboriginal Population Profiles for Development Planning in the Northern East Kimberley</namePart>
+      </name>
+      <location>
+        <address>
+<electronic type="url">
+<value>http://dspace.anu.edu.au/handle/1885/42756</value>
+
+</electronic>
+</address>
+      </location>
+      <relatedObject>
+        <key>au.edu.anu.dspace.RSS1.0</key>
+        <relation type="supports">
+          <url>http://dspace.anu.edu.au/feed/rss_1.0/1885/42756</url>
+        </relation>
+      </relatedObject>
+      <relatedObject>
+        <key>au.edu.anu.dspace.RSS2.0</key>
+        <relation type="supports">
+          <url>http://dspace.anu.edu.au/feed/rss_2.0/1885/42756</url>
+
+        </relation>
+      </relatedObject>
+      <relatedObject>
+        <key>au.edu.anu.dspace.browse</key>
+        <relation type="supports">
+          <url>http://dspace.anu.edu.au/handle/1885/42756/browse-title</url>
+        </relation>
+      </relatedObject>
+      <relatedObject>
+        <key>au.edu.anu.dspace.e83</key>
+        <relation type="isManagedBy"> </relation>
+      </relatedObject>
+    </collection>
+
+  </registryObject>
+
+</registryObjects>

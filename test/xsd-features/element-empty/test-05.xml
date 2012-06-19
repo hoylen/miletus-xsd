@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<!-- Invalid: root element should have empty content model -->
+
+<root xmlns="http://ns.example.com/2012/xsd-features/element-empty">
+  <unexpected/>
+</root>

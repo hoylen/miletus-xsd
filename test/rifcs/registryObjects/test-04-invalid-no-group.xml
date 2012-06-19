@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<!-- Invalid: required group attribute on registryObject missing -->
+
+<registryObjects xmlns="http://ands.org.au/standards/rif-cs/registryObjects">
+
+  <registryObject>
+     <key>test-03</key>
+     <originatingSource>http://example.com</originatingSource>   
+     <collection type="testCollectionType"/>
+  </registryObject>
+
+</registryObjects>

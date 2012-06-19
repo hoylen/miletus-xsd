@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+
+<person xmlns="http://ns.example.com/2012/addressbook">
+ <name>John Smith</name>
+ <phone type="home" Class="bbb">+61 7 1234 5678</phone>
+</person>

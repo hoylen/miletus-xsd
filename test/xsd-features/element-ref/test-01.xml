@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<book xmlns="http://ns.example.com/2012/xsd-features/element-ref">
+  <Title>Future History</Title>
+  <book.author>
+    <given-name>Toichi</given-name>
+    <surname>Hikita</surname>
+  </book.author>
+  <ISBN>0743442482</ISBN>
+</book>
+

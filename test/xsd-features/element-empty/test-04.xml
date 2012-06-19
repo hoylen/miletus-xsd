@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<!-- Namespace prefix used instead of default namespace -->
+
+<n:root xmlns:n="http://ns.example.com/2012/xsd-features/element-empty">
+  <!-- comments ignored -->
+</n:root>

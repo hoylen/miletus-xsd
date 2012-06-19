@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<f:registryObjects
+   xmlns:f="http://ands.org.au/standards/rif-cs/registryObjects"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://ands.org.au/standards/rif-cs/registryObjects http://services.ands.org.au/home/orca/schemata/1.2.0/registryObjects.xsd">
+
+	<f:registryObject
+ group="iVEC MEST - Western Australian Marine Data and Projects">
+		<f:key>12ba2b494d454dec7000b108c55bc1ab14c02165</f:key>
+		<f:originatingSource>http://mest.ivec.org</f:originatingSource>
+		<f:party type="person">
+		</f:party>
+	</f:registryObject>
+
+</f:registryObjects>

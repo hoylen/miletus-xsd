@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<!-- A minimial RIF-CS collection -->
+
+<registryObjects xmlns="http://ands.org.au/standards/rif-cs/registryObjects">
+
+  <registryObject group="test-group">
+     <key>test-01</key>
+     <!-- missing originatingSource -->
+     <collection type="testCollectionType"/>
+  </registryObject>
+
+</registryObjects>

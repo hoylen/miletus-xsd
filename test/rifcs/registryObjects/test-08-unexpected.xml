@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<!-- Invalid: extra element at end of registryObject  -->
+
+<registryObjects xmlns="http://ands.org.au/standards/rif-cs/registryObjects">
+
+  <registryObject group="test-group">
+     <key>test-key</key>
+     <originatingSource>http://example.com</originatingSource>   
+     <collection type="test-collection-type"/>
+     <unexpected/>
+  </registryObject>
+
+</registryObjects>
