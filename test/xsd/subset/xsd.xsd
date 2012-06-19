@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+
+<!-- This is a subset of XML Schema -->
+
+<xsd:schema version="1.0" 
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://www.w3.org/2001/XMLSchema"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified">
+
+  <xsd:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="xml.xsd"/>
+
+  <xsd:element name="schema" type="schemaType"/>
+
+  <xsd:complexType name="schemaType">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+	<xsd:element name="annotation" type="annotationType" minOccurs="0" maxOccurs="unbounded"/>
+	<xsd:element name="include" type="includeType" minOccurs="0" maxOccurs="unbounded"/>
+	<xsd:element name="import" type="importType" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:choice>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+	<xsd:element name="annotation" type="annotationType"/>
+	<xsd:element name="element" type="elementType"/>
+	<xsd:element name="attribute" type="attributeType"/>
+	<xsd:element name="simpleType" type="simpleTypeType"/>
+	<xsd:element name="complexType" type="complexTypeType"/>
+	<xsd:element name="attributeGroup" type="attributeGroupType"/>
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="version" type="xsd:string"/>
+    <xsd:attribute name="targetNamespace" type="xsd:string"/>
+    <xsd:attribute name="elementFormDefault" type="xsd:string"/>
+    <xsd:attribute name="attributeFormDefault" type="xsd:string"/>
+    <xsd:attribute ref="xml:lang"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="annotationType">
+    <xsd:sequence>
+      <xsd:element name="documentation" type="documentationType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute ref="xml:lang"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="documentationType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+	<xsd:attribute name="source" type="xsd:string"/>
+	<xsd:attribute ref="xml:lang"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="includeType">
+    <xsd:attribute name="schemaLocation" type="xsd:string"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="importType">
+    <xsd:attribute name="namespace" type="xsd:string" use="required"/>
+    <xsd:attribute name="schemaLocation" type="xsd:string"/>
+  </xsd:complexType>
+
+
+  <xsd:complexType name="simpleContentType">
+    <xsd:sequence>
+      <xsd:element name="extension" type="extensionType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="extensionType">
+    <xsd:sequence>
+      <xsd:element name="attribute" type="attributeType" maxOccurs="unbounded"/>
+      <xsd:element name="annotation" type="annotationType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="base" type="xsd:string" use="required"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="elementType">
+    <xsd:sequence>
+      <xsd:element name="annotation" type="annotationType" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:choice minOccurs="0">
+	<xsd:element name="complexType" type="complexTypeType"/>
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:string"/>
+    <xsd:attribute name="type" type="xsd:string"/>
+    <xsd:attribute name="minOccurs" type="xsd:string"/>
+    <xsd:attribute name="maxOccurs" type="xsd:string"/>
+    <xsd:attribute name="ref" type="xsd:string"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="enumerationType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+	<xsd:attribute name="value" type="xsd:string"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="restrictionType">
+    <xsd:sequence>
+      <xsd:element name="enumeration" type="enumerationType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="base" type="xsd:string"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="simpleTypeType">
+    <xsd:sequence>
+      <xsd:element name="restriction" type="restrictionType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="complexTypeType">
+    <xsd:sequence>
+      <xsd:element name="annotation" type="annotationType" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:choice minOccurs="0">
+	<xsd:element name="simpleContent" type="simpleContentType"/>
+	<xsd:element name="sequence" type="sequenceType"/>
+	<xsd:element name="choice" type="choiceType"/>
+      </xsd:choice>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+	<xsd:element name="attribute" type="attributeType"/>
+	<xsd:element name="attributeGroup" type="attributeGroupType"/>
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:string"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="sequenceType">
+    <xsd:sequence>
+      <xsd:element name="annotation" type="annotationType" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:choice maxOccurs="unbounded">
+	<xsd:element name="element" type="elementType"/>
+	<xsd:element name="sequence" type="sequenceType"/>
+	<xsd:element name="choice" type="choiceType"/>
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:string"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="choiceType">
+    <xsd:sequence>
+      <xsd:element name="annotation" type="annotationType" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:choice maxOccurs="unbounded">
+	<xsd:element name="element" type="elementType"/>
+	<xsd:element name="sequence" type="sequenceType"/>
+	<xsd:element name="choice" type="choiceType"/>
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="minOccurs" type="xsd:string"/>
+    <xsd:attribute name="maxOccurs" type="xsd:string"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="attributeType">
+    <xsd:sequence>
+      <xsd:element name="annotation" type="annotationType" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="simpleType" type="simpleTypeType" minOccurs="0"/>
+    </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:string"/>
+    <xsd:attribute name="type" type="xsd:string"/>
+    <xsd:attribute name="ref" type="xsd:string"/>
+    <xsd:attribute name="use" type="xsd:string"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="attributeGroupType">
+    <xsd:sequence>
+      <xsd:element name="annotation" type="annotationType" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+	<xsd:element name="attribute" type="attributeType"/>
+	<xsd:element name="attributeGroup" type="attributeGroupType"/>
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:string"/>
+    <xsd:attribute name="ref" type="xsd:string"/>
+  </xsd:complexType>
+
+</xsd:schema>

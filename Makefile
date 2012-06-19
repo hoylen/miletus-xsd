@@ -29,7 +29,8 @@ build: \
   ${BUILDDIR}/xsd-features/ElementEmpty.rb \
   ${BUILDDIR}/xsd-features/AttributeGroup.rb \
   ${BUILDDIR}/AddressBook.rb \
-  ${BUILDDIR}/RIFCS.rb
+  ${BUILDDIR}/RIFCS.rb \
+  ${BUILDDIR}/XSD.rb
 
 ${BUILDDIR}/xsd-features/ElementEmpty.rb: \
   test/xsd-features/element-empty/element-empty.xsd
@@ -56,6 +57,11 @@ ${BUILDDIR}/RIFCS.rb: ${RIFCS_SCHEMAS}
 	mkdir -p ${BUILDDIR}
 	./xml-to-code.rb --output $@-tmp.rb ${RIFCS_SCHEMAS}
 	./xsd-to-ruby.rb --module RIFCS --outdir ${BUILDDIR} --preparsed $@-tmp.rb
+
+${BUILDDIR}/XSD.rb: test/xsd/subset/xsd.xsd
+	mkdir -p ${BUILDDIR}
+	./xml-to-code.rb --output $@-tmp.rb test/xsd/subset/xsd.xsd test/xsd/subset/xml.xsd
+	./xsd-to-ruby.rb --module XSD,XML --outdir ${BUILDDIR} --preparsed $@-tmp.rb
 
 # Debug dump of the interim parser intermediate output
 
@@ -114,6 +120,10 @@ test-rifcs-more: ${BUILDDIR}/RIFCS.rb
 	  test/rifcs/example/test-02.xml
 	./xml-test.rb --parser ${BUILDDIR}/RIFCS.rb --module RIFCS --verbose \
 	  test/rifcs/example/test-03.xml
+
+test-xsd-more: ${BUILDDIR}/XSD.rb
+	./xml-test.rb --parser ${BUILDDIR}/XSD.rb --module XSD --verbose \
+	  test/addressbook/addressbook.xsd
 
 #----------------------------------------------------------------
 # Documentation
