@@ -19,7 +19,7 @@ module XSD
   PREFIX_CLASS_CT = 'ComplexType_'
   PREFIX_CLASS_SE = 'Sequence_'
   PREFIX_CLASS_CH = 'Choice_'
-  PREFIX_CLASS_CH_OPTION = 'ChoiceOption_'
+  PREFIX_CLASS_CH_LIST = 'ChoiceList_'
 
   # Constants used to make member names unique
 
@@ -598,7 +598,8 @@ module XSD
         if member.is_a? XSD_choice
           choice_count += 1
           last_choice = member
-          member.internal_name = "choice#{choice_count}"
+          member.internal_class_name = context.nextname()
+          member.internal_member_name = "choice#{choice_count}"
         end
       end
 
@@ -606,7 +607,7 @@ module XSD
         # There is only one choice in the sequence, so use the simpler
         # internal name of 'choice' instead of the more cumbersome
         # internal name of 'choice1'.
-        last_choice.internal_name = 'choice'
+        last_choice.internal_member_name = 'choice'
       end
 
       # Resurse into every member of the sequence and fix their names
@@ -650,7 +651,11 @@ module XSD
             puts "  # Value is never +nil+."
           end
         end
-        puts "  attr_accessor :#{member.internal_name}"
+        if member.is_a? XSD_choice
+          puts "  attr_accessor :#{member.internal_member_name}"
+        else
+          puts "  attr_accessor :#{member.internal_name}"
+        end
       end
       puts
 
@@ -658,10 +663,16 @@ module XSD
       puts "  def initialize"
       puts "    super()"
       @members.each do |member|
-        if member.multiples?
-          puts "    @#{member.internal_name} = []"
+        if member.is_a? XSD_choice
+          mname = member.internal_member_name
         else
-          puts "    @#{member.internal_name} = nil"
+          mname = member.internal_name
+        end
+
+        if member.multiples?
+          puts "    @#{mname} = []"
+        else
+          puts "    @#{mname} = nil"
         end
       end
       puts "  end"
@@ -726,10 +737,10 @@ module XSD
         elsif member.is_a? XSD_choice
           # Member is a choice
           if member.multiples?
-            puts "       @#{member.internal_name}.each { |m| m.xml(out, indent) }"
+            puts "       @#{member.internal_member_name}.each { |m| m.xml(out, indent) }"
           else
-            puts "    if @#{member.internal_name}"
-            puts "      @#{member.internal_name}.xml(out, indent)"
+            puts "    if @#{member.internal_member_name}"
+            puts "      @#{member.internal_member_name}.xml(out, indent)"
             puts "    end"
           end
 
@@ -742,6 +753,17 @@ module XSD
       puts
       puts "end # class #{XSD::PREFIX_CLASS_SE}#{@internal_name}"
       puts
+    end
+
+    def gen_if_match(context, node_name)
+      "#{XSD::PREFIX_CLASS_SE}#{internal_name}.match(#{node_name})"
+    end
+
+    #----------------
+    # Creates code used to parse this sequence as a particle
+
+    def gen_match_code(context, vname)
+      "#{XSD::PREFIX_PARSE_SE}#{internal_name}(#{vname}, offset)"
     end
 
     def generate_parser(context)
@@ -767,150 +789,89 @@ module XSD
       puts "# Returns matched object and next offset index after parsed nodes."
       puts "def self.#{XSD::PREFIX_PARSE_SE}#{@internal_name}(nodes, offset)"
       puts
-      puts "  # Result object"
       puts "  result = #{XSD::PREFIX_CLASS_SE}#{@internal_name}.new"
       puts
       puts "  # Parse sequence"
       puts "  state = 0"
       puts "  while offset < nodes.size"
       puts "    child = nodes[offset]"
-
-      puts "    case"
-      puts "    when child.is_a?(REXML::Element)"
+      puts
+      puts "    if child.is_a?(REXML::Element)"
       puts "      case state"
+
       state_count = 0
-      choice_count = 0
-
       @members.each do |member|
+        puts "      when #{state_count}"
 
-        if member.is_a? XSD_element
-          puts "      when #{state_count}"
-          puts "        begin"
-          puts "          expecting_element '#{member.name}', child"
+        # The following code will be:
+        #   if (node matches one instance of this member)
+        #     parse the node
+        #   else
+        #     check minOccurs and maxOccurs constraints are satisfied
+        #     advance to next state and try to parse the node in it
+        #  end
 
-          puts "        rescue"
-
-          # Checks for minOccurs
-
-          if member.minOccurs != 0
-            puts "          # minOccurs check"
-            if member.multiples?
-              puts "          if #{member.name}.length < #{member.minOccurs}"
-            else
-              puts "          if #{member.name} == nil"
-            end
-            puts "            raise InvalidXMLError, \"minOccurs not satisfied: #{member.name}\""
-            puts "          end"
-          else
-            puts "          # minOccurs check: minOccurs=0, so no check required"
-          end
-
-          # Checks for maxOccurs
-
-          if member.multiples?
-            # Repeatable member
-
-            if member.unbounded?
-              # Unbounded maxOccurs
-              puts "          # maxOccurs check: unbounded, so no check required"
-            else
-              # Finite maxOccurs
-              puts "          # maxOccurs check"
-              puts "       if #{member.maxOccurs} < #{member.name}.length"
-              puts "         raise InvalidXMLError, \"MaxOccurs exceeded\""
-              puts "       end"
-            end
-          else
-            # Non-repeating member
-            puts "          # maxOccurs check???"
-            #          if member.minOccurs != 0
-            #            puts "          if #{member.name} == nil"
-            #            puts "             raise InvalidXMLError, \"Missing element\""
-            #            puts "          end"
-            #          end
-          end
-
-          puts "          state = #{state_count + 1}"
-          puts "          repeat"
-          puts "        end"
-
-          # Process the element
-
-          print "        result.#{member.name}"
-          if member.multiples?
-            print ' << '
-          else
-            print ' = '
-          end
-
-          if member.type != nil
-            # Element with a named datatype
-
-            if member.type == 'xsd:string'
-              puts "#{PREFIX_PARSE_PR}string(child)"
-            elsif member.type == 'xsd:anyURI'
-              puts "#{PREFIX_PARSE_PR}string(child)"
-            else
-              puts "#{XSD::PREFIX_PARSE_CT}#{member.type}(child)" # assumes only complexTypes
-            end
-
-          elsif ! member.complexType.empty?
-            # Element with an anonymous complexType
-
-            the_ct = member.complexType[0]
-            puts "#{XSD::PREFIX_PARSE_CT}#{the_ct.internal_name}(child)" # assumes only complexTypes
-
-          elsif member.ref != nil
-            raise # TODO
-
-          else
-            raise "internal error"
-          end
-
-          if member.unbounded?
-            puts "        # unbounded: stay in this state"
-          else
-            # Finite number of occurances
-            if member.maxOccurs == 1
-              puts "        state = #{state_count + 1} # singular: advance to next state"
-            else
-              puts "        if #{member.name}.length == #{member.maxOccurs}"
-              puts "          state = #{state_count + 1} # maxOccur reached: advance to next state"
-              puts "        end"
-            end
-          end
-          puts "      offset += 1"
-
-        elsif member.is_a? XSD_choice
-          choice_count += 1
-          puts "      when #{state_count}"
-          puts "        result.#{member.internal_name}, offset = #{XSD::PREFIX_PARSE_CH}#{member.internal_name}(nodes, offset)"
-
-        elsif member.is_a? XSD_sequence
-          # Sequence inside a sequence
-          puts "      when #{state_count}"
-          puts "      raise \"TODO sequence inside a sequence\""
-          puts "      ##  choice#{choice_count}, offset = #{XSD::PREFIX_PARSE_SE}#{member.internal_name}(nodes, offset)"
-
+        mname = nil
+        if member.instance_variable_defined?(:@internal_member_name)
+          mname = member.internal_member_name
         else
-          raise "TODO: #{@name} expecting only element,choice,sequence in sequence: #{member.class}"
+          mname = member.internal_name
         end
+
+        if ! mname
+          raise "DEBUG: member name not defined for #{member}"
+        end
+
+        puts "        if #{ member.gen_if_match(context, 'child') }"
+        puts "          r, offset = #{ member.gen_match_code(context, 'nodes') }"
+        if member.multiples?
+          puts "          result.#{mname} << r"
+        else
+          puts "          result.#{mname} = r"
+        end
+
+        puts "        else"
+
+        # No match: move to next state after checking minOccurs and maxOccurs are satisfied
+
+        if member.minOccurs.zero?
+          min_check_fails = nil
+        else
+          min_check_fails = member.multiples? ? ".length < #{minOccurs}" : " == nil"
+        end
+
+        if min_check_fails
+          puts "          raise InvalidXMLError, \"sequence not enough #{mname}\" if result.#{mname}#{min_check_fails}"
+        end
+
+        if ! member.maxOccurs
+          max_check_fails = nil
+        else
+          max_check_fails = member.multiples? ? ".length > #{maxOccurs}" : nil
+        end
+
+        if max_check_fails
+          puts "          raise InvalidXMLError, \"sequence too many #{mname}\" if result.#{mname}#{max_check_fails}"
+        end
+
+        puts "          state = #{state_count + 1}"
+        puts "        end"
 
         state_count += 1
       end
 
       puts "      else"
-      puts "        raise InvalidXMLError, \"Unexpected element: {\#{child.namespace}}\#{child.name}\""
+      puts "        raise InvalidXMLError, \"unexpected element: {\#{child.namespace}}\#{child.name}\""
       puts "      end # case state"
 
-      puts "    when child.is_a?(REXML::Text)"
+      puts "    elsif child.is_a?(REXML::Text)"
       puts "      expecting_whitespace child"
       puts "      offset += 1"
-      puts "    when child.is_a?(REXML::Comment)"
+      puts "    elsif child.is_a?(REXML::Comment)"
       puts "      # Ignore comments"
       puts "      offset += 1"
       puts "    else"
-      puts "      raise InvalidXMLError, \"Unknown node type: \#{child.class}\""
+      puts "      raise InvalidXMLError, \"internal error: unsupported node type: \#{child.class}\""
       puts "    end"
       puts "  end # while"
       puts
@@ -934,7 +895,7 @@ module XSD
           puts "    raise InvalidXMLError, \"sequence is incomplete\""
           puts "  end"
         elsif last_required.is_a?(XSD_choice)
-          puts "  if result.#{last_required.internal_name} == nil"
+          puts "  if result.#{last_required.internal_member_name} == nil"
           puts "    raise InvalidXMLError, \"sequence is incomplete\""
           puts "  end"
         elsif last_required.is_a?(XSD_sequence)
@@ -965,7 +926,8 @@ module XSD
     # Array of two or more XSD::XSD_element objects.
     attr_accessor :element
 
-    attr_accessor :internal_name
+    attr_accessor :internal_class_name
+    attr_accessor :internal_member_name
 
     # Constructor
     def initialize
@@ -975,8 +937,11 @@ module XSD
 
     def fix_names(context)
       fix_occurs
-      if ! instance_variable_defined?(:@internal_name)
-        @internal_name = context.nextname() # make up an internal name
+      if ! instance_variable_defined?(:@internal_class_name)
+        @internal_class_name = context.nextname() # make up an internal name
+      end
+      if ! instance_variable_defined?(:@internal_member_name)
+        @internal_member_name = @internal_class_name
       end
 
       @element.each { |x| x.fix_names(context) }
@@ -990,34 +955,11 @@ module XSD
 
       # Generate for self
 
-      puts "# Class to represent the choice: #{@internal_name}"
+      puts "# Class to represent the choice: #{@internal_member_name}"
       puts "#"
       puts to_str('# ')
 
-      if multiples?
-        # Choice that is multivalued
-        puts "#"
-        puts "# An array of #{XSD::PREFIX_CLASS_CH_OPTION}#{@internal_name}"
-        puts "class #{XSD::PREFIX_CLASS_CH}#{@internal_name} < Array"
-        puts
-
-        puts "  # Serialize repeatable choices as XML"
-        puts "  def xml(out, indent)"
-        puts "    self.each { |opt| opt.xml(out, indent) }"
-        puts "  end"
-        puts
-
-        puts "end # class #{XSD::PREFIX_CLASS_CH}#{@internal_name}"
-        puts
-
-        puts "# Class to represent an option of the choice: #{@internal_name}"
-        puts "#"
-        puts to_str('# ')
-        puts "class #{XSD::PREFIX_CLASS_CH_OPTION}#{@internal_name}"
-      else
-        # Choice that is single valued
-        puts "class #{XSD::PREFIX_CLASS_CH}#{@internal_name}"
-      end
+      puts "class #{XSD::PREFIX_CLASS_CH}#{@internal_class_name}"
 
       # Accessor for content
 
@@ -1094,6 +1036,37 @@ END_OPTION_METHODS
     count += 1
   end
 
+  # Match method
+
+  puts "def self.match(node)"
+  first = true
+  element.each do |e|
+
+    if e.type
+      ename = e.name
+    elsif ! e.complexType.empty?
+      ename = e.name
+    elsif e.ref
+      target = context.find_element(e.ref_local, e.ref_ns)
+      ename = target.name
+    else
+      raise
+    end
+    print first ? "  if" : "  elsif"
+    puts " node.name == '#{ename}' && node.namespace == #{context.current.module_name}::NAMESPACE"
+    puts "    true"
+    first = false
+  end
+  if ! first
+    puts "  else"
+    puts "    false"
+    puts "  end"
+  else
+    puts "  false # choice has no options, so never matches"
+  end
+  puts "end # def match"
+  puts
+
   # XML output method for a choice
 
   # Determine which (if any) elements are primatives, since non-primitives
@@ -1158,38 +1131,40 @@ END_OPTION_METHODS
   puts "    end"
   puts "  end"
   puts
+  puts "end # class #{XSD::PREFIX_CLASS_CH}#{@internal_class_name}"
+  puts
 
   if multiples?
-    # Choice that is multivalued
-    puts "end # class #{XSD::PREFIX_CLASS_CH_OPTION}#{@internal_name}"
-  else
-    # Choice that is single valued
-    puts "end # class #{XSD::PREFIX_CLASS_CH}#{@internal_name}"
+    # This choice is repeatable, so create a class to hold a list of them
+
+    puts "#"
+    puts "# An array of #{XSD::PREFIX_CLASS_CH}#{@internal_class_name}"
+    puts "#"
+    puts "class #{XSD::PREFIX_CLASS_CH_LIST}#{@internal_class_name} < Array"
+    puts
+    puts "  # Serialize repeatable choices as XML"
+    puts "  def xml(out, indent)"
+    puts "    self.each { |opt| opt.xml(out, indent) }"
+    puts "  end"
+    puts
+    puts "end # class #{XSD::PREFIX_CLASS_CH_LIST}#{@internal_class_name}"
+    puts
   end
 
-  puts
+end
+
+def gen_if_match(context, node_name)
+  "#{XSD::PREFIX_CLASS_CH}#{internal_class_name}.match(#{node_name})"
+end
+
+  #----------------
+  # Creates code used to parse this choice as a particle
+
+def gen_match_code(context, vname)
+  "#{XSD::PREFIX_PARSE_CH}#{internal_class_name}(#{vname}, offset)"
 end
 
 def generate_parser(context)
-
-  #      puts "  offset = 0"
-  #      puts "  while offset < node.children.size"
-  #      puts "    child = node.children[offset]"
-  #
-  #      puts "    case"
-  #      puts "    when child.is_a?(REXML::Element)"
-  #      puts "      value, offset = #{XSD::PREFIX_PARSE_CH_PARTICLE}#{@choice[0].internal_name} node, offset"
-  #      puts
-  #      puts "    when child.is_a?(REXML::Text)"
-  #      puts "      expecting_whitespace child"
-  #      puts "      offset += 1"
-  #      puts "    when child.is_a?(REXML::Comment)"
-  #      puts "      # Ignore comments"
-  #      puts "      offset += 1"
-  #      puts "    else"
-  #      puts "      raise InvalidXMLError, \"Unknown node type: \#{child.class}\""
-  #      puts "    end"
-  #      puts "  end # while"
 
   # Generate for nested subcomponents
 
@@ -1197,15 +1172,15 @@ def generate_parser(context)
 
   # Generate for self
 
-  puts "# Parser for choice: <code>#{@internal_name}</code>"
+  puts "# Parser for choice: <code>#{@internal_class_name}</code>"
   puts
 
-  puts "def self.#{XSD::PREFIX_PARSE_CH}#{@internal_name}(nodes, offset)"
+  puts "def self.#{XSD::PREFIX_PARSE_CH}#{@internal_class_name}(nodes, offset)"
 
   puts "  # Create result object"
 
   module_name = context.current.module_name
-  puts "  result = #{module_name}::#{XSD::PREFIX_CLASS_CH}#{@internal_name}.new"
+  puts "  result = #{module_name}::#{XSD::PREFIX_CLASS_CH}#{@internal_class_name}.new"
   puts
 
   puts "  # Parse choice"
@@ -1213,11 +1188,6 @@ def generate_parser(context)
   puts "  while offset < nodes.length do"
   puts "    node = nodes[offset]"
   puts "    if node.is_a?(REXML::Element)"
-
-  if multiples?
-    # Choice that is multivalued
-    puts "      opt = #{XSD::PREFIX_CLASS_CH_OPTION}#{@internal_name}.new" # new member
-  end
 
   count = 0
   @element.each do |opt|  # FIXME: should loop over children not just elements
@@ -1265,15 +1235,8 @@ def generate_parser(context)
         print "      elsif "
       end
       puts "node.name == '#{element_name}' && node.namespace == NAMESPACE"
-
-      print "        "
-      if multiples?
-        # Choice that is multivalued
-        print "opt"
-      else
-        print "result"
-      end
-      puts ".#{element_name} = #{parse_method}(node)"
+      puts "        result.#{element_name} = #{parse_method}(node)"
+      puts "        return result, offset + 1"
 
     else
       raise "TODO"
@@ -1283,13 +1246,7 @@ def generate_parser(context)
   puts "      else"
   puts "        raise InvalidXMLError, \"Unexpected element in choice: {\#{node.namespace}}\#{node.name}\""
   puts "      end"
-  puts "      offset += 1"
-
-  if multiples?
-    # Choice that is multivalued
-    puts "      result << opt"
-  end
-
+  puts
   puts "    elsif node.is_a?(REXML::Text)"
   puts "      expecting_whitespace node"
   puts "      offset += 1"
@@ -1300,41 +1257,7 @@ def generate_parser(context)
   puts "      raise InvalidXMLError, \"Unknown node type: \#{child.class}\""
   puts "    end"
   puts "  end # while"
-
-  if 0 < @minOccurs
-    # Check minCccurs is satisified
-
-    puts "  # Check minOccurs==#{@minOccurs}"
-    if multiples?
-      # Choice that is multivalued
-      puts "  if result.length < #{@minOccurs}"
-    else
-      # Choice is single valued
-      puts "  if ! result._option"
-    end
-    puts "    raise InvalidXMLError, \"Choice minOccurs not satisfied\""
-    puts "  end"
-  else
-    puts "  # Check minOccurs: not necessary, since minOccurs==0"
-  end
-
-  if multiples?
-    # Choice that is multivalued
-    if ! unbounded?
-      # maxOccurs is finite
-      puts "  # Check maxOccurs==#{@maxOccurs}"
-      puts "  if #{@maxOccurs} < result.length"
-      puts "    raise InvalidXMLError, \"Choice maxOccurs exceeded\""
-      puts "  end"
-    end
-  else
-    # Choice that is single valued
-    raise "TODO: handling maxOccurs = 0" if @maxOccurs != 1
-  end
-
-  puts "  # Return"
-  puts "  return result, offset"
-
+  puts "  raise \'choice not found\'"
   puts "end"
   puts
 
@@ -1548,6 +1471,43 @@ class XSD_element < XSD_particle
   end
 
   #----------------
+  # Code condition for this a node to match this element
+
+  def gen_if_match(context, node_name)
+    "#{node_name}.name == '#{name}' && #{node_name}.namespace == #{context.current.module_name}::NAMESPACE"
+  end
+
+  #----------------
+  # Creates code used to parse this element inside a sequence
+
+  def gen_match_code(context, vname)
+
+    if type != nil
+      # Element with a named datatype
+
+      if type == 'xsd:string'
+        return "#{PREFIX_PARSE_PR}string(#{vname}[offset]), offset + 1"
+      elsif type == 'xsd:anyURI'
+        return "#{PREFIX_PARSE_PR}string(#{vname}[offset]), offset + 1"
+      else
+        return "#{XSD::PREFIX_PARSE_CT}#{type}(#{vname}[offset]), offset + 1" # assumes only complexTypes
+      end
+
+    elsif ! complexType.empty?
+      # Element with an anonymous complexType
+
+      the_ct = complexType[0]
+      return "#{XSD::PREFIX_PARSE_CT}#{the_ct.internal_name}(#{vname}[offset]), offset + 1" # assumes only complexTypes
+
+    elsif ref != nil
+      raise # TODO
+
+    else
+      raise "internal error"
+    end
+  end
+
+  #----------------
   # Generate code to parse this element as a top level element.
   # This is only used for elements declared at the top level of the
   # XML Schema, because they are the only ones that can be parsed for
@@ -1564,7 +1524,7 @@ class XSD_element < XSD_particle
 
     if @type != nil
       # Defined by a named datatype
-      puts "  #{XSD::PREFIX_PARSE_CT}_DATATYPE_#{@type}(root) # type"
+      puts "  #{XSD::PREFIX_PARSE_CT}#{@type}(root) # type"
 
     elsif @ref != nil
       # Define by a reference to another element
@@ -1707,7 +1667,11 @@ class XSD_complexType < Base
 
       @sequence[0].members.each do |member|
         # Redirect accessors to the members of the sequence
-        n = member.internal_name
+        if member.is_a? XSD_choice
+          n = member.internal_member_name
+        else
+          n = member.internal_name
+        end
         puts "  # Child element getter"
         puts "  def #{n}; @_sequence.#{n} end"
         puts "  # Child element setter"
@@ -1839,18 +1803,91 @@ class XSD_complexType < Base
       # choice
 
       if @choice[0].multiples?
-        print "  result._choices"
+        puts "  # complexType with choice (repeatable)"
+        puts "  result._choices = #{XSD::PREFIX_CLASS_CH_LIST}#{@choice[0].internal_class_name}.new"
       else
-        print "  result._choice"
+        puts "  # complexType with choice (single)"
+        puts "  result._choice = nil"
       end
-      puts ", offset = #{XSD::PREFIX_PARSE_CH}#{@choice[0].internal_name}(node.children, 0)"
 
-      puts "  if offset < node.children.size"
-      puts "     raise \"complexType choice has left over elements\""
-      puts "  end"
+      # Process all children of the node
+
+      puts "  offset = 0"
+      puts "  while offset < node.children.length"
+      puts "    child = node.children[offset]"
+      puts "    if child.is_a?(REXML::Element)"
+
+      if ! @choice[0].multiples?
+        puts "      if result._choice"
+        puts "        raise InvalidXMLError, \"unexpected element in complexType choice\""
+        puts "      end"
+      end
+
+      puts "      if #{XSD::PREFIX_CLASS_CH}#{@choice[0].internal_class_name}.match(child)"
+      puts "        r, offset = #{XSD::PREFIX_PARSE_CH}#{@choice[0].internal_member_name}(node.children, offset)"
+
+      if @choice[0].multiples?
+        puts "        result._choices << r"
+      else
+        puts "        result._choice = r"
+      end
+
+      puts "      else"
+      puts "        raise InvalidXMLError, \"unexpected element in complexType's choice\""
+      puts "      end"
+
+      puts "    elsif child.is_a?(REXML::Text)"
+      puts "      expecting_whitespace child"
+      puts "      offset += 1"
+      puts "    elsif child.is_a?(REXML::Comment)"
+      puts "      # Ignore comments"
+      puts "      offset += 1"
+      puts "    else"
+      puts "      raise InvalidXMLError, \"internal error: unsupported node type: \#{child.class}\""
+      puts "    end"
+      puts "  end # while"
+
+      # Check cardinality
+
+      if @choice[0].multiples?
+        if @choice[0].minOccurs != 0
+          puts "  if result._choices.length < #{@choice[0].minOccurs}"
+          puts "    raise InvalidXMLError, \"insufficient occurances of repeating choice\""
+          puts "  end"
+        end
+        if @choice[0].maxOccurs
+          puts "  if #{@choice[0].maxOccurs} < result._choices.length"
+          puts "    raise InvalidXMLError, \"too many occurances of repeating choice\""
+          puts "  end"
+        end
+
+      else
+        if @choice[0].minOccurs != 0
+          puts "  if ! result._choice"
+          puts "    raise InvalidXMLError, \"missing occurances of choice\""
+          puts "  end"
+        end
+      end
 
     else
       # empty content model
+
+      puts "  # Empty content model: must only contain non-significant whitespace"
+      puts "  offset = 0"
+      puts "  while offset < node.children.length"
+      puts "    child = node.children[offset]"
+      puts "    if child.is_a?(REXML::Element)"
+      puts "      raise InvalidXMLError, \"unexpected element in empty complexType\""
+      puts "    elsif child.is_a?(REXML::Text)"
+      puts "      expecting_whitespace child"
+      puts "      offset += 1"
+      puts "    elsif child.is_a?(REXML::Comment)"
+      puts "      # Ignore comments"
+      puts "      offset += 1"
+      puts "    else"
+      puts "      raise InvalidXMLError, \"internal error: unsupported node type: \#{child.class}\""
+      puts "    end"
+      puts "  end # while"
     end
 
     puts
@@ -2268,15 +2305,14 @@ def output_parser_common_code(module_name)
 
       value = ''
       node.each_child do |child|
-        case
-        when child.is_a?(REXML::Element)
+        if child.is_a?(REXML::Element)
           raise InvalidXMLError, "Unexpected element:" \
           " {\#{child.namespace}}\#{child.name}"
 
-        when child.is_a?(REXML::Text)
+        elsif child.is_a?(REXML::Text)
           value << REXML::Text.unnormalize(child.to_s)
 
-        when child.is_a?(REXML::Comment)
+        elsif child.is_a?(REXML::Comment)
           # Ignore comments
 
         else
@@ -2292,12 +2328,11 @@ def output_parser_common_code(module_name)
       # TODO: check for no attributes
 
       node.each_child do |child|
-        case
-        when child.is_a?(REXML::Element)
+        if child.is_a?(REXML::Element)
           raise InvalidXMLError, "unexpected element in empty content model: {\#{child.namespace}}\#{child.name}"
-        when child.is_a?(REXML::Text)
+        elsif child.is_a?(REXML::Text)
           expecting_whitespace child
-        when child.is_a?(REXML::Comment)
+        elsif child.is_a?(REXML::Comment)
           # Ignore comments
         else
           raise InvalidXMLError, "unknown node type: \#{child.class}"

@@ -113,6 +113,8 @@ test-rifcs-registryObjects: ${BUILDDIR}/RIFCS.rb
 #----------------------------------------------------------------
 # Parse XML and output XML
 
+test-more: test-rifcs-more test-xsd-more
+
 test-rifcs-more: ${BUILDDIR}/RIFCS.rb
 	./xml-test.rb --parser ${BUILDDIR}/RIFCS.rb --module RIFCS --verbose \
 	  test/rifcs/example/test-01.xml
@@ -124,6 +126,8 @@ test-rifcs-more: ${BUILDDIR}/RIFCS.rb
 test-xsd-more: ${BUILDDIR}/XSD.rb
 	./xml-test.rb --parser ${BUILDDIR}/XSD.rb --module XSD --verbose \
 	  test/addressbook/addressbook.xsd
+	./xml-test.rb --parser ${BUILDDIR}/XSD.rb --module XSD --verbose \
+	  test/rifcs/xsd/registryObjects.xsd
 
 #----------------------------------------------------------------
 # Documentation
