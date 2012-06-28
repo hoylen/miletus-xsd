@@ -122,7 +122,7 @@ def main
     end
 
     sio = StringIO.new
-    data.xml('root', sio)
+    #data.xml('root', sio)
     s = sio.string
     puts s
 

@@ -20,6 +20,8 @@ class XSD::Base
 
   attr_accessor :_namespace
 
+  attr_accessor :_module_name
+
   def _class_name=(n)
     @_class_name = n
   end
@@ -44,6 +46,7 @@ class XSD::Base
       _ref_target._class_name
     when :attribute_ref
       raise 'internal error'
+
     else
       @_class_name
     end
