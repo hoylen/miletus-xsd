@@ -33,12 +33,17 @@ class XSD::Base
     when :element_anonymous_complexType
       choice.complexType._class_name
     when :element_empty
-      "empty_element" # TODO
+      'element_empty' # TODO
 
     when :attribute_type
       _type_target._class_name
     when :attribute_ref
       _ref_target._class_name
+
+    when :attributeGroup_ref
+      _ref_target._class_name
+    when :attribute_ref
+      raise 'internal error'
     else
       @_class_name
     end

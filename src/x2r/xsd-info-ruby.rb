@@ -1625,7 +1625,7 @@ END_OPTION_METHODS
 
   # Parses an empty element. Such elements contain no attributes
   # and no content model.
-  def self.parse_empty(node)
+  def self.#{PREFIX_PARSE}element_empty(node)
     # TODO: check for no attributes
 
     node.each_child do |child|
@@ -1704,7 +1704,7 @@ end
   #================================================================
 
   def gen_parser_attributeGroup(attr_group)
-    puts "  #{PREFIX_PARSE}#{attr_group.ref}(node, result)"
+    puts "  #{PREFIX_PARSE}#{attr_group._class_name}(node, result)"
   end
 
   def generate_parser_attributeGroup(attr_group, is_top)
@@ -2103,7 +2103,7 @@ end
       puts "private"
     end
     puts
-    puts "# Parser for complexType: <code>#{ct.name}</code>"
+    puts "# Parser for complexType: <code>#{ct._class_name}</code>"
     puts
 
     puts "def self.#{PREFIX_PARSE}#{ct._class_name}(node)"
