@@ -32,6 +32,8 @@ class XSD::Base
       _ref_target._class_name
     when :element_anonymous_complexType
       choice.complexType._class_name
+    when :element_empty
+      "empty_element" # TODO
 
     when :attribute_type
       _type_target._class_name

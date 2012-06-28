@@ -164,6 +164,26 @@ class XSDInfoRuby < XSDInfo
     end
   end
 
+  def classify_attributeGroup(ag)
+    # Classify the attribute group
+
+    match = 0
+
+    if ag.name
+      ag._form = :attributeGroup_def
+      match += 1
+    end
+
+    if ag.ref
+      ag._form = :attributeGroup_ref
+      match += 1
+    end
+
+    if match != 1
+      raise 'internal error' # expecting exactly one of the above forms
+    end
+  end
+
   def classify_complexType(ct)
 
     match = 0
@@ -198,10 +218,12 @@ class XSDInfoRuby < XSDInfo
     # Classify the element declaration
 
     match = 0
+
     if element.type_attribute
       element._form = :element_type
       match += 1
     end
+
     if element.ref
       element._form = :element_ref
       match += 1
@@ -216,8 +238,13 @@ class XSDInfoRuby < XSDInfo
       end
     end
 
-    if match != 1
-      raise 'internal error' # expecting exactly one of the above forms
+    if match == 0
+      element._form = :element_empty
+    elsif match == 1
+      # success
+      element._form
+    else
+      raise 'internal error' # expecting not more than one of the above forms
     end
   end
 
@@ -314,8 +341,11 @@ class XSDInfoRuby < XSDInfo
 
   def preprocess_attributeGroup(attr_group)
 
-    if attr_group.name
-      # attributeGroup (i.e. being defined)
+    classify_attributeGroup(attr_group)
+
+    case attr_group._form
+    when :attributeGroup_def
+      # attributeGroup definition
 
       attr_group._class_name = ncname_to_classname(:attributeGroup, attr_group.name)
 
@@ -330,13 +360,13 @@ class XSDInfoRuby < XSDInfo
         end
       end
 
-    elsif attr_group.ref
+    when :attributeGroup_ref
       # attributeGroup reference (i.e. being used)
       target = collection.find_attributeGroup(namespace, attr_group.ref)
       if ! target
         raise "attributeGroup cannot be resolved: #{attr_group.ref}"
       end
-      attr_group._target = target
+      attr_group._ref_target = target
 
     else
       raise 'internal error: bad attributeGroup'
@@ -1183,8 +1213,35 @@ END_OPTION_METHODS
 
   end # def output_ruby_classes_complexType
 
+  def output_accessors_attribute(attr)
+    puts "  # The <code>#{attr.name}</code> attribute."
+    puts "  attr_accessor :#{attr._member_name}"
+  end
 
+  # Method used by both otput_accessors_attributeGroup
+  # and output_accessors_complexType_attr to process
+  # an option that could either be an attribute
+  # or an attributeGroup.
 
+  def output_accessors_a_or_ag(opt)
+    case opt._option
+    when :attribute
+      output_accessors_attribute(opt.attribute)
+    when :attributeGroup
+      if opt.attributeGroup._form != :attributeGroup_ref
+        raise "DEBUG: #{opt.attributeGroup._form}"
+      end
+      output_accessors_attributeGroup(opt.attributeGroup._ref_target)
+    else
+      raise 'internal error'
+    end
+  end
+
+  def output_accessors_attributeGroup(ag)
+    ag.choice.each do |opt|
+      output_accessors_a_or_ag(opt)
+    end
+  end
 
   def output_accessors_complexType_attr(ct)
 
@@ -1195,9 +1252,8 @@ END_OPTION_METHODS
     else
       # The attributes are defined in the list of attribute or
       # attributeGroup at the end of the complexType definition.
-      ct.choice2.each do |a_or_ag|
-        raise
-        puts "raise \"TODO: #{a_or_ag}\" # TODO"
+      ct.choice2.each do |opt|
+        output_accessors_a_or_ag(opt)
       end
     end
   end
@@ -1218,6 +1274,33 @@ END_OPTION_METHODS
      output_initialize_extension_attr(sc.extension)
   end
 
+  def output_initialize_attribute(attr)
+    puts "    # Attribute"
+    puts "    @#{attr._member_name} = nil"
+  end
+
+  def output_initialize_attributeGroup(ag)
+    ag.choice.each do |opt|
+      output_initialize_a_or_ag(opt)
+    end
+  end
+
+  # Method used by both...
+
+  def output_initialize_a_or_ag(opt)
+    case opt._option
+    when :attribute
+      output_initialize_attribute(opt.attribute)
+    when :attributeGroup
+      if opt.attributeGroup._form != :attributeGroup_ref
+        raise 'internal error'
+      end
+      output_initialize_attributeGroup(opt.attributeGroup._ref_target)
+    else
+      raise 'internal error'
+    end
+  end
+
   def output_initialize_extension_attr(ext)
     ext.attribute.each do |attr|
       puts "    @#{attr._member_name} = nil"
@@ -1234,8 +1317,8 @@ END_OPTION_METHODS
     else
       # The attributes are defined in the list of attribute or
       # attributeGroup at the end of the complexType definition.
-      ct.choice2.each do |a_or_ag|
-        puts "DEBUG: #{a_or_ag}"
+      ct.choice2.each do |opt|
+        output_initialize_a_or_ag(opt)
       end
     end
   end
