@@ -3,6 +3,7 @@
 .PHONY: build doc
 
 BUILDDIR=build
+BUILD2=build2
 DOCDIR=doc
 
 RIFCS_SCHEMAS=\
@@ -63,6 +64,25 @@ ${BUILDDIR}/XSD.rb: test/xsd/subset/xsd.xsd
 	./xml-to-code.rb --output $@-tmp.rb test/xsd/subset/xsd.xsd test/xsd/subset/xml.xsd
 	./xsd-to-ruby.rb --module XSD,XML --outdir ${BUILDDIR} --preparsed $@-tmp.rb
 
+
+new: ${BUILD2}/AddressBook.rb
+	ruby -I ${BUILD2} test/addressbook/tc_addressbook.rb
+
+${BUILD2}/AddressBook.rb: \
+  ${BUILDDIR}/XSD.rb \
+  test/addressbook/addressbook.xsd
+	mkdir -p ${BUILD2}
+	-src/x2r.rb -v --module AddressBook --outdir ${BUILD2} \
+	   test/addressbook/addressbook.xsd
+
+${BUILD2}/RIFCS.rb: \
+  ${BUILDDIR}/XSD.rb \
+  ${RIFCS_SCHEMAS}
+	mkdir -p ${BUILD2}
+	-src/x2r.rb -v --module RIFCS,XML --outdir ${BUILD2} \
+	  test/rifcs/xsd/registryTypes.xsd \
+	  test/rifcs/xsd/xml.xsd
+
 # Debug dump of the interim parser intermediate output
 
 dump: ${BUILDDIR}/rifcs.rb
@@ -102,13 +122,16 @@ test-addressbook: ${BUILDDIR}/AddressBook.rb
 # RIF-CS
 
 test-rifcs: ${BUILDDIR}/RIFCS.rb
-	ruby -I ${BUILDDIR} test/rifcs/ts_rifcs.rb
+	@cd test/rifcs && ruby -I ../../${BUILDDIR} ts.rb
 
 test-rifcs-example: ${BUILDDIR}/RIFCS.rb
-	ruby -I ${BUILDDIR} test/rifcs/example/tc_example.rb
+	@cd test/rifcs/example && ruby -I ../../../${BUILDDIR} tc.rb
 
 test-rifcs-registryObjects: ${BUILDDIR}/RIFCS.rb
-	ruby -I ${BUILDDIR} test/rifcs/registryObjects/tc_registryObjects.rb
+	@cd test/rifcs/registryObjects && ruby -I ../../../${BUILDDIR} tc.rb
+
+test-rifcs-people: ${BUILDDIR}/RIFCS.rb
+	@cd test/rifcs/people && ruby -I ../../../${BUILDDIR} tc.rb
 
 #----------------------------------------------------------------
 # Parse XML and output XML
@@ -117,11 +140,11 @@ test-more: test-rifcs-more test-xsd-more
 
 test-rifcs-more: ${BUILDDIR}/RIFCS.rb
 	./xml-test.rb --parser ${BUILDDIR}/RIFCS.rb --module RIFCS --verbose \
-	  test/rifcs/example/test-01.xml
+	  test/rifcs/example/input-01.xml
 	./xml-test.rb --parser ${BUILDDIR}/RIFCS.rb --module RIFCS --verbose \
-	  test/rifcs/example/test-02.xml
+	  test/rifcs/example/input-02.xml
 	./xml-test.rb --parser ${BUILDDIR}/RIFCS.rb --module RIFCS --verbose \
-	  test/rifcs/example/test-03.xml
+	  test/rifcs/example/input-03.xml
 
 test-xsd-more: ${BUILDDIR}/XSD.rb
 	./xml-test.rb --parser ${BUILDDIR}/XSD.rb --module XSD --verbose \
@@ -155,6 +178,7 @@ ${DOCDIR}/RIFCS: ${BUILDDIR}/RIFCS.rb
 clean:
 	find . -name \*~ -exec rm {} \;
 	rm -rf ${BUILDDIR}
+	rm -rf ${BUILD2}
 	rm -rf ${DOCDIR}
 
 #EOF

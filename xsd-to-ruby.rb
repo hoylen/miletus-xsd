@@ -247,6 +247,24 @@ module XSD
       end
     end # def gen_accessors
 
+    def gen_initializer(context)
+
+      if @name
+        # Named attribute
+        puts "    #{@internal_name} = nil"
+
+      elsif @ref
+        # Referenced attribute
+        if @ref == 'xml:lang'
+          puts "    lang = nil"
+        else
+          raise "  # TODO: ref attribute not supported yet: #{attr.ref}"
+        end
+      else
+        raise "unexpected form for attribute"
+      end
+    end # def gen_initializer
+
     def gen_parser(context, node_name, result_name)
 
       if @name
@@ -342,6 +360,19 @@ module XSD
 
       ag.attribute.each do |attr|
         attr.gen_accessor(context, ag.name)
+      end
+    end
+
+    def gen_initializer(context)
+      raise "internal error" if ! @ref
+
+      ag = context.find_attributeGroup(@ref_local, @ref_ns)
+      if ! ag
+        raise "unknown attributeGroup: #{@ref}"
+      end
+
+      ag.attribute.each do |attr|
+        attr.gen_initializer(context)
       end
     end
 
@@ -629,6 +660,7 @@ module XSD
       puts "#"
       puts to_str('# ')
       puts "class #{XSD::PREFIX_CLASS_SE}#{@internal_name}"
+      puts "  attr_accessor :xml_src_node"
 
       @members.each do |member|
         if member.multiples?
@@ -959,7 +991,8 @@ module XSD
       puts "#"
       puts to_str('# ')
 
-      puts "class #{XSD::PREFIX_CLASS_CH}#{@internal_class_name}"
+      puts "class #{XSD::PREFIX_CLASS_CH}#{@internal_class_name} < Base"
+      puts "  attr_accessor :xml_src_node"
 
       # Accessor for content
 
@@ -1014,7 +1047,7 @@ module XSD
   # See the +NAMES+ constant for permitted values for +symbol+.
   def [](symbol)
     match = NAMES.index(symbol)
-    match ? @_value : nil
+    match == @_index ? @_value : nil
   end
 
 END_OPTION_METHODS
@@ -1141,6 +1174,7 @@ END_OPTION_METHODS
     puts "# An array of #{XSD::PREFIX_CLASS_CH}#{@internal_class_name}"
     puts "#"
     puts "class #{XSD::PREFIX_CLASS_CH_LIST}#{@internal_class_name} < Array"
+    puts "  attr_accessor :xml_src_node"
     puts
     puts "  # Serialize repeatable choices as XML"
     puts "  def xml(out, indent)"
@@ -1643,6 +1677,7 @@ class XSD_complexType < Base
     puts "#"
     puts to_str('# ')
     puts "class #{XSD::PREFIX_CLASS_CT}#{@internal_name} < Base"
+    puts "  attr_accessor :xml_src_node"
 
     # Accessors for attributes (if any)
 
@@ -1702,6 +1737,20 @@ class XSD_complexType < Base
     else
       # empty content model
     end
+
+    # Initializer
+
+    puts "  def initialize"
+    puts "    super()"
+    @attribute.each do |attr|
+      attr.gen_initializer(context)
+    end
+    @attributeGroup.each do |ag|
+      ag.gen_initializer(context)
+    end
+
+
+    puts "  end"
 
     # XML output method for the complexType
 

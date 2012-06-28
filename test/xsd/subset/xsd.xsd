@@ -136,7 +136,6 @@
 	<xsd:element name="choice" type="choiceType"/>
       </xsd:choice>
     </xsd:sequence>
-    <xsd:attribute name="name" type="xsd:string"/>
   </xsd:complexType>
 
   <xsd:complexType name="choiceType">
