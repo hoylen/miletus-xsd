@@ -4,8 +4,8 @@
 #
 
 require 'optparse'
-require 'build/XSD'
-require 'src/xsd-info-ruby'
+require 'XSD'
+require 'xsd-info-ruby'
 
 #----------------------------------------------------------------
 

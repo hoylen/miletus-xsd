@@ -2238,6 +2238,8 @@ def output_ruby_header(namespace, module_name)
 
 #--
 # Generated code: do not edit
+#
+# Created by x2r-bootstrap.rb
 
 require 'REXML/document'
 

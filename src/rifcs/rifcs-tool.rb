@@ -1,0 +1,235 @@
+#!/usr/bin/ruby -w
+
+require 'optparse'
+
+require 'RIFCS'
+require 'RIFCS-extensions'
+
+#================================================================
+
+def print_typed_string(symbol, x, all)
+  print "    #{symbol}: #{x._value}"
+  if x.type_attribute
+    print " (type: #{x.type_attribute})"
+  else
+    print " (type not specified)" if all
+  end
+  puts
+end
+
+def print_identifier(x, all)
+  print_typed_string(:namePart, x, all)
+end
+
+def print_name(x, all)
+  puts "    name:"
+  if x.type_attribute
+    puts "      type: #{x.type_attribute}"
+  else
+    puts "      type not specified" if all
+  end
+
+  if x.dateFrom
+    puts "      dateFrom: #{x.dateFrom}"
+  else
+    puts "      dateFrom not specified" if all
+  end
+
+  if x.dateTo
+    puts "      dateTo: #{x.dateTo}"
+  else
+    puts "      dateTo not specified" if all
+  end
+
+  if x.lang
+    puts "      language: #{x.lang}"
+  else
+    puts "      language not specified" if all
+  end
+
+  x.namePart.each do |np|
+    print_typed_string('    namePart', np, all)
+  end
+
+end
+
+#----------------------------------------------------------------
+
+def print_party(p, all)
+  puts "  Party:"
+  puts "    type: #{p.type_attribute}"
+
+  if p.dateModified
+    puts "    dateModified: #{p.dateModified}"
+  else
+    puts "    dateModified not specified" if all
+  end
+
+  p.all.each { |x| puts "    Got anything: #{x}" }
+end
+
+def print_collection(c, all)
+  puts "  Collection:"
+
+  puts "    type: #{c.type_attribute}"
+  if c.dateModified
+    puts "    dateModified=#{c.dateModified}"
+  else
+    puts "    dateModified not specified" if all
+  end
+
+  if c.dateAccessioned
+    puts "    dateAccessioned=#{c.dateAccessioned}" # this is special for collections
+  else
+    puts "    dateAccessioned not specified" if all
+  end
+
+  c.identifier.each    { |x| print_identifier(x, all) }
+  c.name.each          { |x| print_name(x, all) }
+#  c.location.each      { |x| print_location(x, all) }
+#  c.coverage.each      { |x| print_coverage(x, all) }
+#  c.relatedObject.each { |x| print_relatedObject(x, all) }
+#  c.subject.each       { |x| print_subject(x, all) }
+#  c.description.each   { |x| print_description(x, all) }
+#  c.rights.each        { |x| print_rights(x, all) }
+#  c.relatedInfo.each   { |x| print_relatedInfo(x, all) }
+#  c.citationInfo.each  { |x| print_citationInfo(x, all) }
+end
+
+def print_registryObject(ro, all)
+
+  puts "  key: #{ro.key}"
+
+  print "  originatingSource: #{ro.originatingSource._value}"
+  if ro.originatingSource.type_attribute
+    print " (type: #{ro.originatingSource.type_attribute})"
+  else
+    print " (type not specified)" if all
+  end
+  puts
+
+  if ro.group
+    puts "  group = #{ro.group}"
+  else
+    puts "  group not specified" if all
+  end
+
+  case ro.choice._option
+  when :party
+    print_party(ro.choice.party, all)
+  when :collection
+    print_collection(ro.choice.collection, all)
+  when :activity
+    print_activity(ro.choice.activity, all) # TODO
+  when :service
+    print_service(ro.choice.service, all) # TODO
+  else
+    raise 'internal error' # the XML parser prevents this from happening
+  end
+end
+
+#----------------------------------------------------------------
+
+def process_command_line
+
+  # Specify command line options
+
+  options = {}
+  opt_parser = OptionParser.new do |opt|
+    opt.banner = "Usage: PROG [options] {rifcsFiles}"
+
+    opt.separator "Options:"
+
+#    opt.on("-o", "--outdir dir", "output directory") do |param|
+#      options[:outdir] = param
+#    end
+#
+#    opt.on("-m", "--module names", "names of module (comma separated)") do |param|
+#      options[:modules] = param
+#    end
+#
+#    opt.on("-P", "--preparsed code", "preparsed") do |param|
+#      options[:preparsed] = param
+#    end
+
+    opt.on("-a", "--all", "show all fields") do
+      options[:all] = true
+    end
+
+    opt.on("-q", "--quiet", "do not print out the data") do
+      options[:quiet] = true
+    end
+
+    opt.on("-v", "--verbose", "verbose output") do
+      options[:verbose] = true
+    end
+
+    opt.on("-h", "--help", "show help message") do
+      $stderr.puts opt_parser
+      exit 0
+    end
+  end
+  opt_parser.version = 1.0
+  opt_parser.release = 1024
+
+  # Parse parameters
+
+  begin
+    opt_parser.parse!
+  rescue OptionParser::InvalidOption => e
+    $stderr.puts "Usage error: #{e.message} (--help for help)"
+    exit 2
+  rescue OptionParser::InvalidArgument => e
+    $stderr.puts "Usage error: #{e.message}"
+    exit 2
+  end
+
+  if options[:quiet] && options[:verbose]
+    $stderr.puts "Usage error: cannot specifiy both --quiet and --verbose"
+    exit 2
+  end
+
+  # Use parameters
+
+  if ARGV.empty?
+    # In the interim implementation that uses the preparsed code
+    # instead of XML Schema files, this check is not required
+    #$stderr.puts "Usage error: missing input schema filenames (-h for help)"
+    #exit 2
+  end
+
+  return [ ARGV, options[:all], options[:quiet], options[:verbose] ]
+
+end # def process_command_line
+
+#----------------------------------------------------------------
+
+def main
+
+  filenames, all, quiet, verbose = process_command_line
+
+  filenames.each do |filename|
+    puts "#{filename}:" if ! quiet
+
+    file = File.new(filename)
+    doc, name = RIFCS.parse(file)
+    raise if name != 'registryObjects'
+
+    puts "  (Contains #{doc.registryObject.length} registryObjects)" if ! quiet
+
+    count = 0
+    doc.registryObject.each do |registryObject|
+      count += 1
+      if ! quiet
+        puts "  [#{count}]"
+        print_registryObject(registryObject, all)
+      end
+    end
+  end
+
+  0 # success
+end
+
+exit main
+
+#EOF

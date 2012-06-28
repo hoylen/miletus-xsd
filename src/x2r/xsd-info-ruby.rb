@@ -1,6 +1,6 @@
 #!/usr/bin/ruby -w
 
-require 'src/xsd-info'
+require 'xsd-info'
 
 #================================================================
 

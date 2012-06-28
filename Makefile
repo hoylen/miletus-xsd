@@ -2,8 +2,7 @@
 
 .PHONY: build doc
 
-BUILDDIR=build
-BUILD2=build2
+BUILD=build
 DOCDIR=doc
 
 RIFCS_SCHEMAS=\
@@ -13,6 +12,13 @@ test/rifcs/xsd/collection.xsd \
 test/rifcs/xsd/party.xsd \
 test/rifcs/xsd/service.xsd \
 test/rifcs/xsd/registryTypes.xsd
+
+BOOTSTRAP_X2C=src/bootstrap/xml-to-code.rb
+BOOTSTRAP_X2R=src/bootstrap/x2r-bootstrap.rb
+
+X2R=ruby -I ${BUILD}/bootstrap -I src/x2r  src/x2r/x2r.rb
+
+XML_TOOL=src/util/xml-tool.rb
 
 default:
 	@echo "Targets:"
@@ -27,66 +33,66 @@ all: clean build test
 #----------------------------------------------------------------
 
 build: \
-  ${BUILDDIR}/xsd-features/ElementEmpty.rb \
-  ${BUILDDIR}/xsd-features/AttributeGroup.rb \
-  ${BUILDDIR}/AddressBook.rb \
-  ${BUILDDIR}/RIFCS.rb \
-  ${BUILDDIR}/XSD.rb
+  ${BUILD}/bootstrap/xsd-features/ElementEmpty.rb \
+  ${BUILD}/bootstrap/xsd-features/AttributeGroup.rb \
+  ${BUILD}/bootstrap/AddressBook.rb \
+  ${BUILD}/bootstrap/RIFCS.rb \
+  ${BUILD}/bootstrap/XSD.rb
 
-${BUILDDIR}/xsd-features/ElementEmpty.rb: \
+${BUILD}/bootstrap/xsd-features/ElementEmpty.rb: \
   test/xsd-features/element-empty/element-empty.xsd
-	mkdir -p ${BUILDDIR}/xsd-features
-	./xml-to-code.rb --output $@-tmp.rb \
+	mkdir -p ${BUILD}/bootstrap/xsd-features
+	${BOOTSTRAP_X2C} --output $@-tmp.rb \
 	  test/xsd-features/element-empty/element-empty.xsd
-	./xsd-to-ruby.rb --module ElementEmpty --outdir ${BUILDDIR}/xsd-features --preparsed $@-tmp.rb
+	${BOOTSTRAP_X2R} --module ElementEmpty --outdir ${BUILD}/bootstrap/xsd-features --preparsed $@-tmp.rb
 
-${BUILDDIR}/xsd-features/AttributeGroup.rb: \
+${BUILD}/bootstrap/xsd-features/AttributeGroup.rb: \
   test/xsd-features/attributeGroup/attributeGroup.xsd
-	mkdir -p ${BUILDDIR}/xsd-features
-	./xml-to-code.rb --output $@-tmp.rb \
+	mkdir -p ${BUILD}/bootstrap/xsd-features
+	${BOOTSTRAP_X2C} --output $@-tmp.rb \
 	  test/xsd-features/attributeGroup/attributeGroup.xsd
-	./xsd-to-ruby.rb --module AttributeGroup --outdir ${BUILDDIR}/xsd-features --preparsed $@-tmp.rb
+	${BOOTSTRAP_X2R} --module AttributeGroup --outdir ${BUILD}/bootstrap/xsd-features --preparsed $@-tmp.rb
 
-${BUILDDIR}/AddressBook.rb: \
+${BUILD}/bootstrap/AddressBook.rb: \
   test/addressbook/addressbook.xsd
-	mkdir -p ${BUILDDIR}
-	./xml-to-code.rb --output $@-tmp.rb \
+	mkdir -p ${BUILD}/bootstrap
+	${BOOTSTRAP_X2C} --output $@-tmp.rb \
 	  test/addressbook/addressbook.xsd
-	./xsd-to-ruby.rb --module AddressBook --outdir ${BUILDDIR} --preparsed $@-tmp.rb
+	${BOOTSTRAP_X2R} --module AddressBook --outdir ${BUILD}/bootstrap --preparsed $@-tmp.rb
 
-${BUILDDIR}/RIFCS.rb: ${RIFCS_SCHEMAS}
-	mkdir -p ${BUILDDIR}
-	./xml-to-code.rb --output $@-tmp.rb ${RIFCS_SCHEMAS}
-	./xsd-to-ruby.rb --module RIFCS --outdir ${BUILDDIR} --preparsed $@-tmp.rb
+${BUILD}/bootstrap/RIFCS.rb: ${RIFCS_SCHEMAS}
+	mkdir -p ${BUILD}/bootstrap
+	${BOOTSTRAP_X2C} --output $@-tmp.rb ${RIFCS_SCHEMAS}
+	${BOOTSTRAP_X2R} --module RIFCS --outdir ${BUILD}/bootstrap --preparsed $@-tmp.rb
 
-${BUILDDIR}/XSD.rb: test/xsd/subset/xsd.xsd
-	mkdir -p ${BUILDDIR}
-	./xml-to-code.rb --output $@-tmp.rb test/xsd/subset/xsd.xsd test/xsd/subset/xml.xsd
-	./xsd-to-ruby.rb --module XSD,XML --outdir ${BUILDDIR} --preparsed $@-tmp.rb
+${BUILD}/bootstrap/XSD.rb: test/xsd/subset/xsd.xsd
+	mkdir -p ${BUILD}/bootstrap
+	${BOOTSTRAP_X2C} --output $@-tmp.rb test/xsd/subset/xsd.xsd test/xsd/subset/xml.xsd
+	${BOOTSTRAP_X2R} --module XSD,XML --outdir ${BUILD}/bootstrap --preparsed $@-tmp.rb
 
 
-new: ${BUILD2}/AddressBook.rb
-	ruby -I ${BUILD2} test/addressbook/tc_addressbook.rb
+new: ${BUILD}/AddressBook.rb
+	ruby -I ${BUILD} test/addressbook/tc_addressbook.rb
 
-${BUILD2}/AddressBook.rb: \
-  ${BUILDDIR}/XSD.rb \
+${BUILD}/AddressBook.rb: \
+  ${BUILD}/bootstrap/XSD.rb \
   test/addressbook/addressbook.xsd
-	mkdir -p ${BUILD2}
-	-src/x2r.rb -v --module AddressBook --outdir ${BUILD2} \
+	mkdir -p ${BUILD}
+	-${X2R} -v --module AddressBook --outdir ${BUILD} \
 	   test/addressbook/addressbook.xsd
 
-${BUILD2}/RIFCS.rb: \
-  ${BUILDDIR}/XSD.rb \
+${BUILD}/RIFCS.rb: \
+  ${BUILD}/bootstrap/XSD.rb \
   ${RIFCS_SCHEMAS}
-	mkdir -p ${BUILD2}
-	-src/x2r.rb -v --module RIFCS,XML --outdir ${BUILD2} \
+	mkdir -p ${BUILD}
+	-${X2R} -v --module RIFCS,XML --outdir ${BUILD} \
 	  test/rifcs/xsd/registryTypes.xsd \
 	  test/rifcs/xsd/xml.xsd
 
 # Debug dump of the interim parser intermediate output
 
-dump: ${BUILDDIR}/rifcs.rb
-	./xsd-debug.rb --preparsed ${BUILDDIR}/rifcs.rb-tmp.rb
+dump: ${BUILD}/bootstrap/rifcs.rb
+	./xsd-debug.rb --preparsed ${BUILD}/bootstrap/rifcs.rb-tmp.rb
 
 #----------------------------------------------------------------
 
@@ -98,87 +104,86 @@ test: \
 # XSD features
 
 test-xsd-features: \
-  ${BUILDDIR}/xsd-features/ElementEmpty.rb \
-  ${BUILDDIR}/xsd-features/AttributeGroup.rb
-	ruby -I ${BUILDDIR} -I test \
+  ${BUILD}/bootstrap/xsd-features/ElementEmpty.rb \
+  ${BUILD}/bootstrap/xsd-features/AttributeGroup.rb
+	ruby -I ${BUILD}/bootstrap -I test \
 	  test/xsd-features/ts_xsd-features.rb
 
 test-xsd-features-element-empty: \
-  ${BUILDDIR}/xsd-features/ElementEmpty.rb
-	ruby -I ${BUILDDIR} \
+  ${BUILD}/bootstrap/xsd-features/ElementEmpty.rb
+	ruby -I ${BUILD}/bootstrap \
 	  test/xsd-features/element-empty/tc_element-empty.rb
 
 test-xsd-features-attributeGroup: \
-  ${BUILDDIR}/xsd-features/attributeGroup.rb
-	ruby -I ${BUILDDIR} \
+  ${BUILD}/bootstrap/xsd-features/attributeGroup.rb
+	ruby -I ${BUILD}/bootstrap \
 	  test/xsd-features/attributeGroup/tc_attributeGroup.rb
 
 
 # Address book
 
-test-addressbook: ${BUILDDIR}/AddressBook.rb
-	ruby -I ${BUILDDIR} test/addressbook/tc_addressbook.rb
+test-addressbook: ${BUILD}/bootstrap/AddressBook.rb
+	ruby -I ${BUILD}/bootstrap test/addressbook/tc_addressbook.rb
 
 # RIF-CS
 
-test-rifcs: ${BUILDDIR}/RIFCS.rb
-	@cd test/rifcs && ruby -I ../../${BUILDDIR} ts.rb
+test-rifcs: ${BUILD}/bootstrap/RIFCS.rb
+	@cd test/rifcs && ruby -I ../../${BUILD}/bootstrap ts.rb
 
-test-rifcs-example: ${BUILDDIR}/RIFCS.rb
-	@cd test/rifcs/example && ruby -I ../../../${BUILDDIR} tc.rb
+test-rifcs-example: ${BUILD}/bootstrap/RIFCS.rb
+	@cd test/rifcs/example && ruby -I ../../../${BUILD}/bootstrap tc.rb
 
-test-rifcs-registryObjects: ${BUILDDIR}/RIFCS.rb
-	@cd test/rifcs/registryObjects && ruby -I ../../../${BUILDDIR} tc.rb
+test-rifcs-registryObjects: ${BUILD}/bootstrap/RIFCS.rb
+	@cd test/rifcs/registryObjects && ruby -I ../../../${BUILD}/bootstrap tc.rb
 
-test-rifcs-people: ${BUILDDIR}/RIFCS.rb
-	@cd test/rifcs/people && ruby -I ../../../${BUILDDIR} tc.rb
+test-rifcs-people: ${BUILD}/bootstrap/RIFCS.rb
+	@cd test/rifcs/people && ruby -I ../../../${BUILD}/bootstrap tc.rb
 
 #----------------------------------------------------------------
 # Parse XML and output XML
 
 test-more: test-rifcs-more test-xsd-more
 
-test-rifcs-more: ${BUILDDIR}/RIFCS.rb
-	./xml-test.rb --parser ${BUILDDIR}/RIFCS.rb --module RIFCS --verbose \
+test-rifcs-more: ${BUILD}/bootstrap/RIFCS.rb
+	${XML_TOOL} --parser ${BUILD}/bootstrap/RIFCS.rb --module RIFCS --verbose \
 	  test/rifcs/example/input-01.xml
-	./xml-test.rb --parser ${BUILDDIR}/RIFCS.rb --module RIFCS --verbose \
+	${XML_TOOL} --parser ${BUILD}/bootstrap/RIFCS.rb --module RIFCS --verbose \
 	  test/rifcs/example/input-02.xml
-	./xml-test.rb --parser ${BUILDDIR}/RIFCS.rb --module RIFCS --verbose \
+	${XML_TOOL} --parser ${BUILD}/bootstrap/RIFCS.rb --module RIFCS --verbose \
 	  test/rifcs/example/input-03.xml
 
-test-xsd-more: ${BUILDDIR}/XSD.rb
-	./xml-test.rb --parser ${BUILDDIR}/XSD.rb --module XSD --verbose \
+test-xsd-more: ${BUILD}/bootstrap/XSD.rb
+	${XML_TOOL} --parser ${BUILD}/bootstrap/XSD.rb --module XSD --verbose \
 	  test/addressbook/addressbook.xsd
-	./xml-test.rb --parser ${BUILDDIR}/XSD.rb --module XSD --verbose \
+	${XML_TOOL} --parser ${BUILD}/bootstrap/XSD.rb --module XSD --verbose \
 	  test/rifcs/xsd/registryObjects.xsd
 
 #----------------------------------------------------------------
 # Documentation
 
 doc: \
-  ${DOCDIR}/xsd-to-ruby \
+  ${DOCDIR}/x2r-bootstrap \
   ${DOCDIR}/AddressBook \
   ${DOCDIR}/RIFCS
 
-${DOCDIR}/xsd-to-ruby: xsd-to-ruby.rb
+${DOCDIR}/x2r-bootstrap: src/bootstrap/x2r-bootstrap.rb
 	mkdir -p ${DOCDIR}
-	rdoc -o ${DOCDIR}/xsd-to-ruby xsd-to-ruby.rb
+	rdoc -o ${DOCDIR}/x2r-bootstrap src/bootstrap/x2r-bootstrap.rb
 
-${DOCDIR}/AddressBook: ${BUILDDIR}/AddressBook.rb
+${DOCDIR}/AddressBook: ${BUILD}/bootstrap/AddressBook.rb
 	mkdir -p ${DOCDIR}
-	rdoc -o ${DOCDIR}/addressbook ${BUILDDIR}/AddressBook.rb
+	rdoc -o ${DOCDIR}/addressbook ${BUILD}/bootstrap/AddressBook.rb
 
-${DOCDIR}/RIFCS: ${BUILDDIR}/RIFCS.rb
+${DOCDIR}/RIFCS: ${BUILD}/bootstrap/RIFCS.rb
 	mkdir -p ${DOCDIR}
-	rdoc -o ${DOCDIR}/rifcs ${BUILDDIR}/RIFCS.rb
+	rdoc -o ${DOCDIR}/rifcs ${BUILD}/bootstrap/RIFCS.rb
 
 #----------------------------------------------------------------
 # Clean
 
 clean:
 	find . -name \*~ -exec rm {} \;
-	rm -rf ${BUILDDIR}
-	rm -rf ${BUILD2}
+	rm -rf ${BUILD}
 	rm -rf ${DOCDIR}
 
 #EOF

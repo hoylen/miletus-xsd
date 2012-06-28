@@ -1,5 +1,5 @@
 
-require 'src/xsd-datatypes'
+require 'xsd-datatypes'
 
 #================================================================
 
