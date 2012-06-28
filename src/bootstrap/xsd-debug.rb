@@ -67,13 +67,14 @@ end
 
 class XSD_schema < Base
   attr_accessor :version, :elementFormDefault, :attributeFormDefault, :targetNamespace, :xmlns, :xsd
-  attr_accessor :import, :include, :complexType, :attributeGroup, :element
+  attr_accessor :import, :include, :attribute, :attributeGroup, :complexType, :element
   def initialize
     super()
     @import = []
     @include = []
-    @complexType = []
+    @attribute = []
     @attributeGroup = []
+    @complexType = []
     @element = []
   end
 end
