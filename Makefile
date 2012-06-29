@@ -3,6 +3,7 @@
 .PHONY: build doc
 
 BUILD=build
+XMLOBJ_DIR=${BUILD}/xmlobj
 DOCDIR=doc
 
 RIFCS_SCHEMAS=\
@@ -33,51 +34,51 @@ all: clean build test
 #----------------------------------------------------------------
 
 build: \
-  ${BUILD}/XSDPrimitives.rb \
-  ${BUILD}/xsd-features/ElementEmpty.rb \
-  ${BUILD}/xsd-features/AttributeGroup.rb \
-  ${BUILD}/AddressBook.rb \
-  ${BUILD}/RIFCS.rb \
-  ${BUILD}/XSD.rb
+  ${XMLOBJ_DIR}/XSDPrimitives.rb \
+  ${XMLOBJ_DIR}/xsd-features/ElementEmpty.rb \
+  ${XMLOBJ_DIR}/xsd-features/AttributeGroup.rb \
+  ${XMLOBJ_DIR}/AddressBook.rb \
+  ${XMLOBJ_DIR}/RIFCS.rb \
+  ${XMLOBJ_DIR}/XSD.rb
 
-${BUILD}/XSDPrimitives.rb: src/x2r/XSDPrimitives.rb
-	mkdir -p ${BUILD}/xsd-features
+${XMLOBJ_DIR}/XSDPrimitives.rb: src/x2r/XSDPrimitives.rb
+	mkdir -p ${XMLOBJ_DIR}
 	cp $? $@
 
-${BUILD}/xsd-features/ElementEmpty.rb: \
+${XMLOBJ_DIR}/xsd-features/ElementEmpty.rb: \
   ${BUILD}/bootstrap/XSD.rb \
   ${RIFCS_SCHEMAS}
-	mkdir -p ${BUILD}/xsd-features
-	-${X2R} -v --module ElementEmpty --outdir ${BUILD}/xsd-features \
+	mkdir -p ${XMLOBJ_DIR}/xsd-features
+	-${X2R} -v --module ElementEmpty --outdir ${XMLOBJ_DIR}/xsd-features \
 	  test/xsd-features/element-empty/element-empty.xsd
 
-${BUILD}/xsd-features/AttributeGroup.rb: \
+${XMLOBJ_DIR}/xsd-features/AttributeGroup.rb: \
   ${BUILD}/bootstrap/XSD.rb \
   ${RIFCS_SCHEMAS}
-	mkdir -p ${BUILD}/xsd-features
-	-${X2R} -v --module AttributeGroup --outdir ${BUILD}/xsd-features \
+	mkdir -p ${XMLOBJ_DIR}/xsd-features
+	-${X2R} -v --module AttributeGroup --outdir ${XMLOBJ_DIR}/xsd-features \
 	  test/xsd-features/attributeGroup/attributeGroup.xsd
 
-${BUILD}/AddressBook.rb: \
+${XMLOBJ_DIR}/AddressBook.rb: \
   ${BUILD}/bootstrap/XSD.rb \
   test/addressbook/addressbook.xsd
-	mkdir -p ${BUILD}
-	-${X2R} -v --module AddressBook --outdir ${BUILD} \
+	mkdir -p ${XMLOBJ_DIR}
+	-${X2R} -v --module AddressBook --outdir ${XMLOBJ_DIR} \
 	   test/addressbook/addressbook.xsd
 
-${BUILD}/RIFCS.rb: \
+${XMLOBJ_DIR}/RIFCS.rb: \
   ${BUILD}/bootstrap/XSD.rb \
   ${RIFCS_SCHEMAS}
-	mkdir -p ${BUILD}
-	-${X2R} -v --module RIFCS,XML --outdir ${BUILD} \
+	mkdir -p ${XMLOBJ_DIR}
+	-${X2R} -v --module RIFCS,XML --outdir ${XMLOBJ_DIR} \
 	  ${RIFCS_SCHEMAS} \
 	  test/rifcs/xsd/xml.xsd
 
-${BUILD}/XSD.rb: \
+${XMLOBJ_DIR}/XSD.rb: \
   ${BUILD}/bootstrap/XSD.rb \
   test/xsd/subset/xsd.xsd
-	mkdir -p ${BUILD}
-	-${X2R} -v --module XSD,XML --outdir ${BUILD} \
+	mkdir -p ${XMLOBJ_DIR}
+	-${X2R} -v --module XSD,XML --outdir ${XMLOBJ_DIR} \
 	  test/xsd/subset/xsd.xsd test/xsd/subset/xml.xsd
 
 #----------------------------------------------------------------
@@ -145,21 +146,21 @@ test: \
 # XSD features
 
 test-xsd-features: \
-  ${BUILD}/xsd-features/ElementEmpty.rb \
-  ${BUILD}/xsd-features/AttributeGroup.rb \
-  ${BUILD}/XSDPrimitives.rb
+  ${XMLOBJ_DIR}/xsd-features/ElementEmpty.rb \
+  ${XMLOBJ_DIR}/xsd-features/AttributeGroup.rb \
+  ${XMLOBJ_DIR}/XSDPrimitives.rb
 	ruby -I ${BUILD} -I test \
 	  test/xsd-features/ts_xsd-features.rb
 
 test-xsd-features-element-empty: \
-  ${BUILD}/xsd-features/ElementEmpty.rb \
-  ${BUILD}/XSDPrimitives.rb
+  ${XMLOBJ_DIR}/xsd-features/ElementEmpty.rb \
+  ${XMLOBJ_DIR}/XSDPrimitives.rb
 	ruby -I ${BUILD} \
 	  test/xsd-features/element-empty/tc_element-empty.rb
 
 test-xsd-features-attributeGroup: \
-  ${BUILD}/xsd-features/AttributeGroup.rb \
-  ${BUILD}/XSDPrimitives.rb
+  ${XMLOBJ_DIR}/xsd-features/AttributeGroup.rb \
+  ${XMLOBJ_DIR}/XSDPrimitives.rb
 	ruby -I ${BUILD} \
 	  test/xsd-features/attributeGroup/tc_attributeGroup.rb
 
@@ -167,30 +168,30 @@ test-xsd-features-attributeGroup: \
 # Address book
 
 test-addressbook: \
-  ${BUILD}/AddressBook.rb \
-  ${BUILD}/XSDPrimitives.rb
+  ${XMLOBJ_DIR}/AddressBook.rb \
+  ${XMLOBJ_DIR}/XSDPrimitives.rb
 	ruby -I ${BUILD} test/addressbook/tc_addressbook.rb
 
 # RIF-CS
 
 test-rifcs: \
-  ${BUILD}/RIFCS.rb \
-  ${BUILD}/XSDPrimitives.rb
+  ${XMLOBJ_DIR}/RIFCS.rb \
+  ${XMLOBJ_DIR}/XSDPrimitives.rb
 	@cd test/rifcs && ruby -I ../../${BUILD} ts.rb
 
 test-rifcs-example: \
-  ${BUILD}/RIFCS.rb \
-  ${BUILD}/XSDPrimitives.rb
+  ${XMLOBJ_DIR}/RIFCS.rb \
+  ${XMLOBJ_DIR}/XSDPrimitives.rb
 	@cd test/rifcs/example && ruby -I ../../../${BUILD} tc.rb
 
 test-rifcs-registryObjects: \
-  ${BUILD}/RIFCS.rb \
-  ${BUILD}/XSDPrimitives.rb
+  ${XMLOBJ_DIR}/RIFCS.rb \
+  ${XMLOBJ_DIR}/XSDPrimitives.rb
 	@cd test/rifcs/registryObjects && ruby -I ../../../${BUILD} tc.rb
 
 test-rifcs-party: \
-  ${BUILD}/RIFCS.rb \
-  ${BUILD}/XSDPrimitives.rb
+  ${XMLOBJ_DIR}/RIFCS.rb \
+  ${XMLOBJ_DIR}/XSDPrimitives.rb
 	@cd test/rifcs/party && ruby -I ../../../${BUILD} tc.rb
 
 #----------------------------------------------------------------
@@ -199,21 +200,21 @@ test-rifcs-party: \
 test-more: test-rifcs-more test-xsd-more
 
 test-rifcs-more: \
-  ${BUILD}/RIFCS.rb \
-  ${BUILD}/XSDPrimitives.rb
-	${XML_TOOL} --parser ${BUILD}/RIFCS.rb --module RIFCS --verbose \
+  ${XMLOBJ_DIR}/RIFCS.rb \
+  ${XMLOBJ_DIR}/XSDPrimitives.rb
+	${XML_TOOL} --parser ${XMLOBJ_DIR}/RIFCS.rb --module RIFCS --verbose \
 	  test/rifcs/example/input-01.xml
-	${XML_TOOL} --parser ${BUILD}/RIFCS.rb --module RIFCS --verbose \
+	${XML_TOOL} --parser ${XMLOBJ_DIR}/RIFCS.rb --module RIFCS --verbose \
 	  test/rifcs/example/input-02.xml
-	${XML_TOOL} --parser ${BUILD}/RIFCS.rb --module RIFCS --verbose \
+	${XML_TOOL} --parser ${XMLOBJ_DIR}/RIFCS.rb --module RIFCS --verbose \
 	  test/rifcs/example/input-03.xml
 
 test-xsd-more: \
-  ${BUILD}/XSD.rb \
-  ${BUILD}/XSDPrimitives.rb
-	${XML_TOOL} --parser ${BUILD}/XSD.rb --module XSD --verbose \
+  ${XMLOBJ_DIR}/XSD.rb \
+  ${XMLOBJ_DIR}/XSDPrimitives.rb
+	${XML_TOOL} --parser ${XMLOBJ_DIR}/XSD.rb --module XSD --verbose \
 	  test/addressbook/addressbook.xsd
-	${XML_TOOL} --parser ${BUILD}/XSD.rb --module XSD --verbose \
+	${XML_TOOL} --parser ${XMLOBJ_DIR}/XSD.rb --module XSD --verbose \
 	  test/rifcs/xsd/registryObjects.xsd
 
 #----------------------------------------------------------------
@@ -233,13 +234,13 @@ ${DOCDIR}/x2r:
 	mkdir -p ${DOCDIR}
 	rdoc -o ${DOCDIR}/x2r src/x2r/*.rb
 
-${DOCDIR}/AddressBook: ${BUILD}/AddressBook.rb
+${DOCDIR}/AddressBook: ${XMLOBJ_DIR}/AddressBook.rb
 	mkdir -p ${DOCDIR}
-	rdoc -o ${DOCDIR}/addressbook ${BUILD}/AddressBook.rb
+	rdoc -o ${DOCDIR}/addressbook ${XMLOBJ_DIR}/AddressBook.rb
 
-${DOCDIR}/RIFCS: ${BUILD}/RIFCS.rb
+${DOCDIR}/RIFCS: ${XMLOBJ_DIR}/RIFCS.rb
 	mkdir -p ${DOCDIR}
-	rdoc -o ${DOCDIR}/rifcs ${BUILD}/RIFCS.rb
+	rdoc -o ${DOCDIR}/rifcs ${XMLOBJ_DIR}/RIFCS.rb
 
 #----------------------------------------------------------------
 # Clean

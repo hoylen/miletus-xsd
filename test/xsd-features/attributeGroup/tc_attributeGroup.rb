@@ -1,7 +1,7 @@
 #!/usr/bin/ruby -w
 
 require 'test/unit'
-require 'xsd-features/AttributeGroup.rb'
+require 'xmlobj/xsd-features/AttributeGroup.rb'
 
 class AttributeGroupTestCase < Test::Unit::TestCase
 

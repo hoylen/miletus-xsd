@@ -1,7 +1,7 @@
 #!/usr/bin/ruby -w
 
 require 'test/unit'
-require 'xsd-features/ElementEmpty.rb'
+require 'xmlobj/xsd-features/ElementEmpty.rb'
 
 class ElementEmptyTestCase < Test::Unit::TestCase
 

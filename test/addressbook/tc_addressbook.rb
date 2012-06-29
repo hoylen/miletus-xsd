@@ -1,7 +1,7 @@
 #!/usr/bin/ruby -w
 
 require 'test/unit'
-require 'AddressBook.rb'
+require 'xmlobj/AddressBook.rb'
 
 class Test1 < Test::Unit::TestCase
   def test1

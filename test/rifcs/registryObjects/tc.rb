@@ -1,7 +1,7 @@
 #!/usr/bin/ruby -w
 
 require 'test/unit'
-require 'RIFCS'
+require 'xmlobj/RIFCS'
 
 class RIFCS_registryObjects_TestCase < Test::Unit::TestCase
 

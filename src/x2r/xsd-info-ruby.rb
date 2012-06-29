@@ -763,7 +763,7 @@ END_HEADER2
     puts "# GENERATED CODE: DO NOT EDIT"
     puts
     puts "require 'REXML/document'"
-    puts "require 'XSDPrimitives'"
+    puts "require 'xmlobj/XSDPrimitives'"
     puts
 
     puts "module #{module_name}"
