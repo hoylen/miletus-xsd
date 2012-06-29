@@ -1,9 +1,13 @@
+#!/usr/bin/ruby -w
+#
+# Classes to represent XML Schema components from a single XML
+# namespace and a collection of those XML namespaces.
 
 require 'xsd-datatypes'
 
 #================================================================
 
-# Represents the XML Schema environment for generating code.
+# Represents the XML Schema environment.
 #
 # It identifies all the named XSD::XSD_element and XSD::XSD_complexType
 # objects from all the known XML Schemas. This allows the code generator
@@ -13,12 +17,10 @@ require 'xsd-datatypes'
 # Limitation: other named components (e.g. groups) should be added to this
 # when they are supported.
 
-
-
-#================================================================
-
 class XSDInfo
+  # The XML namespace represented by this object
   attr_accessor :namespace
+  # Reference to the collection containing this and other related namespaces.
   attr_accessor :collection
 
   def initialize(namespace)
@@ -132,6 +134,9 @@ end # class XSDInfo
 #================================================================
 
 # A collection of XSDInfo
+#
+# This collection represents all the known XML namespaces, for
+# the purposes of dereferencing schema components.
 
 class XSDInfoCollection
 

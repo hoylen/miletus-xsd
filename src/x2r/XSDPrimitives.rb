@@ -1,6 +1,8 @@
 #!/usr/bin/ruby -w
 
-# Implementation of XML Schema primitives types
+# Implementation of XML Schema primitives types.
+#
+# This is used by the the generated Ruby code.
 
 module XSDPrimitives
 

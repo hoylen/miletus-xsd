@@ -1,20 +1,11 @@
 #!/usr/bin/ruby -w
+#
 
 require 'xsd-info'
 
 #================================================================
 
-# Represents the XML Schema environment for generating code.
-#
-# It identifies all the named XSD::XSD_element and XSD::XSD_complexType
-# objects from all the known XML Schemas. This allows the code generator
-# to easily process elements defined by a +ref+ to an element
-# declaration or by +type+ to a named datatype.
-#
-# Limitation: other named components (e.g. groups) should be added to this
-# when they are supported.
-
-#================================================================
+# Extends the XSDInfo with methods for generating Ruby code.
 
 class XSDInfoRuby < XSDInfo
 
@@ -24,7 +15,6 @@ class XSDInfoRuby < XSDInfo
   COMMENT_SEPARATOR_CLASSES = '#' + '-' * 16
 
   PREFIX_PARSE = 'parse_'
-  PREFIX_PARSE_AG = 'parse_attributeGroup_'
 
   def initialize(namespace)
     super(namespace)
@@ -99,6 +89,7 @@ class XSDInfoRuby < XSDInfo
 
   #================================================================
 
+
   def use_mandatory_set(attr, value)
     @use_mandatory[attr.object_id] = value
   end
@@ -112,6 +103,25 @@ class XSDInfoRuby < XSDInfo
   end
 
   #----------------------------------------------------------------
+
+  # Gets the namespace name and local part of a QName (XML qualified
+  # name) from a lexical representation of that QName. The lexical
+  # representation consists an optional prefix followed by a colon,
+  # followed by the local part. The prefix is mapped into the
+  # namespace name according to the namespace declarations of the
+  # current XML node. If there is no prefix, then the default namespace
+  # is the namespace name of the QName.
+  #
+  # For example, if context represents the following element,
+  # this method can be used to expand the two attribute values.
+  #
+  #   <myelement xmlns="http://ns.example.com/def/1.0"
+  #              xmlns:foo="http://ns.example.com/foo/1.0"
+  #              myqname1="foo:bar"
+  #              myqname2="baz"/>
+  #
+  #   expand_qname("foo:bar" => [ "http://ns.example.com/foo/1.0", "bar" ]
+  #   expand_qname("baz" => [ "http://ns.example.com/def/1.0", "baz" ]
 
   def expand_qname(context, qname)
     a, b = qname.split(':')
@@ -135,11 +145,14 @@ class XSDInfoRuby < XSDInfo
   end
 
   #================================================================
+  #---
   # Classification methods. These are used in the preprocessing
   # operation to set the _form for attributes, complexTypes and
   # elements. The _form is subsequently used to determine how
   # these objects should be processed, without having to re-determine
   # the form again.
+
+  # Sets the _form of the attribute +attr+.
 
   def classify_attribute(attr)
     # Classify the attribute declaration
@@ -164,6 +177,8 @@ class XSDInfoRuby < XSDInfo
     end
   end
 
+  # Sets the _form of the attributeGroup +ag+.
+
   def classify_attributeGroup(ag)
     # Classify the attribute group
 
@@ -183,6 +198,8 @@ class XSDInfoRuby < XSDInfo
       raise 'internal error' # expecting exactly one of the above forms
     end
   end
+
+  # Sets the _form of the complexType +ct+.
 
   def classify_complexType(ct)
 
@@ -213,6 +230,8 @@ class XSDInfoRuby < XSDInfo
       raise 'internal error' # expecting exactly one of the above forms
     end
   end
+
+  # Sets the _form of the element +element+.
 
   def classify_element(element)
     # Classify the element declaration
@@ -332,7 +351,7 @@ class XSDInfoRuby < XSDInfo
     if need_name
       # Preprocess the name
       attr._member_name = ncname_to_membername(:attribute, attr.name)
-      attr._namespace = @namespace
+      attr._module_name = @module_name
     else
       attr._member_name = ncname_to_membername(:attribute, 'ref_to_attribute')
     end
@@ -683,6 +702,8 @@ class XSDInfoRuby < XSDInfo
 
   public
 
+  # Create Ruby code for this XML namespace.
+
   def generate_code(verbose)
 
     output_ruby_header
@@ -696,16 +717,17 @@ class XSDInfoRuby < XSDInfo
 
   def output_ruby_header
 
-    puts <<"END_HEADER"
+    puts <<"END_HEADER1"
 #!/usr/bin/ruby -w
 #
-# :title: Module for the XML namespace #{namespace}
-# = XML objects
+# :title: #{module_name}: objects for XML namespace #{namespace}
 #
-# This module defines classes to represent an XML infoset that
-# was defined by a set of XML Schemas for the XML namespace:
+# = #{module_name}
 #
-# #{namespace }
+# This module defines classes to represent an XML infoset
+# for the XML namespace:
+#
+#   #{namespace}
 #
 # It also defines methods to parse an XML document into those
 # objects and to serialize those objects into an XML document.
@@ -715,36 +737,69 @@ class XSDInfoRuby < XSDInfo
 #
 # Invoke the +xml+ method on an object to serialize it into XML.
 #
-# == Example
+END_HEADER1
+
+    top_elements = []
+
+    @named_elements.sort.each do |ename, item|
+      ns, name, parse_method = element_info(item)
+      top_elements << [ ename, parse_method ]
+    end
+
+    if ! top_elements.empty?
+
+      puts "# == Methods to parse for elements"
+      puts "#"
+
+      top_elements.each do |e|
+        puts "# <code>#{e[1]}</code>::"
+        puts "#   the <code>#{e[0]}</code> element"
+      end
+      puts "#"
+
+      puts <<"END_HEADER2"
+# == Examples
 #
-# <pre>
-# begin
-#   src = File.new("example.xml")
-#   obj, name = #{module_name}.parser(src)
+# === Parsing for a specific element
+#
+#   file = File.new("example.xml")
+#   doc = REXML::Document.new(file)
+#   root_node = doc.root
+#   root_element = #{module_name}#{top_elements[0][1]}(root_node) # parsing for the #{top_elements[0][0]} element
+#
+# === Parsing for any element declared at the top level
+#
+#   file = File.new("example.xml")
+#   doc = REXML::Document.new(file)
+#   obj, name = #{module_name}.parser(doc.root)
 #   if name != 'expectedRootElementName'
-#     ...
+#     ... # root element matched some other element
 #   end
 #
 #   src.xml($stdout)
 #
-# rescue InvalidXMLError => e
-#   ...
-# rescue REXML:...
-#   ...
-# end
-# </pre>
+# === Error handling
+#
+#   begin
+#     elem = #{module_name}#{top_elements[0][1]}(root_node)
+#   rescue InvalidXMLError => e
+#     ... # schema validity error
+#   rescue REXML:...
+#     ... # well-formed XML error
+#   end
+END_HEADER2
+    end
 
-#--
-# GENERATED CODE: DO NOT EDIT
-
-require 'REXML/document'
-require 'XSDPrimitives'
-
-END_HEADER
+    puts "#--"
+    puts "# GENERATED CODE: DO NOT EDIT"
+    puts
+    puts "require 'REXML/document'"
+    puts "require 'XSDPrimitives'"
+    puts
 
     puts "module #{module_name}"
 
-    puts <<"END_HEADER"
+    puts <<"END_HEADER3"
 
 #{COMMENT_SEPARATOR}
 
@@ -762,8 +817,10 @@ class Base
   # Constructor.
   # The +node+ is the REXML::node that provides the
   # namespace context for interpreting any QNames.
+  # The +node+ can be +nil+, but then +expand_qname+ cannot be invoked
+  # (which is fine for some objects where QNames are not used).
   #
-  def initialize(node=nil)
+  def initialize(node)
     @xml_src_node = node
   end
 
@@ -775,21 +832,38 @@ class Base
   # current XML node. If there is no prefix, then the default namespace
   # is the namespace name of the QName.
   #
-  # For example, "foo:bar" is converted into
-  # [ "http://ns.example.com/foo/1.0", "bar" ] and "baz" is converted into
-  # [ "http://ns.example.com/def/1.0", "baz" ] if the current node is
-  # <myelement xmlns="http://ns.example.com/def/1.0" xmlns:foo="http://ns.example.com/foo/1.0">...
+  # For example, if this object represents the following element,
+  # this method can be used to expand the two attribute values.
+  #
+  #   <myelement xmlns="http://ns.example.com/def/1.0"
+  #              xmlns:foo="http://ns.example.com/foo/1.0"
+  #              myqname1="foo:bar"
+  #              myqname2="baz"/>
+  #
+  #   expand_qname("foo:bar" => [ "http://ns.example.com/foo/1.0", "bar" ]
+  #   expand_qname("baz" => [ "http://ns.example.com/def/1.0", "baz" ]
 
   def expand_qname(qname)
     a, b = qname.split(':')
     if b
       # a=prefix; b=localname
-      [ "http://debug.namespace/prefix/\#{a}", b ] # TODO
+      ns = @xml_src_node.namespace(a)
+      localname = b
     else
       # a=localname (in current namespace)
-      [ 'http://debug.namespace/default-namespace', a ] # TODO
+      ns = @xml_src_node.namespace('')
+      localname = a
     end
-END_HEADER
+    if ! ns
+      if b && a == 'xml'
+        ns = 'http://www.w3.org/XML/1998/namespace'
+      else
+        raise "unknown namespace for QName \"#\{qname}\""
+      end
+    end
+    [ ns, localname ]
+
+END_HEADER3
     puts '  end'
     puts 'end'
     puts
@@ -867,8 +941,8 @@ END_HEADER
     # Standard methods for a choice: initialize, _option, [], []=
 
     puts <<"END_OPTION_METHODS"
-  def initialize
-    super()
+  def initialize(node)
+    super(node)
     @_index = nil # indicates which option (0..#{ch.choice.length - 1} or nil)
     @_value = nil # the value of the option
   end
@@ -1112,7 +1186,7 @@ end
     output_accessors_complexType_attr(ct)
     output_accessors_complexType_content(ct)
 
-    puts "  def initialize(node=nil)"
+    puts "  def initialize(node)"
     puts "    super(node)"
     output_initialize_complexType_attr(ct)
     output_initialize_complexType_content(ct)
@@ -1295,7 +1369,7 @@ end
 
     # Initializer
 
-    puts "  def initialize(node=nil)"
+    puts "  def initialize(node)"
     puts "    super(node)"
     seq.choice.each do |member|
       case member._option
@@ -1405,7 +1479,12 @@ end
     end
   end
 
-  # Method used by both...
+  # Method used to output the initializer code for attribute members.
+  #
+  # This is used by both output_initialize_complexType and
+  # output_initialize_attributeGroup since both complexTypes and
+  # attributeGroups contain a sequence that is a mixture of either
+  # attribute or attributeGroup declarations.
 
   def output_initialize_a_or_ag(opt)
     case opt._option
@@ -1469,7 +1548,7 @@ end
 
   def output_accessor_complexType_sequence(seq)
 
-    puts "  # For internal use."
+    puts "  # For internal use by parsers."
     puts "  #"
     puts "  # An instance of <code>#{seq._class_name}</code>"
     puts "  # to represent the sequence which defines the content model"
@@ -1769,6 +1848,8 @@ end
 
   #================================================================
 
+  # Output code fragment for parsing an attribute.
+
   def gen_parser_attribute(attr, node_name, result_name)
 
 #    if @name
@@ -1798,7 +1879,7 @@ end
     end
   end
 
-  #================================================================
+  #----------------------------------------------------------------
 
   def gen_parser_attributeGroup(attr_group)
     puts "  #{PREFIX_PARSE}#{attr_group._class_name}(node, result)"
@@ -1902,7 +1983,7 @@ def generate_parser_sequence(seq)
   puts "# Returns matched object and next offset index after parsed nodes."
   puts "def self.#{PREFIX_PARSE}#{seq._class_name}(nodes, offset)"
   puts
-  puts "  result = #{seq._class_name}.new"
+  puts "  result = #{seq._class_name}.new(nil)"
   puts
   puts "  # Parse sequence"
   puts "  state = 0"
@@ -2159,7 +2240,7 @@ def generate_parser_choice(ch)
 
   puts "  # Create result object"
 
-  puts "  result = #{module_name}::#{ch._class_name}.new"
+  puts "  result = #{module_name}::#{ch._class_name}.new(nil)"
   puts
 
   puts "  # Parse choice"

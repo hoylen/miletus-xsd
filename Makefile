@@ -34,8 +34,11 @@ all: clean build test
 
 build: \
   ${BUILD}/XSDPrimitives.rb \
+  ${BUILD}/xsd-features/ElementEmpty.rb \
+  ${BUILD}/xsd-features/AttributeGroup.rb \
   ${BUILD}/AddressBook.rb \
-  ${BUILD}/RIFCS.rb
+  ${BUILD}/RIFCS.rb \
+  ${BUILD}/XSD.rb
 
 ${BUILD}/XSDPrimitives.rb: src/x2r/XSDPrimitives.rb
 	mkdir -p ${BUILD}/xsd-features
@@ -218,12 +221,17 @@ test-xsd-more: \
 
 doc: \
   ${DOCDIR}/x2r-bootstrap \
+  ${DOCDIR}/x2r \
   ${DOCDIR}/AddressBook \
   ${DOCDIR}/RIFCS
 
 ${DOCDIR}/x2r-bootstrap: src/bootstrap/x2r-bootstrap.rb
 	mkdir -p ${DOCDIR}
 	rdoc -o ${DOCDIR}/x2r-bootstrap src/bootstrap/x2r-bootstrap.rb
+
+${DOCDIR}/x2r:
+	mkdir -p ${DOCDIR}
+	rdoc -o ${DOCDIR}/x2r src/x2r/*.rb
 
 ${DOCDIR}/AddressBook: ${BUILD}/AddressBook.rb
 	mkdir -p ${DOCDIR}

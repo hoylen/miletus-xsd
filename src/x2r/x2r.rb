@@ -1,7 +1,11 @@
 #!/usr/bin/ruby -w
-# :title: x2r.rb
-# = XML Schema to Ruby compiler
 #
+# = XML Schema to Ruby classes
+#
+# A command line program to convert one or more XML Schema files into
+# one or more Ruby modules.
+#
+# For help, run with <code>--help</code>.
 
 require 'optparse'
 require 'XSD'
@@ -9,22 +13,37 @@ require 'xsd-info-ruby'
 
 #----------------------------------------------------------------
 
+# Extends the XSD module with methods for managing data used
+# for code generation.
+
 class XSD::Base
 
-  attr_accessor :_form # set by the classify_* methods for attributes, complexTypes and elements
-  attr_accessor :_ref_target # only used by attributes and element
-  attr_accessor :_type_target # only used by attributes and element
+  # Set by the classify_* methods for attributes, complexTypes and elements
+  attr_accessor :_form
 
+  # This is only used by attributes and elements.
+  attr_accessor :_ref_target
+
+  # This is only used by attributes and elements.
+  attr_accessor :_type_target
+
+  # The minOccurs as a number. If used, this is never +nil+.
   attr_accessor :_minOccurs
+  # The maxOccurs as a number or +nil+ to represent unbounded.
   attr_accessor :_maxOccurs
 
-  attr_accessor :_namespace
-
+  # The module name of this component.
   attr_accessor :_module_name
 
+  # Sets the class name
   def _class_name=(n)
     @_class_name = n
   end
+
+  # Returns the class name. How the class name is obtained depends on
+  # how this component is defined. Components with an explicity type
+  # will return the class name for that type. References will return
+  # the referenced component's class name.
 
   def _class_name
     case _form
@@ -71,6 +90,7 @@ end
 
 #----------------------------------------------------------------
 
+private
 def generate_code(collection, outdir, verbose)
 
   # Preprocess
@@ -124,6 +144,7 @@ end # def generate_code
 
 #----------------------------------------------------------------
 
+private
 def process_command_line
 
   # Specify command line options
@@ -192,6 +213,7 @@ end # def process_command_line
 
 #----------------------------------------------------------------
 
+public
 def main
 
   filenames,
