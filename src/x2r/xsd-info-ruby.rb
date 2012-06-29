@@ -19,8 +19,6 @@ class XSDInfoRuby < XSDInfo
   def initialize(namespace)
     super(namespace)
 
-    @use_mandatory = {} # used by attribute
-
     # These are used for name generation
 
     @choice_name_bases_used = {} # keep track of generated choice base names
@@ -85,21 +83,6 @@ class XSDInfoRuby < XSDInfo
     end
 
     str
-  end
-
-  #================================================================
-
-
-  def use_mandatory_set(attr, value)
-    @use_mandatory[attr.object_id] = value
-  end
-
-  def use_mandatory_get_get(attr)
-    value = @use_mandatory[attr.object_id]
-    if ! value
-      raise 'internal error'
-    end
-    value
   end
 
   #----------------------------------------------------------------
@@ -302,20 +285,6 @@ class XSDInfoRuby < XSDInfo
   def preprocess_attribute(attr)
 
     classify_attribute(attr)
-
-    # Preprocess the use (which all attributes have)
-
-    if attr.use
-      if attr.use == 'required'
-        use_mandatory_set(attr, true)
-      elsif attr.use == 'optional'
-        use_mandatory_set(attr, false)
-      else
-        raise "unexpected attribute use: #{attr.use}"
-      end
-    else
-      use_mandatory_set(attr, false)
-    end
 
     # Other preprocessing
 
