@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+
+<registryObjects xmlns="http://ands.org.au/standards/rif-cs/registryObjects">
+
+  <registryObject group="test-group">
+    <key>test-key-1</key>
+    <originatingSource>http://example.com</originatingSource>
+    <party type="person">
+      <name type="primary">
+	<namePart>John Smith</namePart>
+      </name>
+    </party>
+  </registryObject>
+
+  <registryObject group="test-group">
+    <key>test-key-2</key>
+    <originatingSource>http://example.com</originatingSource>
+    <party type="person">
+      <name type="primary">
+	<namePart type="given">John</namePart>
+	<namePart type="initial">J</namePart>
+	<namePart type="family">Citizen</namePart>
+      </name>
+    </party>
+  </registryObject>
+
+  <registryObject group="test-group">
+    <key>test-key-3</key>
+    <originatingSource>http://example.com</originatingSource>
+    <party type="person">
+      <name type="primary">
+	<namePart type="test-full">John Smith</namePart>
+      </name>
+      <name type="abbreviated">
+	<namePart type="test-full">J. Smith</namePart>
+      </name>
+      <name type="alternative">
+	<namePart type="test-full">Johnny Smith</namePart>
+      </name>
+    </party>
+  </registryObject>
+
+</registryObjects>

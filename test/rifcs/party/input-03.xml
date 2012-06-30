@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<registryObjects xmlns="http://ands.org.au/standards/rif-cs/registryObjects">
+  <registryObject group="test-group">
+    <key>test-key</key>
+    <originatingSource>http://example.com</originatingSource>
+    <party type="person">
+      <name type="primary">
+	<namePart type="full">Ove Hoegh_Guldberg</namePart>
+      </name>
+      <location>
+	<address>
+	  <physical>
+	    <addressPart type="voice">tel:61-7-3365-1111</addressPart>
+	  </physical>
+	  <physical type="streetAddress">
+	    <addressPart type="country">Australia</addressPart>
+	    <addressPart type="locationDescriptor">University of Queensland</addressPart>
+	    <addressPart type="postCode">4072</addressPart>
+	    <addressPart type="stateOrTerritory">QLD</addressPart>
+	    <addressPart type="suburbOrPlaceOrLocality">St Lucia</addressPart>
+	  </physical>
+	</address>
+      </location>
+      <relatedObject>
+	<key>516811d7-cc34-207a-e0440003ba8c79dd</key>
+	<relation type="pointOfContact"/>
+      </relatedObject>
+      <relatedInfo>
+	<identifier type="uri">http://www.google.com</identifier>
+	<title>Google Homepage</title>
+	<notes>The internet's largest search provider</notes>
+      </relatedInfo>
+    </party>
+  </registryObject>
+</registryObjects>

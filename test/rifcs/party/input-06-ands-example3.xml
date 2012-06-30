@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<!-- Example from http://ands.org.au/guides/cpguide/cpgparty.html (accessed 2012-06-25) -->
+
+<registryObjects xmlns="http://ands.org.au/standards/rif-cs/registryObjects" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://ands.org.au/standards/rif-cs/registryObjects http://services.ands.org.au/documentation/rifcs/schema/registryObjects.xsd">
+    <registryObject group="Example University">
+        <key>example.edu.au/PTY/6</key>
+        <originatingSource type="authoritative">http://www.example.edu.au</originatingSource>
+        <party type="person">
+            
+            <!--NLA party identifier not present as record not yet matched with Trove-->
+            
+            <name type="primary">   
+                <namePart type="family">Smith</namePart>
+                <namePart type="given">Joseph</namePart>
+                <namePart type="suffix">1963-</namePart>
+            </name>
+            <!--separate name parts to allow matching with Trove-->
+            
+            <!--...-->
+            
+            <subject type="anzsrc-for">2103</subject>
+            <!--ANZSRC Field of Research supports disambiguation in Trove-->
+            
+            <description type="brief">Professor Smith has research interests in social and emotional intelligence, cognitive factors contributing to depression, and mental health help seeking. He is affiliated with the American Psychological Association (APA) and the Society of Australian Social Psychologists.    
+            </description>
+            <!--Biographical information supports disambiguation in Trove-->
+            
+            <relatedInfo type="publication">
+                 <identifier type="url">http://eprints.qut.edu.au/7451/</identifier>
+                 <title>Series of Detailed Turbulence Measurements in a Small Subtropical Estuarine System</title>
+                 <notes>Contains additional information about this dataset including calibration and data accuracy.</notes>
+            </relatedInfo>
+            <!--Publication information supports disambiguation in Trove-->
+            
+        </party>
+    </registryObject>
+</registryObjects>

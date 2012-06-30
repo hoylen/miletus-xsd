@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+
+<!-- Example from http://ands.org.au/guides/cpguide/cpgparty.html (accessed 2012-06-25) -->
+
+<registryObjects xmlns="http://ands.org.au/standards/rif-cs/registryObjects" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://ands.org.au/standards/rif-cs/registryObjects http://services.ands.org.au/documentation/rifcs/schema/registryObjects.xsd">   
+    <registryObject group="Research Institute">
+        <key>researchinstitute.org.au/f8c4a4749</key>
+        <originatingSource>http://resint.gov.au/geonetwork/srv/en/oaipmh</originatingSource>
+        
+        <party type="person">
+            
+            <identifier type="AU-ANL:PEAU">http://nla.gov.au/nla.party-471322</identifier>
+            <!--NLA identifier included to allow linking with other records about the same person-->
+            
+            <identifier type="thomsonreuters">A-1009-2008</identifier>
+            <!--Thomson Reuters Researcher ID included to allow later matching with publications and to support disambiguation in Trove.
+                This could also be provided in the form 
+                <identifier type="uri">http://www.researcherid.com/rid/A-1009-2008</identifier>
+            Only use this form for stable URIs, not for queries. If only the ID is available use a type that reflects the authority for the identifier-->
+            
+            <identifier type="scopus">71022101507</identifier>
+            <!--Elsevier Scopus Author ID included to allow later matching with publications and to support disambiguation in Trove-->
+            
+            <identifier type="viaf">29541064</identifier>
+            <!--VIAF ID included to allow later matching with publications and to support disambiguation in Trove-->
+            
+            <identifier type="orcid">AAA-1034-2010</identifier>
+            <!--ORCID ID included to allow later matching with publications and to support disambiguation in Trove-->
+            
+            <name>
+                <namePart type="title">Professor</namePart>
+                <namePart type="given">Mark</namePart>
+                <namePart type="family">Reindeer</namePart>
+            </name>
+            <!--separate name parts to allow matching with Trove-->
+            
+            <location>
+                <address>
+                      <electronic type="url">
+                      <value>http://institute.edu.au/staffcontactinfo/f8c4a4749</value>
+                      </electronic>
+                </address>
+            </location>
+            <!--...-->                        
+            <relatedInfo type="website">
+                <identifier type="url">http://institute.edu.au/research/staff/Reindeer.html</identifier>
+                <notes>Staff home page with biographical information, recent publications, research interests and current projects.</notes>
+            </relatedInfo>
+        </party>
+    </registryObject>
+</registryObjects>

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<registryObjects xmlns="http://ands.org.au/standards/rif-cs/registryObjects">
+  <registryObject group="test-group">
+    <key>test-key</key>
+    <originatingSource>http://example.com</originatingSource>
+    <party type="party-type">
+      <!-- minimal person record with no data elements -->
+    </party>
+  </registryObject>
+</registryObjects>
