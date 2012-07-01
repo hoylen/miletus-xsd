@@ -32,8 +32,42 @@ class XSD::Base
   # The maxOccurs as a number or +nil+ to represent unbounded.
   attr_accessor :_maxOccurs
 
-  # The module name of this component.
-  attr_accessor :_module_name
+  # The module name for the class of this component.
+
+  # Sets the class module.
+  def _class_module=(n)
+    @_class_module = n
+  end
+
+  # Returns the class module.
+
+  def _class_module
+    case _form
+    when :element_type
+      _type_target._class_module
+    when :element_ref
+      _ref_target._class_module
+    when :element_anonymous_complexType
+      choice.complexType._class_module
+    when :element_empty
+      'element_empty_module' # TODO
+
+    when :attribute_type
+      _type_target._class_module
+    when :attribute_ref
+      _ref_target._class_module
+
+    when :attributeGroup_ref
+      _ref_target._class_module
+    when :attribute_ref
+      _ref_target._class_module
+
+    else
+      @_class_module
+    end
+  end
+
+
 
   # Sets the class name
   def _class_name=(n)
@@ -71,6 +105,23 @@ class XSD::Base
     end
   end
 
+  # The module name for the element/attribute name
+
+  def _member_module=(n)
+    @_member_module = n
+  end
+
+  def _member_module
+    case _form
+    when :element_ref
+      _ref_target._member_module
+    when :attribute_ref
+      _ref_target._member_module
+    else
+      @_member_module
+    end
+  end
+
   def _member_name=(n)
     @_member_name = n
   end
@@ -83,6 +134,20 @@ class XSD::Base
       _ref_target._member_name
     else
       @_member_name
+    end
+  end
+
+  def _name
+    case _form
+    when :element_ref
+      _ref_target.name
+    when :attribute_ref
+      _ref_target.name
+    else
+      if ! @name
+        return "NAME_NOT_INITIALIZED"
+      end
+      @name
     end
   end
 

@@ -5,7 +5,7 @@ require 'xmlobj/AddressBook.rb'
 
 class Test1 < Test::Unit::TestCase
   def test1
-    file = File.new('test/addressbook/test-01.xml')
+    file = File.new('test/addressbook/input-01.xml')
     doc, element_name = AddressBook.parse(file)
 
     assert_equal 'person', element_name

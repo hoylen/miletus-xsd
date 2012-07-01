@@ -102,10 +102,6 @@ def main
 
   filenames.each do |filename|
 
-    if verbose then
-      puts "Parsing #{filename}"
-    end
-
     data, name = mod.parse(File.new(filename))
 #    data, name = parser.parse(File.new(filename))
 
@@ -121,14 +117,16 @@ def main
       end
     end
 
+    if verbose then
+      $stderr.puts "#{filename}: schema valid"
+    end
+
     sio = StringIO.new
-    #data.xml('root', sio)
+    data.to_xml(mod::NAMESPACE, name, {}, '', sio)
     s = sio.string
     puts s
 
   end
-
-  puts "Success"
 
   0 # success
 end

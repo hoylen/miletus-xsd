@@ -197,7 +197,13 @@ test-rifcs-party: \
 #----------------------------------------------------------------
 # Parse XML and output XML
 
-test-more: test-rifcs-more test-xsd-more
+test-more: test-addressbook-more test-rifcs-more test-xsd-more
+
+test-addressbook-more: \
+  ${XMLOBJ_DIR}/AddressBook.rb \
+  ${XMLOBJ_DIR}/XSDPrimitives.rb
+	${XML_TOOL} --parser ${XMLOBJ_DIR}/AddressBook.rb --module AddressBook --verbose \
+	  test/addressbook/input-01.xml
 
 test-rifcs-more: \
   ${XMLOBJ_DIR}/RIFCS.rb \

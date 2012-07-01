@@ -4,12 +4,13 @@ module XSD_Primitives
 
 
   class XSD_string
-    attr_accessor :_module_name
+    attr_accessor :_class_module
     attr_accessor :_class_name
+
  #   attr_accessor :_method_name
 
     def initialize
-      @_module_name = 'XSDPrimitives'
+      @_class_module = 'XSDPrimitives'
       @_class_name = 'string'
 #      @_method_name = 'String'
     end
