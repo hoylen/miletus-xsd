@@ -62,9 +62,9 @@ class XSDInfoRuby < XSDInfo
       when :element
         elem = item.element
         if is_multiples?(elem)
-          puts "    @#{elem._member_name}.each do |i|"
+          puts "    @_value.each do |i|"
         else
-          puts "    i =  #{elem._member_name}"
+          puts "    i =  @_value"
           puts "    if i"
         end
         if elem._class_module == 'XSDPrimitives' && elem._class_name == 'string'
