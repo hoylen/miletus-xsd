@@ -12,6 +12,7 @@ class ElementEmptyTestCase < Test::Unit::TestCase
     doc, name = ElementEmpty.parse(file)
 
     assert_equal 'root', name
+    assert_not_nil doc
   end
 
   def test02
@@ -19,6 +20,7 @@ class ElementEmptyTestCase < Test::Unit::TestCase
     doc, name = ElementEmpty.parse(file)
 
     assert_equal 'root', name
+    assert_not_nil doc
   end
 
   def test03
@@ -26,6 +28,7 @@ class ElementEmptyTestCase < Test::Unit::TestCase
     doc, name = ElementEmpty.parse(file)
 
     assert_equal 'root', name
+    assert_not_nil doc
   end
 
   def test04
@@ -33,6 +36,7 @@ class ElementEmptyTestCase < Test::Unit::TestCase
     doc, name = ElementEmpty.parse(file)
 
     assert_equal 'root', name
+    assert_not_nil doc
   end
 
   def test05

@@ -48,6 +48,7 @@ class StructuresTestCase < Test::Unit::TestCase
     doc, name = Structures.parse(file)
 
     assert_equal 'element_with_choice', name
+    assert_equal 'Alpha', doc.option1
   end
 end
 
