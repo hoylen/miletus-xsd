@@ -7,7 +7,7 @@ require 'xmlobj/RIFCS'
 
 class RIFCS_registryObjects_TestCase < Test::Unit::TestCase
 
-  DIR = global_variables.include?('$input_dir') ? eval('$input_dir') : ''
+  DIR = global_variables.include?(:$input_dir) ? eval('$input_dir') : ''
 
   def load(filename)
     file = File.new(filename)

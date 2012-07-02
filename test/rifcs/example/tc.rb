@@ -7,7 +7,7 @@ require 'xmlobj/RIFCS'
 
 class RIFCS_example_TestCase < Test::Unit::TestCase
 
-  DIR = global_variables.include?('$input_dir') ? eval('$input_dir') : ''
+  DIR = global_variables.include?(:$input_dir) ? eval('$input_dir') : ''
 
   def test_01
     file = File.new("#{DIR}input-01.xml")

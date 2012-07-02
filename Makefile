@@ -191,22 +191,22 @@ test-addressbook: \
 test-rifcs: \
   ${XMLOBJ_DIR}/RIFCS.rb \
   ${XMLOBJ_DIR}/XSDPrimitives.rb
-	@cd test/rifcs && ruby -I ../../${BUILD} ts.rb
+	@cd test/rifcs && ruby -I . -I ../../${BUILD} ts.rb
 
 test-rifcs-example: \
   ${XMLOBJ_DIR}/RIFCS.rb \
   ${XMLOBJ_DIR}/XSDPrimitives.rb
-	@cd test/rifcs/example && ruby -I ../../../${BUILD} tc.rb
+	@cd test/rifcs/example && ruby -I . -I ../../../${BUILD} tc.rb
 
 test-rifcs-registryObjects: \
   ${XMLOBJ_DIR}/RIFCS.rb \
   ${XMLOBJ_DIR}/XSDPrimitives.rb
-	@cd test/rifcs/registryObjects && ruby -I ../../../${BUILD} tc.rb
+	@cd test/rifcs/registryObjects && ruby -I . -I ../../../${BUILD} tc.rb
 
 test-rifcs-party: \
   ${XMLOBJ_DIR}/RIFCS.rb \
   ${XMLOBJ_DIR}/XSDPrimitives.rb
-	@cd test/rifcs/party && ruby -I ../../../${BUILD} tc.rb
+	@cd test/rifcs/party && ruby -I . -I ../../../${BUILD} tc.rb
 
 #----------------------------------------------------------------
 # Parse XML and output XML
