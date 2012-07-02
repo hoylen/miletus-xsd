@@ -933,7 +933,7 @@ END_HEADER3
   # See the +NAMES+ constant for permitted values for +symbol+.
   def [](symbol)
     match = NAMES.index(symbol)
-    match ? @_value : nil
+    (match == @_index) ? @_value : nil
   end
 
 END_OPTION_METHODS
@@ -968,7 +968,7 @@ END_OPTION_METHODS
       end
       puts "# Returns +nil+ if not the option."
       puts "  def #{identifier}"
-      puts "    #{count} == @_index ? @_value : nil"
+      puts "    (#{count} == @_index) ? @_value : nil"
       puts "  end"
 
       puts "  # Set the choice to be the +#{identifier}+ option with the +value+."
