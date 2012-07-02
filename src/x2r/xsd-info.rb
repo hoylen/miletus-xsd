@@ -1,7 +1,9 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby
 #
 # Classes to represent XML Schema components from a single XML
 # namespace and a collection of those XML namespaces.
+
+$VERBOSE = true
 
 require 'xsd-datatypes'
 

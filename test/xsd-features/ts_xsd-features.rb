@@ -1,5 +1,7 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby
 # XSD features test suite.
+
+$VERBOSE = true
 
 # Include all the XSD features test cases
 

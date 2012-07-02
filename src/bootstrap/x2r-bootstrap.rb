@@ -1,7 +1,9 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby
 # :title: xsd-to-ruby.rb
 # = XML Schema to Ruby compiler
 #
+
+$VERBOSE = true
 
 require 'optparse'
 

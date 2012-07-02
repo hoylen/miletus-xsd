@@ -1,4 +1,8 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby
+
+# Additional methods to make handling RIF-CS easier.
+
+$VERBOSE = true
 
 module RIFCS
 

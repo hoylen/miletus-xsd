@@ -1,4 +1,6 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby
+
+$VERBOSE = true
 
 # Implementation of XML Schema primitives types.
 #

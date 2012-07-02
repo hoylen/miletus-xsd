@@ -1,5 +1,7 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby
 # XSD compiler
+
+$VERBOSE = true
 
 require 'optparse'
 require 'rexml/document'
@@ -92,7 +94,7 @@ def generate_ruby(doms, output_filename)
 
   # Output header
 
-  puts "#!/usr/bin/env ruby -w"
+  puts "#!/usr/bin/env ruby"
   puts
   puts "# Generated code: do not edit"
   puts

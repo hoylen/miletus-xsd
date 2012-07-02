@@ -1,4 +1,6 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby
+
+$VERBOSE = true
 
 require 'test/unit'
 require 'xmlobj/xsd-features/Structures.rb'

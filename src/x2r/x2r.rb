@@ -1,4 +1,4 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby
 #
 # = XML Schema to Ruby classes
 #
@@ -6,6 +6,8 @@
 # one or more Ruby modules.
 #
 # For help, run with <code>--help</code>.
+
+$VERBOSE = true
 
 require 'optparse'
 require 'XSD'

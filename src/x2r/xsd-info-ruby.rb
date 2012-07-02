@@ -1,5 +1,7 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby
 #
+
+$VERBOSE = true
 
 require 'xsd-info'
 require 'codegen-to-xml'

@@ -2,7 +2,7 @@
 
 .PHONY: build doc
 
-BUILD=build
+BUILD=./build
 XMLOBJ_DIR=${BUILD}/xmlobj
 DOCDIR=doc
 
@@ -103,31 +103,31 @@ ${BUILD}/bootstrap/xsd-features/ElementEmpty.rb: \
 	mkdir -p ${BUILD}/bootstrap/xsd-features
 	${BOOTSTRAP_X2C} --output $@-tmp.rb \
 	  test/xsd-features/element-empty/element-empty.xsd
-	${BOOTSTRAP_X2R} --module ElementEmpty --outdir ${BUILD}/bootstrap/xsd-features --preparsed $@-tmp.rb
+	${BOOTSTRAP_X2R} --module ElementEmpty --outdir ${BUILD}/bootstrap/xsd-features --preparsed ./$@-tmp.rb
 
 ${BUILD}/bootstrap/xsd-features/AttributeGroup.rb: \
   test/xsd-features/attributeGroup/attributeGroup.xsd
 	mkdir -p ${BUILD}/bootstrap/xsd-features
 	${BOOTSTRAP_X2C} --output $@-tmp.rb \
 	  test/xsd-features/attributeGroup/attributeGroup.xsd
-	${BOOTSTRAP_X2R} --module AttributeGroup --outdir ${BUILD}/bootstrap/xsd-features --preparsed $@-tmp.rb
+	${BOOTSTRAP_X2R} --module AttributeGroup --outdir ${BUILD}/bootstrap/xsd-features --preparsed ./$@-tmp.rb
 
 ${BUILD}/bootstrap/AddressBook.rb: \
   test/addressbook/addressbook.xsd
 	mkdir -p ${BUILD}/bootstrap
 	${BOOTSTRAP_X2C} --output $@-tmp.rb \
 	  test/addressbook/addressbook.xsd
-	${BOOTSTRAP_X2R} --module AddressBook --outdir ${BUILD}/bootstrap --preparsed $@-tmp.rb
+	${BOOTSTRAP_X2R} --module AddressBook --outdir ${BUILD}/bootstrap --preparsed ./$@-tmp.rb
 
 ${BUILD}/bootstrap/RIFCS.rb: ${RIFCS_SCHEMAS}
 	mkdir -p ${BUILD}/bootstrap
 	${BOOTSTRAP_X2C} --output $@-tmp.rb ${RIFCS_SCHEMAS}
-	${BOOTSTRAP_X2R} --module RIFCS --outdir ${BUILD}/bootstrap --preparsed $@-tmp.rb
+	${BOOTSTRAP_X2R} --module RIFCS --outdir ${BUILD}/bootstrap --preparsed ./$@-tmp.rb
 
 ${BUILD}/bootstrap/XSD.rb: test/xsd/subset/xsd.xsd
 	mkdir -p ${BUILD}/bootstrap
 	${BOOTSTRAP_X2C} --output $@-tmp.rb test/xsd/subset/xsd.xsd test/xsd/subset/xml.xsd
-	${BOOTSTRAP_X2R} --module XSD,XML --outdir ${BUILD}/bootstrap --preparsed $@-tmp.rb
+	${BOOTSTRAP_X2R} --module XSD,XML --outdir ${BUILD}/bootstrap --preparsed ./$@-tmp.rb
 
 new: ${BUILD}/AddressBook.rb
 	ruby -I ${BUILD} test/addressbook/tc_addressbook.rb

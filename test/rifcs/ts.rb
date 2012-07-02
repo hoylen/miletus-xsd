@@ -1,5 +1,7 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby
 # RIF-CS test suite.
+
+$VERBOSE = true
 
 # Include all the RIF-CS test cases
 
