@@ -11,13 +11,13 @@ class XSDInfoRuby < XSDInfo
       when :element
         elem = member.element
         if is_multiples?(elem)
-          puts "    #{elem._member_name}.each do |i|"
+          puts "    @#{elem._member_name}.each do |i|"
         else
-          puts "    i =  #{elem._member_name}"
+          puts "    i = @#{elem._member_name}"
           puts "    if i"
         end
         if elem._class_module == 'XSDPrimitives' && elem._class_name == 'string'
-          puts "      primitive_to_xml(#{elem._member_module}::NAMESPACE, '#{elem._name}', i, indent, io)"
+          puts "      XSDPrimitives.primitive_to_xml(#{elem._member_module}::NAMESPACE, '#{elem._name}', i, indent, io)"
         else
           puts "      i.to_xml(#{elem._member_module}::NAMESPACE, '#{elem._name}', inscope_ns, indent, io)"
         end
@@ -58,13 +58,13 @@ class XSDInfoRuby < XSDInfo
       when :element
         elem = item.element
         if is_multiples?(elem)
-          puts "    #{elem._member_name}.each do |i|"
+          puts "    @#{elem._member_name}.each do |i|"
         else
           puts "    i =  #{elem._member_name}"
           puts "    if i"
         end
         if elem._class_module == 'XSDPrimitives' && elem._class_name == 'string'
-          puts "      primitive_to_xml(#{item.element._member_module}::NAMESPACE, '#{item.element._name}', i, indent, io)"
+          puts "      XSDPrimitives.primitive_to_xml(#{item.element._member_module}::NAMESPACE, '#{item.element._name}', i, indent, io)"
         else
           puts "      i.to_xml(#{item.element._member_module}::NAMESPACE, '#{item.element._name}', inscope_ns, indent, io)"
         end
@@ -136,11 +136,11 @@ END
         # Attributes from the simpleContent
 
         ct.choice1.simpleContent.extension.attribute.each do |attr|
-          puts "  if #{attr._member_name}"
-          puts "    io.print ' #{attr.name}=\"'"
-          puts "    io.print @#{attr._member_name}"
-          puts "    io.print '\"'"
-          puts "  end"
+          puts "      if @#{attr._member_name}"
+          puts "        io.print ' #{attr.name}=\"'"
+          puts "        io.print XSDPrimitives.pcdata(@#{attr._member_name})"
+          puts "        io.print '\"'"
+          puts "      end"
         end
       end
 
@@ -150,7 +150,7 @@ END
           attr = a_or_ag.attribute
           puts "      if #{attr._member_name}"
           puts "        io.print \" #{attr.name}=\\\"\""
-          puts "        io.print #{attr._member_name}"
+          puts "        io.print XSDPrimitives.pcdata(@#{attr._member_name})"
           puts "        io.print '\"'"
           puts "      end"
 
@@ -184,7 +184,7 @@ END
       case ct._form
       when :complexType_simpleContent
         puts "      if @_value"
-        puts "        io.print @_value"
+        puts "        io.print XSDPrimitives.cdata(@_value)"
         puts "      end"
       when :complexType_sequence
         puts "      _sequence.to_xml(new_inscope_ns, nested_indent, io)"
@@ -218,80 +218,11 @@ END
     puts <<"END"
       io.print "</#\{qualifier}#\{element_name}>"
       if indent
-        io.print "\n"
+        io.puts
       end
 END
       end
       puts "    end"
   end
-
-=begin
-
-    # XML output method for the complexType
-
-    if ! @simpleContent.empty?
-      @simpleContent[0].gen_xml(module_name)
-
-    else
-      puts "  # Serialize as XML."
-      puts "  # The +ename+ (+String+) is used as the element name and the"
-      puts "  # XML is written to +out+ (+IO+) with indenting of +indent+."
-      puts "  def xml(ename, out, indent='')"
-
-      puts "    out.print \"\#{indent}<\#{ename}\" # start tag"
-      @attribute.each do |attr|
-        attr.gen_xml(module_name)
-      end
-      puts "    out.print \">\""
-
-      if ! @sequence.empty?
-        puts "    out.puts"
-        puts "    @_sequence.xml(out, indent)"
-        puts "    out.print indent"
-      elsif ! @choice.empty?
-        puts "    out.puts"
-        puts "    @_choices.xml(out, indent+'  ')"
-        puts "    out.print indent"
-      else
-        # empty content model
-      end
-
-      puts "    out.print \"</\#{ename}>\\n\" # end tag"
-      puts "  end"
-      puts
-    end
-
-
-    #----------------
-    # Methods used in the output of XML
-
-    private
-
-    # Returns a copy of +str+ with the ampersand, greater than and
-    # less than characters replaced by XML character entities. The
-    # result is suitable for output as XML *character data*.
-    def self.cdata(str)
-      s = str.gsub('&', '&amp;')
-      s.gsub!('<', '&lt;')
-      s.gsub!('>', '&gt;')
-      s
-    end
-
-    # Returns a copy of +str+ with the ampersand, greater than, less
-    # than, double and single quotes characters replaced by XML
-    # character entities. The result is suitable for output as the
-    # value of an XML attribute.
-    def self.pcdata(str)
-      s = str.gsub('&', '&amp;')
-      s.gsub!('<', '&lt;')
-      s.gsub!('>', '&gt;')
-      s.gsub!('\\\'', '&apos;')
-      s.gsub!('\"', '&quot;')
-      s
-    end
-
-
-  end
-=end
 
 end

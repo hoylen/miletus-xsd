@@ -6,11 +6,11 @@
 
 module XSDPrimitives
 
- def self.parse_string(node)
+  def self.parse_string(node)
 
-  # Parses the +node+ for character data content. Assumes the +node+
-  # is an REXML::Element object. Returns a +String+ or raises
-  # an exception if the element does not just contain character data.
+    # Parses the +node+ for character data content. Assumes the +node+
+    # is an REXML::Element object. Returns a +String+ or raises
+    # an exception if the element does not just contain character data.
 
     # Parse element containing just text
 
@@ -61,6 +61,48 @@ module XSDPrimitives
     if node.to_s !~ /^\s*$/
       raise InvalidXMLError, "Unexpected text: \#{node.to_s.strip}"
     end
+  end
+
+  # Exception that is raised if the XML violates the XML Schema.
+  class InvalidXMLError < Exception; end
+
+  #----------------
+  # Methods used in the output of XML
+
+  private
+
+  # Returns a copy of +str+ with the ampersand, greater than and
+  # less than characters replaced by XML character entities. The
+  # result is suitable for output as XML *character data*.
+  def self.cdata(str)
+    s = str.gsub('&', '&amp;')
+    s.gsub!('<', '&lt;')
+    s.gsub!('>', '&gt;')
+    s
+  end
+
+  # Returns a copy of +str+ with the ampersand, greater than, less
+  # than, double and single quotes characters replaced by XML
+  # character entities. The result is suitable for output as the
+  # value of an XML attribute.
+  def self.pcdata(str)
+    s = str.gsub('&', '&amp;')
+    s.gsub!('<', '&lt;')
+    s.gsub!('>', '&gt;')
+    s.gsub!('\'', '&apos;')
+    s.gsub!('"', '&quot;')
+    s
+  end
+
+  # Output a primitive value
+
+  def self.primitive_to_xml(ns, ename, i, indent, io)
+    if indent
+      io.print indent
+    end
+    io.print "<#{ename}>"
+    io.print cdata(i)
+    io.puts "</#{ename}>"
   end
 
 end

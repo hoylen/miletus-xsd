@@ -47,17 +47,24 @@ ${XMLOBJ_DIR}/XSDPrimitives.rb: src/x2r/XSDPrimitives.rb
 
 ${XMLOBJ_DIR}/xsd-features/ElementEmpty.rb: \
   ${BUILD}/bootstrap/XSD.rb \
-  ${RIFCS_SCHEMAS}
+  test/xsd-features/element-empty/element-empty.xsd
 	mkdir -p ${XMLOBJ_DIR}/xsd-features
 	-${X2R} -v --module ElementEmpty --outdir ${XMLOBJ_DIR}/xsd-features \
 	  test/xsd-features/element-empty/element-empty.xsd
 
 ${XMLOBJ_DIR}/xsd-features/AttributeGroup.rb: \
   ${BUILD}/bootstrap/XSD.rb \
-  ${RIFCS_SCHEMAS}
+  test/xsd-features/attributeGroup/attributeGroup.xsd
 	mkdir -p ${XMLOBJ_DIR}/xsd-features
 	-${X2R} -v --module AttributeGroup --outdir ${XMLOBJ_DIR}/xsd-features \
 	  test/xsd-features/attributeGroup/attributeGroup.xsd
+
+${XMLOBJ_DIR}/xsd-features/Structures.rb: \
+  ${BUILD}/bootstrap/XSD.rb \
+  test/xsd-features/structures/structures.xsd
+	mkdir -p ${XMLOBJ_DIR}/xsd-features
+	-${X2R} -v --module Structures --outdir ${XMLOBJ_DIR}/xsd-features \
+	  test/xsd-features/structures/structures.xsd
 
 ${XMLOBJ_DIR}/AddressBook.rb: \
   ${BUILD}/bootstrap/XSD.rb \
@@ -148,6 +155,7 @@ test: \
 test-xsd-features: \
   ${XMLOBJ_DIR}/xsd-features/ElementEmpty.rb \
   ${XMLOBJ_DIR}/xsd-features/AttributeGroup.rb \
+  ${XMLOBJ_DIR}/xsd-features/Structures.rb \
   ${XMLOBJ_DIR}/XSDPrimitives.rb
 	ruby -I ${BUILD} -I test \
 	  test/xsd-features/ts_xsd-features.rb
@@ -163,6 +171,12 @@ test-xsd-features-attributeGroup: \
   ${XMLOBJ_DIR}/XSDPrimitives.rb
 	ruby -I ${BUILD} \
 	  test/xsd-features/attributeGroup/tc_attributeGroup.rb
+
+test-xsd-features-structures: \
+  ${XMLOBJ_DIR}/xsd-features/Structures.rb \
+  ${XMLOBJ_DIR}/XSDPrimitives.rb
+	ruby -I ${BUILD} \
+	  test/xsd-features/structures/tc_structures.rb
 
 
 # Address book
@@ -199,11 +213,23 @@ test-rifcs-party: \
 
 test-more: test-addressbook-more test-rifcs-more test-xsd-more
 
+test-xsd-features-more: \
+  ${XMLOBJ_DIR}/xsd-features/Structures.rb \
+  ${XMLOBJ_DIR}/XSDPrimitives.rb
+	${XML_TOOL} --parser ${XMLOBJ_DIR}/xsd-features/Structures.rb --module Structures --verbose \
+	  test/xsd-features/structures/input-01.xml
+	${XML_TOOL} --parser ${XMLOBJ_DIR}/xsd-features/Structures.rb --module Structures --verbose \
+	  test/xsd-features/structures/input-02.xml
+	${XML_TOOL} --parser ${XMLOBJ_DIR}/xsd-features/Structures.rb --module Structures --verbose \
+	  test/xsd-features/structures/input-03.xml
+
 test-addressbook-more: \
   ${XMLOBJ_DIR}/AddressBook.rb \
   ${XMLOBJ_DIR}/XSDPrimitives.rb
 	${XML_TOOL} --parser ${XMLOBJ_DIR}/AddressBook.rb --module AddressBook --verbose \
 	  test/addressbook/input-01.xml
+	${XML_TOOL} --parser ${XMLOBJ_DIR}/AddressBook.rb --module AddressBook --verbose \
+	  test/addressbook/input-02.xml
 
 test-rifcs-more: \
   ${XMLOBJ_DIR}/RIFCS.rb \

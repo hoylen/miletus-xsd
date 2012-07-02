@@ -782,13 +782,6 @@ class Base
     @xml_src_node = node
   end
 
-  def primitive_to_xml(ns, ename, i, indent, io)
-    if indent
-      io.print indent
-    end
-    io.puts "<#\{ename}>#\{i}</#\{ename}>"
-  end
-
   # Gets the namespace name and local part of a QName (XML qualified
   # name) from a lexical representation of that QName. The lexical
   # representation consists an optional prefix followed by a colon,
@@ -2759,7 +2752,7 @@ END_PARSER_MAIN2
   end
 
   puts "    else"
-  puts "      raise InvalidXMLError, \"element not from namespace: \#{NAMESPACE}\""
+  puts "      raise InvalidXMLError, \"element not defined in \#{NAMESPACE}: {#\{root.namespace}}#\{root.name}\""
   puts "    end"
   puts "  end"
   puts
