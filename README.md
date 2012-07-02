@@ -3,10 +3,16 @@ miletus-xsd
 
 RIF-CS XML parser in Ruby
 
+Status
+------
+
+This is currently a work in progress.
+
 Introduction
 ------------
 
-This is a parser for parsing RIF-CS in Ruby. The parser takes
+This is a parser for parsing the _Registry Interchange Format -
+Collections and Services_ (RIF-CS) XML format in Ruby. The parser takes
 takes in the XML parsed by REXML, performs schema validation
 on it, and produces objects to represent the data.
 
@@ -59,11 +65,6 @@ Repeating element are represented as Ruby Arrays.
 References
 ----------
 
-ECMAScript for XML (E4X), 2nd edition (December 2005).
-http://www.ecma-international.org/publications/standards/Ecma-357.htm
+* Registry Interchange Format - Collections and Services (RIF-CS)
+  http://www.ands.org.au/resource/rif-cs.html
 
-This interface is similar to the E4X-style API. This article describes
-a Ruby prototype of that API, but it is dynamic rather than based on
-XML Schema. The interesting thing about the E4X-style API is that you
-can parse XML fragments into an object.
-http://onlamp.com/onlamp/2004/08/12/ruby_e4x.html
