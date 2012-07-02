@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+
+<element_with_choice xmlns="http://ns.example.com/2012/test/xsd-features/Structures">
+  <option1>Alpha</option1>
+</element_with_choice>

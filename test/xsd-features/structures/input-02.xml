@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<!-- Checks character entities are decoded/encoded correctly. -->
+
+<element_with_sequence xmlns="http://ns.example.com/2012/test/xsd-features/Structures"
+		       attr3="attribute &amp; &lt; &gt; &quot; &apos; &amp;">
+  <mandatory1>Ampersand &amp;</mandatory1>
+  <mandatory2>Less than sign &lt;</mandatory2>
+  <mandatory3>Greater than sign &gt;</mandatory3>
+  <mandatory4>Multiples &amp; &amp; &amp; &gt; &gt; &lt; &lt; &amp; &amp; &amp;</mandatory4>
+</element_with_sequence>

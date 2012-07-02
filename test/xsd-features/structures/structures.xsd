@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<xsd:schema
+ version="1.0"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns="http://ns.example.com/2012/test/xsd-features/Structures"
+ targetNamespace="http://ns.example.com/2012/test/xsd-features/Structures"
+ elementFormDefault="qualified"
+ attributeFormDefault="unqualified">
+
+  <xsd:attributeGroup name="ag1">
+     <xsd:attribute name="attr1" type="xsd:string"/>
+     <xsd:attribute name="attr2" type="xsd:string" use="optional"/>
+     <xsd:attribute name="attr3" type="xsd:string" use="required"/>
+  </xsd:attributeGroup>
+
+  <xsd:complexType name="ct_with_sequence_type">
+    <xsd:sequence>
+      <xsd:element name="mandatory1"                             type="xsd:string"/>
+      <xsd:element name="mandatory2" minOccurs="1"               type="xsd:string"/>
+      <xsd:element name="mandatory3"               maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="mandatory4" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+
+      <xsd:element name="optional1" minOccurs="0" type="xsd:string"/>
+      <xsd:element name="optional2" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="ag1"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="ct_with_choice_type">
+    <xsd:choice>
+      <xsd:element name="option1" type="xsd:string"/>
+      <xsd:element name="option2" type="xsd:string"/>
+      <xsd:element name="option3" type="xsd:string"/>
+    </xsd:choice>
+  </xsd:complexType>
+
+  <xsd:element name="element_with_sequence" type="ct_with_sequence_type"/>
+
+  <xsd:element name="element_with_choice" type="ct_with_choice_type"/>
+
+</xsd:schema>

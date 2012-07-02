@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<addressbook xmlns="http://ns.example.com/2012/addressbook">
+
+  <person>
+    <name>John "Johnny" Smith</name>
+    <phone type="&lt;foo&amp;bar'uvw&quot;xyz&gt;" CountryCode="+61">7 1234 5678</phone>
+  </person>
+
+  <company>
+    <companyName>John Smith &amp; Sons Pty Ltd &lt;Brisbane&gt;</companyName>
+    <Phone type="voice">+61 7 1234 5678</Phone>
+    <Phone type="fax">+61 7 1234 5679</Phone>
+    <EMAIL>enquiries@js.example.com</EMAIL>
+  </company>
+
+</addressbook>

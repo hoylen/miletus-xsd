@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<element_with_sequence xmlns="http://ns.example.com/2012/test/xsd-features/Structures" attr3="foobar">
+  <mandatory1>Alpha</mandatory1>
+  <mandatory2>Beta</mandatory2>
+  <mandatory3>Gamma</mandatory3>
+  <mandatory4>Delta</mandatory4>
+</element_with_sequence>
+
