@@ -12,14 +12,16 @@ class XSDInfoRuby < XSDInfo
         elem = member.element
         if is_multiples?(elem)
           puts "    @#{elem._member_name}.each do |i|"
+          vname = 'i'
         else
-          puts "    i = @#{elem._member_name}"
-          puts "    if i"
+          puts "    m = @#{elem._member_name}"
+          puts "    if m"
+          vname = 'm'
         end
         if elem._class_module == 'XSDPrimitives' && elem._class_name == 'string'
-          puts "      XSDPrimitives.primitive_to_xml(#{elem._member_module}::NAMESPACE, '#{elem._name}', i, indent, io)"
+          puts "      XSDPrimitives.primitive_to_xml(#{elem._member_module}::NAMESPACE, '#{elem._name}', #{vname}, indent, io)"
         else
-          puts "      i.to_xml(#{elem._member_module}::NAMESPACE, '#{elem._name}', inscope_ns, indent, io)"
+          puts "      #{vname}.to_xml(#{elem._member_module}::NAMESPACE, '#{elem._name}', inscope_ns, indent, io)"
         end
         puts "    end"
 
@@ -30,11 +32,13 @@ class XSDInfoRuby < XSDInfo
         ch = member.choice
         if is_multiples?(ch)
           puts "    #{ch._member_name}.each do |i|"
+          vname = 'i'
         else
-          puts "    i =  #{ch._member_name}"
-          puts "    if i"
+          puts "    m =  #{ch._member_name}"
+          puts "    if m"
+          vname = 'm'
         end
-        puts "      i.to_xml(inscope_ns, indent, io)"
+        puts "      #{vname}.to_xml(inscope_ns, indent, io)"
         puts "    end"
 
       else
