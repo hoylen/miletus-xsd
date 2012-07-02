@@ -78,7 +78,7 @@ class XSDInfoRuby < XSDInfo
     str.gsub!('-', '_')
     str.gsub!('.', '_')
 
-    if Object.method_defined? str
+    if Object.method_defined?(str) || str == 'type'
       # Name clash with an existing method on the Object class.
       # For example, an attribute or element called 'type' will
       # trigger this. Generate a unique name using the suffix.
@@ -702,7 +702,7 @@ END_HEADER1
     top_elements = []
 
     @named_elements.sort.each do |ename, item|
-      ns, name, parse_method = element_info(item)
+      _, _, parse_method = element_info(item)
       top_elements << [ ename, parse_method ]
     end
 
@@ -986,140 +986,6 @@ END_OPTION_METHODS
 
   output_to_xml_method_choice(ch)
 
-=begin
-  # Match method
-
-  puts "def self.match(node)"
-  first = true
-  element.each do |e|
-
-    if e.type
-      ename = e.name
-    elsif ! e.complexType.empty?
-      ename = e.name
-    elsif e.ref
-      target = context.find_element(e.ref_local, e.ref_ns)
-      ename = target.name
-    else
-      raise
-    end
-    print first ? "  if" : "  elsif"
-    puts " node.name == '#{ename}' && node.namespace == #{context.current.module_name}::NAMESPACE"
-    puts "    true"
-    first = false
-  end
-  if ! first
-    puts "  else"
-    puts "    false"
-    puts "  end"
-  else
-    puts "  false # choice has no options, so never matches"
-  end
-  puts "end # def match"
-  puts
-
-  # XML output method for a choice
-
-  # Determine which (if any) elements are primatives, since non-primitives
-  # will have an 'xml' method, but primatives won't.
-
-  primitives = []
-  count = 0
-  @element.each do |opt|
-    if (opt.type == 'xsd:string' ||
-        opt.type == 'xsd:anyURI')
-      primitives << count
-    end
-    count += 1
-  end
-
-  puts "  # Serialize as XML"
-  puts "  def xml(out, indent)"
-  puts "    if @_index"
-
-  if primitives.empty?
-    # All options are not primitives
-    need_primitive_support = false
-    need_xml_method_support = true
-  elsif primitives.length == @element.length
-    # All options are primitives
-    need_primitive_support = true
-    need_xml_method_support = false
-  else
-    # A mixture of both primitives and non-primitives
-    need_primitive_support = true
-    need_xml_method_support = true
-  end
-  need_both = need_primitive_support && need_xml_method_support
-
-  if need_both
-    print "      if ["
-    primitives.each { |p| print " #{p}," }
-    puts "].include?(@_index)"
-  end
-
-  if need_primitive_support
-    puts "        # Primitive"
-    puts "        out.print indent"
-    puts "        out.print \"<\#{NAMES[@_index]}>\""
-    puts "        out.print @_value"
-    puts "        out.print \"</\#{NAMES[@_index]}>\\n\""
-  end
-
-  if need_both
-    puts "      else"
-  end
-
-  if need_xml_method_support
-    puts "        # Non-primitive"
-    puts "        @_value.xml(NAMES[@_index], out, indent)"
-  end
-
-  if need_both
-    puts "      end"
-  end
-
-  puts "    end"
-  puts "  end"
-  puts
-  puts "end # class #{XSD::PREFIX_CLASS_CH}#{@internal_class_name}"
-  puts
-
-  if multiples?
-    # This choice is repeatable, so create a class to hold a list of them
-
-    puts "#"
-    puts "# An array of #{XSD::PREFIX_CLASS_CH}#{@internal_class_name}"
-    puts "#"
-    puts "class #{XSD::PREFIX_CLASS_CH_LIST}#{@internal_class_name} < Array"
-    puts
-    puts "  # Serialize repeatable choices as XML"
-    puts "  def xml(out, indent)"
-    puts "    self.each { |opt| opt.xml(out, indent) }"
-    puts "  end"
-    puts
-
-    # Class finish
-
-    puts "end # class #{ct._class_name}"
-    puts
-
-    # Recursively for nested subcomponents
-
-      @element.each { |x| x.generate_classes(context) }
-    # Recurse for nested subcomponents
-
-    case ch._form
-    when :choice_sequence
-      output_ruby_classes_sequence(ct.choice1.sequence)
-    when :complexType_choice
-      output_ruby_classes_choice(ct.choice1.choice)
-    when :complexType_simpleType
-    when :complexType_empty
-    else
-      raise 'internal error'
-    end
-=end
   puts 'end'
   puts
 
@@ -2163,7 +2029,7 @@ def gen_if_match_choice(ch, node_name)
 
     case option._option
     when :element
-      ns, name, unused_parse_method = element_info(option.element)
+      ns, name, _ = element_info(option.element)
       str << "#{node_name}.name == '#{name}' && #{node_name}.namespace == #{ns}"
 
     else

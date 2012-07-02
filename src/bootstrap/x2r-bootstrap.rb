@@ -204,7 +204,7 @@ module XSD
 
       method_name = ncname.gsub(/\-\./, '_') # convert hyphens and full stops to underscore
 
-      if ! Object.method_defined? method_name
+      if ! (Object.method_defined?(method_name) || method_name == 'type')
         # No clash. Use the attribute local name as the accessor name
         method_name
       else
@@ -253,12 +253,12 @@ module XSD
 
       if @name
         # Named attribute
-        puts "    #{@internal_name} = nil"
+        puts "    @#{@internal_name} = nil"
 
       elsif @ref
         # Referenced attribute
         if @ref == 'xml:lang'
-          puts "    lang = nil"
+          puts "    @lang = nil"
         else
           raise "  # TODO: ref attribute not supported yet: #{attr.ref}"
         end
@@ -1434,7 +1434,7 @@ class XSD_element < XSD_particle
 
       method_name = ncname.gsub(/\-\./, '_') # convert hyphens and full stops to underscore
 
-      if ! Object.method_defined? method_name
+      if ! (Object.method_defined?(method_name) || method_name == 'type')
         # No clash. Use the attribute local name as the accessor name
         method_name
       else
