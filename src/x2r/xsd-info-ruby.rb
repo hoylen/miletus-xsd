@@ -1006,620 +1006,620 @@ END_OPTION_METHODS
 
 end
 
-  def output_ruby_classes_complexType(ct)
+def output_ruby_classes_complexType(ct)
 
-    puts COMMENT_SEPARATOR_CLASSES
-    puts
-    if ct.name
-      print '# Class to represent the complexType'
-      print ': <code>'
-      print ct.name
-      print '</code>.'
-    else
-      print '# Class to represent an anonymous complexType.'
-    end
-    puts
-    puts '#'
-    puts "class #{ct._class_name} < Base"
+  puts COMMENT_SEPARATOR_CLASSES
+  puts
+  if ct.name
+    print '# Class to represent the complexType'
+    print ': <code>'
+    print ct.name
+    print '</code>.'
+  else
+    print '# Class to represent an anonymous complexType.'
+  end
+  puts
+  puts '#'
+  puts "class #{ct._class_name} < Base"
 
-    output_accessors_complexType_attr(ct)
-    output_accessors_complexType_content(ct)
+  output_accessors_complexType_attr(ct)
+  output_accessors_complexType_content(ct)
 
-    puts "  def initialize(node)"
-    puts "    super(node)"
-    output_initialize_complexType_attr(ct)
-    output_initialize_complexType_content(ct)
-    puts "  end"
-    puts
+  puts "  def initialize(node)"
+  puts "    super(node)"
+  output_initialize_complexType_attr(ct)
+  output_initialize_complexType_content(ct)
+  puts "  end"
+  puts
 
-    output_to_xml_method_complexType(ct)
+  output_to_xml_method_complexType(ct)
 
-    puts "end"
-    puts
+  puts "end"
+  puts
 
-    # Recurse for nested subcomponents
+  # Recurse for nested subcomponents
 
-    case ct._form
-    when :complexType_simpleContent
-      # do nothing
-    when :complexType_sequence
-      output_ruby_classes_sequence(ct.choice1.sequence)
-    when :complexType_choice
-      output_ruby_classes_choice(ct.choice1.choice)
-    when :complexType_empty
-    else
-      raise "internal error: #{ct._form}"
-    end
-
+  case ct._form
+  when :complexType_simpleContent
+    # do nothing
+  when :complexType_sequence
+    output_ruby_classes_sequence(ct.choice1.sequence)
+  when :complexType_choice
+    output_ruby_classes_choice(ct.choice1.choice)
+  when :complexType_empty
+  else
+    raise "internal error: #{ct._form}"
   end
 
-  def output_ruby_classes_element(elem)
+end
 
-    # Although elements don't have classes associated with them
-    # (because they will be represented by the class of their
-    # datatype), there might be nested subcomponents that
-    # require classes to be defined.
+def output_ruby_classes_element(elem)
 
-    # Recurse for nested subcomponents
+  # Although elements don't have classes associated with them
+  # (because they will be represented by the class of their
+  # datatype), there might be nested subcomponents that
+  # require classes to be defined.
 
-    case elem._form
-    when :element_type
-      # class will be created by that type's definition
-    when :element_ref
-      # class will be created by the reference's declaration
-    when :element_anonymous_complexType
-      output_ruby_classes_complexType(elem.choice.complexType)
+  # Recurse for nested subcomponents
+
+  case elem._form
+  when :element_type
+    # class will be created by that type's definition
+  when :element_ref
+    # class will be created by the reference's declaration
+  when :element_anonymous_complexType
+    output_ruby_classes_complexType(elem.choice.complexType)
+  else
+    raise "internal error: #{elem._form}"
+  end
+
+end
+
+def output_accessor_sequence_choice(choice)
+
+  # Get the name of the class for the choice
+
+  defining_classname = choice._class_name
+
+  # Output comment
+
+  if is_multiples?(choice)
+    # A repeatable choice
+    print "  # An array of ["
+    print choice._minOccurs
+    print '..'
+    if choice._maxOccurs
+      print choice._maxOccurs
     else
-      raise "internal error: #{elem._form}"
+      print '*'
     end
+    puts "] <code>#{defining_classname}</code> objects."
 
-  end
-
-  def output_accessor_sequence_choice(choice)
-
-    # Get the name of the class for the choice
-
-    defining_classname = choice._class_name
-
-    # Output comment
-
-    if is_multiples?(choice)
-      # A repeatable choice
-      print "  # An array of ["
-      print choice._minOccurs
-      print '..'
-      if choice._maxOccurs
-        print choice._maxOccurs
-      else
-        print '*'
-      end
-      puts "] <code>#{defining_classname}</code> objects."
-
+  else
+    # A singular choice
+    print "  # An instance of <code>#{defining_classname}</code>"
+    if choice._minOccurs.zero?
+      puts ' (optional choice, can be +nil+).'
     else
-      # A singular choice
-      print "  # An instance of <code>#{defining_classname}</code>"
-      if choice._minOccurs.zero?
-        puts ' (optional choice, can be +nil+).'
-      else
-        puts ' (mandatory choice, always has a non-nil value).'
-      end
+      puts ' (mandatory choice, always has a non-nil value).'
     end
-
-    # The accessor
-
-    puts "  attr_accessor :#{choice._member_name}"
   end
 
-  def output_accessor_sequence_element(element)
+  # The accessor
 
-    # Get the name of the class for the element
+  puts "  attr_accessor :#{choice._member_name}"
+end
 
-    defining_classname = element._class_name
+def output_accessor_sequence_element(element)
 
-#    case element._form
-#    when :element_type
-#      defining_classname = type_target_get(element)._class_name
-#    when :element_ref
-#      raise "TODO"
-#    when :element_anonymous_complexType
-#      defining_classname = element.choice.complexType._class_name
-#    when :element_empty
-#      raise "TODO"
-#    else
-#      raise 'internal error'
-#    end
+  # Get the name of the class for the element
 
-    # Output comment
+  defining_classname = element._class_name
 
-    if is_multiples?(element)
-      # A repeatable element
-      print "  # An array of ["
-      print element._minOccurs
-      print '..'
-      if element._maxOccurs
-        print element._maxOccurs
-      else
-        print '*'
-      end
-      puts "] <code>#{defining_classname}</code> objects."
+  #    case element._form
+  #    when :element_type
+  #      defining_classname = type_target_get(element)._class_name
+  #    when :element_ref
+  #      raise "TODO"
+  #    when :element_anonymous_complexType
+  #      defining_classname = element.choice.complexType._class_name
+  #    when :element_empty
+  #      raise "TODO"
+  #    else
+  #      raise 'internal error'
+  #    end
 
+  # Output comment
+
+  if is_multiples?(element)
+    # A repeatable element
+    print "  # An array of ["
+    print element._minOccurs
+    print '..'
+    if element._maxOccurs
+      print element._maxOccurs
     else
-      # A singular choice
-      print "  # An instance of <code>#{defining_classname}</code>"
-      if element._minOccurs.zero?
-        puts ' (optional element, can be +nil+).'
-      else
-        puts ' (mandatory element, always has a non-nil value).'
-      end
+      print '*'
     end
+    puts "] <code>#{defining_classname}</code> objects."
 
-    # The accessor
-
-    puts "  attr_accessor :#{element._member_name}"
-  end
-
-  def output_initialize_sequence_choice(ch)
-
-    m_name = ch._member_name
-
-    if is_multiples?(ch)
-      init_value = '[]'
+  else
+    # A singular choice
+    print "  # An instance of <code>#{defining_classname}</code>"
+    if element._minOccurs.zero?
+      puts ' (optional element, can be +nil+).'
     else
-      init_value = 'nil'
+      puts ' (mandatory element, always has a non-nil value).'
     end
-
-    puts "    @#{m_name} = #{init_value}"
   end
 
-  def output_initialize_sequence_element(element)
+  # The accessor
 
-    m_name = element._member_name
+  puts "  attr_accessor :#{element._member_name}"
+end
 
-    if is_multiples?(element)
-      init_value = '[]'
-    else
-      init_value = 'nil'
-    end
+def output_initialize_sequence_choice(ch)
 
-    puts "    @#{m_name} = #{init_value}"
+  m_name = ch._member_name
+
+  if is_multiples?(ch)
+    init_value = '[]'
+  else
+    init_value = 'nil'
   end
 
+  puts "    @#{m_name} = #{init_value}"
+end
 
-  def output_ruby_classes_sequence(seq)
+def output_initialize_sequence_element(element)
 
-    puts COMMENT_SEPARATOR_CLASSES
-    puts
-    puts "# Class to represent a sequence."
-    puts "#"
-    puts "class #{seq._class_name} < Base"
+  m_name = element._member_name
 
-    # Accessors
-
-    seq.choice.each do |member|
-      case member._option
-      when :element
-        output_accessor_sequence_element(member.element)
-      when :sequence
-        raise # sequence of sequences not implemented yet
-      when :choice
-        output_accessor_sequence_choice(member.choice)
-      else
-        raise 'internal error'
-      end
-    end
-
-    # Initializer
-
-    puts "  def initialize(node)"
-    puts "    super(node)"
-    seq.choice.each do |member|
-      case member._option
-      when :element
-        output_initialize_sequence_element(member.element)
-      when :sequence
-        raise # sequence of sequences not implemented yet
-      when :choice
-        output_initialize_sequence_choice(member.choice)
-      else
-        raise 'internal error'
-      end
-    end
-    puts "  end"
-
-    output_to_xml_method_sequence(seq)
-
-    # End of class
-
-    puts "end"
-    puts
-
-    # Recurse for nested subcomponents of this sequence
-
-    seq.choice.each do |member|
-      case member._option
-      when :element
-        output_ruby_classes_element(member.element)
-      when :sequence
-        output_ruby_classes_sequence(member.sequence)
-      when :choice
-        output_ruby_classes_choice(member.choice)
-      else
-        raise 'internal error'
-      end
-    end
-
-  end # def output_ruby_classes_complexType
-
-  def output_accessors_attribute(attr)
-    puts "  # The <code>#{attr.name}</code> attribute."
-    puts "  attr_accessor :#{attr._member_name}"
+  if is_multiples?(element)
+    init_value = '[]'
+  else
+    init_value = 'nil'
   end
 
-  # Method used by both otput_accessors_attributeGroup
-  # and output_accessors_complexType_attr to process
-  # an option that could either be an attribute
-  # or an attributeGroup.
+  puts "    @#{m_name} = #{init_value}"
+end
 
-  def output_accessors_a_or_ag(opt)
-    case opt._option
-    when :attribute
-      output_accessors_attribute(opt.attribute)
-    when :attributeGroup
-      if opt.attributeGroup._form != :attributeGroup_ref
-        raise "internal error: #{opt.attributeGroup._form}"
-      end
-      output_accessors_attributeGroup(opt.attributeGroup._ref_target)
+
+def output_ruby_classes_sequence(seq)
+
+  puts COMMENT_SEPARATOR_CLASSES
+  puts
+  puts "# Class to represent a sequence."
+  puts "#"
+  puts "class #{seq._class_name} < Base"
+
+  # Accessors
+
+  seq.choice.each do |member|
+    case member._option
+    when :element
+      output_accessor_sequence_element(member.element)
+    when :sequence
+      raise # sequence of sequences not implemented yet
+    when :choice
+      output_accessor_sequence_choice(member.choice)
     else
       raise 'internal error'
     end
   end
 
-  def output_accessors_attributeGroup(ag)
-    ag.choice.each do |opt|
+  # Initializer
+
+  puts "  def initialize(node)"
+  puts "    super(node)"
+  seq.choice.each do |member|
+    case member._option
+    when :element
+      output_initialize_sequence_element(member.element)
+    when :sequence
+      raise # sequence of sequences not implemented yet
+    when :choice
+      output_initialize_sequence_choice(member.choice)
+    else
+      raise 'internal error'
+    end
+  end
+  puts "  end"
+
+  output_to_xml_method_sequence(seq)
+
+  # End of class
+
+  puts "end"
+  puts
+
+  # Recurse for nested subcomponents of this sequence
+
+  seq.choice.each do |member|
+    case member._option
+    when :element
+      output_ruby_classes_element(member.element)
+    when :sequence
+      output_ruby_classes_sequence(member.sequence)
+    when :choice
+      output_ruby_classes_choice(member.choice)
+    else
+      raise 'internal error'
+    end
+  end
+
+end # def output_ruby_classes_complexType
+
+def output_accessors_attribute(attr)
+  puts "  # The <code>#{attr.name}</code> attribute."
+  puts "  attr_accessor :#{attr._member_name}"
+end
+
+# Method used by both otput_accessors_attributeGroup
+# and output_accessors_complexType_attr to process
+# an option that could either be an attribute
+# or an attributeGroup.
+
+def output_accessors_a_or_ag(opt)
+  case opt._option
+  when :attribute
+    output_accessors_attribute(opt.attribute)
+  when :attributeGroup
+    if opt.attributeGroup._form != :attributeGroup_ref
+      raise "internal error: #{opt.attributeGroup._form}"
+    end
+    output_accessors_attributeGroup(opt.attributeGroup._ref_target)
+  else
+    raise 'internal error'
+  end
+end
+
+def output_accessors_attributeGroup(ag)
+  ag.choice.each do |opt|
+    output_accessors_a_or_ag(opt)
+  end
+end
+
+def output_accessors_complexType_attr(ct)
+
+  if ct._form == :complexType_simpleContent
+    # The attributes are defined inside the simpleContent
+    output_accessors_simpleContent_attr(ct.choice1.simpleContent)
+
+  else
+    # The attributes are defined in the list of attribute or
+    # attributeGroup at the end of the complexType definition.
+    ct.choice2.each do |opt|
       output_accessors_a_or_ag(opt)
     end
   end
+end
 
-  def output_accessors_complexType_attr(ct)
+def output_accessors_simpleContent_attr(sc)
+  output_accessors_extension_attr(sc.extension)
+end
 
-    if ct._form == :complexType_simpleContent
-      # The attributes are defined inside the simpleContent
-      output_accessors_simpleContent_attr(ct.choice1.simpleContent)
+def output_accessors_extension_attr(ext)
+  ext.attribute.each do |attr|
+    puts "  # The <code>#{attr.name}</code> attribute."
+    puts "  attr_accessor :#{attr._member_name} # attribute from extension"
+  end
+  puts
+end
 
-    else
-      # The attributes are defined in the list of attribute or
-      # attributeGroup at the end of the complexType definition.
-      ct.choice2.each do |opt|
-        output_accessors_a_or_ag(opt)
-      end
+def output_initialize_simpleContent_attr(sc)
+  output_initialize_extension_attr(sc.extension)
+end
+
+def output_initialize_attribute(attr)
+  puts "    # Attribute"
+  puts "    @#{attr._member_name} = nil"
+end
+
+def output_initialize_attributeGroup(ag)
+  ag.choice.each do |opt|
+    output_initialize_a_or_ag(opt)
+  end
+end
+
+# Method used to output the initializer code for attribute members.
+#
+# This is used by both output_initialize_complexType and
+# output_initialize_attributeGroup since both complexTypes and
+# attributeGroups contain a sequence that is a mixture of either
+# attribute or attributeGroup declarations.
+
+def output_initialize_a_or_ag(opt)
+  case opt._option
+  when :attribute
+    output_initialize_attribute(opt.attribute)
+  when :attributeGroup
+    if opt.attributeGroup._form != :attributeGroup_ref
+      raise 'internal error'
     end
+    output_initialize_attributeGroup(opt.attributeGroup._ref_target)
+  else
+    raise 'internal error'
   end
+end
 
-  def output_accessors_simpleContent_attr(sc)
-     output_accessors_extension_attr(sc.extension)
-  end
-
-  def output_accessors_extension_attr(ext)
-    ext.attribute.each do |attr|
-      puts "  # The <code>#{attr.name}</code> attribute."
-      puts "  attr_accessor :#{attr._member_name} # attribute from extension"
-    end
-    puts
-  end
-
-  def output_initialize_simpleContent_attr(sc)
-     output_initialize_extension_attr(sc.extension)
-  end
-
-  def output_initialize_attribute(attr)
-    puts "    # Attribute"
+def output_initialize_extension_attr(ext)
+  ext.attribute.each do |attr|
     puts "    @#{attr._member_name} = nil"
   end
+  puts
+end
 
-  def output_initialize_attributeGroup(ag)
-    ag.choice.each do |opt|
+def output_initialize_complexType_attr(ct)
+
+  if ct._form == :complexType_simpleContent
+    # The attributes are defined inside the simpleContent
+    output_initialize_simpleContent_attr(ct.choice1.simpleContent)
+
+  else
+    # The attributes are defined in the list of attribute or
+    # attributeGroup at the end of the complexType definition.
+    ct.choice2.each do |opt|
       output_initialize_a_or_ag(opt)
     end
   end
+end
 
-  # Method used to output the initializer code for attribute members.
-  #
-  # This is used by both output_initialize_complexType and
-  # output_initialize_attributeGroup since both complexTypes and
-  # attributeGroups contain a sequence that is a mixture of either
-  # attribute or attributeGroup declarations.
+#----------------
 
-  def output_initialize_a_or_ag(opt)
-    case opt._option
-    when :attribute
-      output_initialize_attribute(opt.attribute)
-    when :attributeGroup
-      if opt.attributeGroup._form != :attributeGroup_ref
-        raise 'internal error'
+# Create code to declare the accessors for the content model for a
+# ComplexType.
+
+def output_accessors_complexType_content(ct)
+
+  case ct._form
+  when :complexType_simpleContent
+    output_accessor_simpleContent_content(ct.choice1.simpleContent)
+  when :complexType_sequence
+    output_accessor_complexType_sequence(ct.choice1.sequence)
+  when :complexType_choice
+    output_accessor_complexType_content_choice(ct.choice1.choice)
+  when :complexType_empty
+    # No accessors
+  else
+    raise 'internal error'
+  end
+end
+
+# Create code to declare the accessors for the content model for a
+# ComplexType with sequence.
+
+def output_accessor_complexType_sequence(seq)
+
+  puts "  # An instance of <code>#{seq._class_name}</code>"
+  puts "  # to represent the sequence which defines the content model"
+  puts "  # of this complexType. Users of this class will invoke"
+  puts "  # the methods of the sequence that have been replicated"
+  puts "  # by this class: they do not need to directly access the sequence."
+  puts "  attr_accessor :_sequence"
+  puts
+  puts "  # Since this is a complexType defined by a sequence,"
+  puts "  # the members of that sequence can be accessed through"
+  puts "  # the following getters and setters. They invoke the"
+  puts "  # corresponding method on the _sequence object, so"
+  puts "  # the user doesn't have to interact with the underlying"
+  puts "  # _sequence at all."
+  puts
+  # The user does not (and cannot) interact with the complexType's
+  # sequence directly, since seeing that extra layer is inconvenient
+  # and provides no real benefits. If you want to allow them to
+  # access the sequence object, change the above attr_writer into an
+  # attr_accessor.
+
+  seq.choice.each do |member|
+    case member._option
+
+    when :element
+      # Redirect accessors to the members of the sequence
+      n = member.element._member_name
+
+      desc = ''
+      if is_multiples?(member.element)
+        desc << " An array of <code>"
+      else
+        desc << " A single <code>"
       end
-      output_initialize_attributeGroup(opt.attributeGroup._ref_target)
+      desc << member.element._class_name
+      desc << '</code>.'
+      if member.element._minOccurs.zero?
+        if is_multiples?(member.element)
+          desc << ' Can be an empty array.'
+        else
+          desc << ' Optional, so could be +nil+.'
+        end
+      else
+        if is_multiples?(member.element)
+          desc << ' Has a minimum length of #{member.element.minOccurs}.'
+        else
+          desc << ' Mandatory, so is never +nil+.'
+        end
+      end
+
+      puts "  # Gets the child <code>#{n}</code>. #{desc}"
+      puts "  def #{n}; @_sequence.#{n} end"
+
+      puts "  # Sets the child <code>#{n}</code>. #{desc}"
+      puts "  def #{n}=(value); @_sequence.#{n}(value) end"
+      puts
+
+    when :sequence
+      raise 'not implemented yet' # so far all our schemas only have elements as the options of a choice
+
+    when :choice
+      # Redirect accessors to the members of the sequence
+      n = member.choice._member_name
+
+      desc = ''
+      if is_multiples?(member.choice)
+        desc << " An array of <code>"
+      else
+        desc << " A single <code>"
+      end
+      desc << member.choice._class_name
+      desc << '</code>.'
+      if member.choice._minOccurs.zero?
+        if is_multiples?(member.choice)
+          desc << ' Can be an empty array.'
+        else
+          desc << ' Optional, so could be +nil+.'
+        end
+      else
+        if is_multiples?(member.choice)
+          desc << ' Has a minimum length of #{member.choice.minOccurs}.'
+        else
+          desc << ' Mandatory, so is never +nil+.'
+        end
+      end
+
+      puts "  # Gets the child <code>#{n}</code>. #{desc}"
+      puts "  def #{n}; @_sequence.#{n} end"
+
+      puts "  # Sets the child <code>#{n}</code>. #{desc}"
+      puts "  def #{n}=(value); @_sequence.#{n}(value) end"
+      puts
+
     else
       raise 'internal error'
     end
   end
 
-  def output_initialize_extension_attr(ext)
-    ext.attribute.each do |attr|
-      puts "    @#{attr._member_name} = nil"
-    end
-    puts
-  end
+end # def
 
-  def output_initialize_complexType_attr(ct)
+# Create code to declare the accessors for the content model for a
+# ComplexType with choice.
 
-    if ct._form == :complexType_simpleContent
-      # The attributes are defined inside the simpleContent
-      output_initialize_simpleContent_attr(ct.choice1.simpleContent)
+def output_accessor_complexType_content_choice(choice)
 
+  if is_multiples?(choice)
+    # A repeatable choice
+    print "  # An array of ["
+    print choice._minOccurs
+    print '..'
+    if choice._maxOccurs
+      print choice._maxOccurs
     else
-      # The attributes are defined in the list of attribute or
-      # attributeGroup at the end of the complexType definition.
-      ct.choice2.each do |opt|
-        output_initialize_a_or_ag(opt)
-      end
+      print '*'
     end
-  end
+    puts "] <code>#{choice._class_name}</code> objects."
 
-  #----------------
+    puts "  attr_accessor :_choices"
 
-  # Create code to declare the accessors for the content model for a
-  # ComplexType.
+    # Cannot redirect accessor to the options
 
-  def output_accessors_complexType_content(ct)
-
-    case ct._form
-    when :complexType_simpleContent
-      output_accessor_simpleContent_content(ct.choice1.simpleContent)
-    when :complexType_sequence
-      output_accessor_complexType_sequence(ct.choice1.sequence)
-    when :complexType_choice
-      output_accessor_complexType_content_choice(ct.choice1.choice)
-    when :complexType_empty
-      # No accessors
+  else
+    # A singular choice
+    print "  # The <code>#{choice._class_name}</code> object"
+    if choice._minOccurs.zero?
+      puts ' (optional choice, can be +nil+).'
     else
-      raise 'internal error'
+      puts ' (mandatory choice, always has a non-nil value).'
     end
-  end
 
-  # Create code to declare the accessors for the content model for a
-  # ComplexType with sequence.
+    puts "  attr_writer :_choice"
 
-  def output_accessor_complexType_sequence(seq)
-
-    puts "  # An instance of <code>#{seq._class_name}</code>"
-    puts "  # to represent the sequence which defines the content model"
-    puts "  # of this complexType. Users of this class will invoke"
-    puts "  # the methods of the sequence that have been replicated"
-    puts "  # by this class: they do not need to directly access the sequence."
-    puts "  attr_accessor :_sequence"
-    puts
-    puts "  # Since this is a complexType defined by a sequence,"
-    puts "  # the members of that sequence can be accessed through"
-    puts "  # the following getters and setters. They invoke the"
-    puts "  # corresponding method on the _sequence object, so"
-    puts "  # the user doesn't have to interact with the underlying"
-    puts "  # _sequence at all."
-    puts
-    # The user does not (and cannot) interact with the complexType's
-    # sequence directly, since seeing that extra layer is inconvenient
-    # and provides no real benefits. If you want to allow them to
-    # access the sequence object, change the above attr_writer into an
-    # attr_accessor.
-
-    seq.choice.each do |member|
-      case member._option
+    # Redirect accessors to the options of the choice for convenience
+    choice.choice.each do |ch|
+      case ch._option
 
       when :element
-        # Redirect accessors to the members of the sequence
-        n = member.element._member_name
-
-        desc = ''
-        if is_multiples?(member.element)
-          desc << " An array of <code>"
-        else
-          desc << " A single <code>"
-        end
-        desc << member.element._class_name
-        desc << '</code>.'
-        if member.element._minOccurs.zero?
-          if is_multiples?(member.element)
-            desc << ' Can be an empty array.'
-          else
-            desc << ' Optional, so could be +nil+.'
-          end
-        else
-          if is_multiples?(member.element)
-            desc << ' Has a minimum length of #{member.element.minOccurs}.'
-          else
-            desc << ' Mandatory, so is never +nil+.'
-          end
-        end
-
-        puts "  # Gets the child <code>#{n}</code>. #{desc}"
-        puts "  def #{n}; @_sequence.#{n} end"
-
-        puts "  # Sets the child <code>#{n}</code>. #{desc}"
-        puts "  def #{n}=(value); @_sequence.#{n}(value) end"
-        puts
+        n = ch.element._member_name
+        puts "  # The choice's get option"
+        puts "  def #{n}; @_choice.#{n} end"
+        puts "  # The choice's set option"
+        puts "  def #{n}=(value); @_choice.#{n}(value) end"
 
       when :sequence
-        raise 'not implemented yet' # so far all our schemas only have elements as the options of a choice
-
+        # TODO
       when :choice
-        # Redirect accessors to the members of the sequence
-        n = member.choice._member_name
-
-        desc = ''
-        if is_multiples?(member.choice)
-          desc << " An array of <code>"
-        else
-          desc << " A single <code>"
-        end
-        desc << member.choice._class_name
-        desc << '</code>.'
-        if member.choice._minOccurs.zero?
-          if is_multiples?(member.choice)
-            desc << ' Can be an empty array.'
-          else
-            desc << ' Optional, so could be +nil+.'
-          end
-        else
-          if is_multiples?(member.choice)
-            desc << ' Has a minimum length of #{member.choice.minOccurs}.'
-          else
-            desc << ' Mandatory, so is never +nil+.'
-          end
-        end
-
-        puts "  # Gets the child <code>#{n}</code>. #{desc}"
-        puts "  def #{n}; @_sequence.#{n} end"
-
-        puts "  # Sets the child <code>#{n}</code>. #{desc}"
-        puts "  def #{n}=(value); @_sequence.#{n}(value) end"
-        puts
-
+        # TODO
       else
         raise 'internal error'
       end
     end
+  end
+end
 
-  end # def
 
-  # Create code to declare the accessors for the content model for a
-  # ComplexType with choice.
+def output_accessor_simpleContent_content(sc)
+  output_accessors_extension_content(sc.extension)
+end
 
-  def output_accessor_complexType_content_choice(choice)
+def output_accessors_extension_content(ext)
+  puts "  # The simpleContent value as a +String+."
+  puts "  # In XML Schema, this is an extension of <code>#{ext.base}</code>."
+  puts "  attr_accessor :_value"
+  puts
+end
 
-    if is_multiples?(choice)
-      # A repeatable choice
-      print "  # An array of ["
-      print choice._minOccurs
-      print '..'
-      if choice._maxOccurs
-        print choice._maxOccurs
-      else
-        print '*'
-      end
-      puts "] <code>#{choice._class_name}</code> objects."
 
-      puts "  attr_accessor :_choices"
+def output_initialize_complexType_content(ct)
 
-      # Cannot redirect accessor to the options
+  case ct._form
+  when :complexType_simpleContent
+    output_initialize_simpleContent_content(ct.choice1.simpleContent)
+  when :complexType_sequence
+    output_initialize_complexType_sequence(ct.choice1.sequence)
+  when :complexType_choice
+    output_initialize_complexType_content_choice(ct.choice1.choice)
+  when :complexType_empty
+    # No accessors
+  else
+    raise 'internal error'
+  end
+end
 
-    else
-      # A singular choice
-      print "  # The <code>#{choice._class_name}</code> object"
-      if choice._minOccurs.zero?
-        puts ' (optional choice, can be +nil+).'
-      else
-        puts ' (mandatory choice, always has a non-nil value).'
-      end
+def output_initialize_complexType_sequence(seq)
+  puts "    @_sequence = nil"
+end # def
 
-      puts "  attr_writer :_choice"
+def output_initialize_complexType_content_choice(choice)
+  if is_multiples?(choice)
+    puts "    @_choices = []"
+  else
+    puts "    @_choice = nil"
+  end
+end
 
-      # Redirect accessors to the options of the choice for convenience
-      choice.choice.each do |ch|
-        case ch._option
+def output_initialize_simpleContent_content(sc)
+  output_initialize_extension_content(sc.extension)
+end
 
-        when :element
-          n = ch.element._member_name
-          puts "  # The choice's get option"
-          puts "  def #{n}; @_choice.#{n} end"
-          puts "  # The choice's set option"
-          puts "  def #{n}=(value); @_choice.#{n}(value) end"
+def output_initialize_extension_content(ext)
+  puts "    @_value = nil"
+end
 
-        when :sequence
-          # TODO
-        when :choice
-          # TODO
-        else
-          raise 'internal error'
-        end
-      end
-    end
+#================================================================
+# Parser code
+
+#----------------------------------------------------------------
+
+def generate_parser
+  @named_attributeGroups.keys.sort.each do |name|
+    generate_parser_attributeGroup(@named_attributeGroups[name], true)
+  end
+  @named_complexTypes.keys.sort.each do |name|
+    generate_parser_complexType(@named_complexTypes[name], true)
   end
 
-
-  def output_accessor_simpleContent_content(sc)
-    output_accessors_extension_content(sc.extension)
+  @named_elements.keys.sort.each do |name|
+    generate_parser_element(@named_elements[name], true)
   end
 
-  def output_accessors_extension_content(ext)
-    puts "  # The simpleContent value as a +String+."
-    puts "  # In XML Schema, this is an extension of <code>#{ext.base}</code>."
-    puts "  attr_accessor :_value"
-    puts
+  if ! @named_elements.empty?
+    output_top_parser_method
   end
 
+end
 
-  def output_initialize_complexType_content(ct)
+#----------------------------------------------------------------
+# Outputs the common code that is used by the parsing methods.
 
-    case ct._form
-    when :complexType_simpleContent
-      output_initialize_simpleContent_content(ct.choice1.simpleContent)
-    when :complexType_sequence
-      output_initialize_complexType_sequence(ct.choice1.sequence)
-    when :complexType_choice
-      output_initialize_complexType_content_choice(ct.choice1.choice)
-    when :complexType_empty
-      # No accessors
-    else
-      raise 'internal error'
-    end
-  end
-
-  def output_initialize_complexType_sequence(seq)
-    puts "    @_sequence = nil"
-  end # def
-
-  def output_initialize_complexType_content_choice(choice)
-    if is_multiples?(choice)
-      puts "    @_choices = []"
-    else
-      puts "    @_choice = nil"
-    end
-  end
-
-  def output_initialize_simpleContent_content(sc)
-    output_initialize_extension_content(sc.extension)
-  end
-
-  def output_initialize_extension_content(ext)
-    puts "    @_value = nil"
-  end
-
-  #================================================================
-  # Parser code
-
-  #----------------------------------------------------------------
-
-  def generate_parser
-    @named_attributeGroups.keys.sort.each do |name|
-      generate_parser_attributeGroup(@named_attributeGroups[name], true)
-    end
-    @named_complexTypes.keys.sort.each do |name|
-      generate_parser_complexType(@named_complexTypes[name], true)
-    end
-
-    @named_elements.keys.sort.each do |name|
-      generate_parser_element(@named_elements[name], true)
-    end
-
-    if ! @named_elements.empty?
-      output_top_parser_method
-    end
-
-  end
-
-  #----------------------------------------------------------------
-  # Outputs the common code that is used by the parsing methods.
-
-  def output_parser_common_code
+def output_parser_common_code
 
   puts <<"END_PARSER_COMMON"
   #{COMMENT_SEPARATOR}
@@ -1656,9 +1656,9 @@ end
   # Parses an empty element. Such elements contain no attributes
   # and no content model.
   def self.#{PREFIX_PARSE}element_empty(node)
-    # TODO: check for no attributes
+      # TODO: check for no attributes
 
-    node.each_child do |child|
+      node.each_child do |child|
       if child.is_a?(REXML::Element)
         raise InvalidXMLError, "unexpected element in empty content model: {\#{child.namespace}}\#{child.name}"
       elsif child.is_a?(REXML::Text)
@@ -1714,20 +1714,20 @@ end
 
   def gen_parser_attribute(attr, node_name, result_name)
 
-#    if @name
-#      aname = @name
-#      member_name = @internal_name
-#    elsif @ref
-#      if @ref == 'xml:lang'
-#        aname = 'lang' # FIXME
-#        member_name = 'lang'
-#      else
-#        aname = @ref # FIXME
-#        member_name = @ref # FIXME
-#      end
-#    else
-#      raise "attribute without a name or a ref"
-#    end
+    #    if @name
+    #      aname = @name
+    #      member_name = @internal_name
+    #    elsif @ref
+    #      if @ref == 'xml:lang'
+    #        aname = 'lang' # FIXME
+    #        member_name = 'lang'
+    #      else
+    #        aname = @ref # FIXME
+    #        member_name = @ref # FIXME
+    #      end
+    #    else
+    #      raise "attribute without a name or a ref"
+    #    end
     aname = attr.name
 
     print "    #{result_name}.#{attr._member_name} = "
@@ -1772,552 +1772,552 @@ end
 
   #----------------------------------------------------------------
 
-def gen_parser_simpleContent(sc, node_name, result_name)
+  def gen_parser_simpleContent(sc, node_name, result_name)
 
-  gen_parser_extension(sc.extension, node_name, result_name)
-end
-
-#----------------------------------------------------------------
-
-def gen_parser_extension(ext, node_name, result_name)
-
-  puts "  begin # extension parsing"
-
-  # Parse attributes
-
-  puts "    # Parse extension's attributes"
-  ext.attribute.each do |attr|
-    gen_parser_attribute(attr, node_name, result_name)
+    gen_parser_extension(sc.extension, node_name, result_name)
   end
 
-  # Parse base
+  #----------------------------------------------------------------
 
-  parse_method = ''
-  if ext._type_target._class_module != @module_name
-    # Class defined in a different module
-    parse_method << ext._type_target._class_module
-    parse_method << '.'
-  end
-  parse_method << PREFIX_PARSE
-  parse_method << ext._type_target._class_name
+  def gen_parser_extension(ext, node_name, result_name)
 
-  puts "    # Parse extension's base"
-  puts "    #{result_name}._value = #{parse_method}(#{node_name})"
+    puts "  begin # extension parsing"
 
-  puts "  end"
-end
+    # Parse attributes
 
-#----------------------------------------------------------------
-# Sequence
-
-def gen_if_match_sequence(context, node_name)
-  "#{XSD::PREFIX_CLASS_SE}#{internal_name}.match(#{node_name})"
-end
-
-# Creates code used to parse this sequence as a particle
-
-def gen_sequence_match_code(context, vname)
-  "#{PREFIX_PARSE}#{seq._class_name}(#{vname}, offset)"
-end
-
-def generate_parser_sequence(seq)
-
-  # Generate for nested subcomponents of this sequence
-
-  seq.choice.each do |member|
-    case member._option
-    when :element
-      generate_parser_element(member.element, false)
-    when :sequence
-      raise # TODO
-    when :choice
-      generate_parser_choice(member.choice)
-    else
-      raise 'internal error'
+    puts "    # Parse extension's attributes"
+    ext.attribute.each do |attr|
+      gen_parser_attribute(attr, node_name, result_name)
     end
-  end
 
-  # Generate parser for this sequence
+    # Parse base
 
-  puts "private"
-  puts "# Parser for a sequence."
-  puts "#"
-  puts "# Starting at the +offset+ node in the +nodes+ array."
-  puts "# Returns matched object and next offset index after parsed nodes."
-  puts "def self.#{PREFIX_PARSE}#{seq._class_name}(nodes, offset)"
-  puts
-  puts "  result = #{seq._class_name}.new(nil)"
-  puts
-
-  # Determine which is the last member that is mandatory
-
-  last_required_mname = nil
-  last_required_length = nil
-  last_required_multiples = nil
-
-  # Output code
-
-  mcount = 0
-  seq.choice.each do |member|
-    mcount += 1
-
-    case member._option
-    when :element
-      gen_parser_sequence_element(member.element, mcount)
-      if member.element._minOccurs != 0
-        last_required_mname = member.element._member_name
-        last_required_length = member.element._minOccurs
-        last_required_multiples = is_multiples?(member.element)
-      end
-
-    when :sequence
-      raise # TODO: sequence inside sequence
-
-    when :choice
-      gen_parser_sequence_choice(member.choice, mcount)
-      if member.choice._minOccurs != 0
-        last_required_mname = member.choice._member_name
-        last_required_length = member.choice._minOccurs
-        last_required_multiples = is_multiples?(member.choice)
-      end
-    else
-      raise 'internal error'
+    parse_method = ''
+    if ext._type_target._class_module != @module_name
+      # Class defined in a different module
+      parse_method << ext._type_target._class_module
+      parse_method << '.'
     end
-  end
+    parse_method << PREFIX_PARSE
+    parse_method << ext._type_target._class_name
 
-  # Completeness check for the sequence
+    puts "    # Parse extension's base"
+    puts "    #{result_name}._value = #{parse_method}(#{node_name})"
 
-  if last_required_mname
-    puts "  # Completeness check"
-    puts
-    if last_required_multiples
-      puts "  if result.#{last_required_mname}.length < #{last_required_length}"
-      puts "    raise InvalidXMLError, \"incomplete sequence\""
-      puts "  end"
-    else
-      puts "  if ! result.#{last_required_mname}"
-      puts "    raise InvalidXMLError, \"incomplete sequence\""
-      puts "  end"
-    end
-  end
-
-  puts
-  puts "  return [result, offset]"
-  puts "end"
-  puts
-end
-
-def gen_parser_sequence_element(element, number)
-
-  ns, name, parse_method = element_info(element)
-
-  puts
-  puts "  # #{number}: element: #{name}"
-  puts
-  puts "  offset = skip_to_element(nodes, offset)"
-  puts
-
-  if ! is_multiples?(element)
-    # Single element
-    puts "  r = nil"
-    puts "  if offset < nodes.length"
-    puts "    if nodes[offset].name == '#{name}' && nodes[offset].namespace == #{ns}"
-    puts "      r = #{parse_method}(nodes[offset])"
-    puts "      offset += 1"
-    puts "    end"
     puts "  end"
-    if ! element._minOccurs.zero?
-      puts "  if ! r"
-      puts "    raise InvalidXMLError, \"sequence missing #{element._member_name}\""
-      puts "  end"
-    end
-
-  else
-    # Repeatable element
-    puts "  r = []"
-
-    puts "  while offset < nodes.length &&"
-    print "        nodes[offset].name == '#{name}' && nodes[offset].namespace == #{ns}"
-    if element._maxOccurs
-      puts " &&"
-      print "        r.length < #{element._maxOccurs}"
-    end
-    puts
-
-    puts "    r << #{parse_method}(nodes[offset])"
-    puts "    offset = skip_to_element(nodes, offset + 1)"
-    puts "  end"
-    if ! element._minOccurs.zero?
-      puts "  if r.length < #{element._minOccurs}"
-      puts "    raise InvalidXMLError, \"sequence not enough #{element._member_name} elements\""
-      puts "  end"
-    end
-  end
-  puts "  result.#{element._member_name} = r"
-  puts
-end
-
-def gen_parser_sequence_choice(ch, number)
-
-  mname = ch._member_name
-
-  puts
-  puts "  # #{number}: choice: #{mname}"
-  puts
-  puts "  offset = skip_to_element(nodes, offset)"
-  puts
-
-#  if ! is_multiples?(ch)
-#    # Single choice
-
-  puts "  r = nil"
-  puts "  if offset < nodes.length"
-  puts "    if #{ gen_if_match_choice(ch, 'nodes[offset]') }"
-  puts "      r, offset = #{PREFIX_PARSE}#{ch._class_name}(nodes, offset)"
-  puts "      result.#{mname} = r"
-  puts "    end"
-  puts "  end"
-  puts
-
-
-#    if ! ch._minOccurs.zero?
-#      puts "  if ! r"
-#      puts "    raise InvalidXMLError, \"sequence missing #{mname}\""
-#      puts "  end"
-#    end
-#
-#  else
-#    # Repeatable choice
-#    puts "  r = []"
-#    puts "        while offset < nodes.length &&"
-#    print "          #{ gen_if_match_choice(ch, 'nodes[offset]') }"
-#    if ch._maxOccurs
-#      puts " &&"
-#      print "        r.length < #{ch._maxOccurs}"
-#    end
-#    puts
-#
-#    puts "          r1, offset = #{PREFIX_PARSE}#{ch._class_name}(nodes, offset)"
-#    puts "          r << r1"
-#    puts "          offset = skip_to_element(nodes, offset + 1)"
-#    puts "        end"
-#    if ! ch._minOccurs.zero?
-#      puts "  if result.#{mname}.length < #{ch._minOccurs}"
-#      puts "    raise InvalidXMLError, \"sequence not enough #{mname}\""
-#      puts "  end"
-#    end
-#  end
-
-end
-
-#----------------------------------------------------------------
-# Choice
-
-# Creates the conditional part of an if statement to test
-# if the node_name can match at least one of the options
-# in the choice.
-
-def gen_if_match_choice(ch, node_name)
-
-#  "#{ch._class_name}.match(#{node_name})"
-
-  str = ''
-
-  first = true
-  ch.choice.each do |option|
-    str << " || \\\n           " if ! first
-
-    case option._option
-    when :element
-      ns, name, _ = element_info(option.element)
-      str << "#{node_name}.name == '#{name}' && #{node_name}.namespace == #{ns}"
-
-    else
-      raise 'internal error: only elements inside choices are supported'
-    end
-
-    first = false
   end
 
-  if first
-    # Choice has no options, so it never matches
-    str << "false # choice has no options, so never matches"
+  #----------------------------------------------------------------
+  # Sequence
+
+  def gen_if_match_sequence(context, node_name)
+    "#{XSD::PREFIX_CLASS_SE}#{internal_name}.match(#{node_name})"
   end
 
-  str # result
-end
+  # Creates code used to parse this sequence as a particle
 
-
-
-def generate_parser_choice(ch)
-
-  # Generate for nested subcomponents
-
-  ch.choice.each do |el_se_ch|
-    case el_se_ch._option
-    when :element
-      generate_parser_element(el_se_ch.element)
-    when :sequence
-      generate_parser_sequence(el_se_ch.sequence)
-    when :choice
-      generate_parser_choice(el_se_ch.choice)
-    else
-      raise 'internal error'
-    end
+  def gen_sequence_match_code(context, vname)
+    "#{PREFIX_PARSE}#{seq._class_name}(#{vname}, offset)"
   end
 
-  # Generate for this choice
+  def generate_parser_sequence(seq)
 
-  repeating_elements = [] # collects elements that need additional methods
+    # Generate for nested subcomponents of this sequence
 
-  puts "private"
-  puts "# Parser for choice: <code>#{ch._class_name}</code>"
-  puts "#"
-  if is_multiples?(ch)
-    print "# Returns an array of [#{ch._minOccurs}.."
-    print ch._maxOccurs ? ch._maxOccurs : '*'
-    print "] #{ch._class_name} objects, since this choice"
-    puts " has been defined with a maxOccurs greater than 1 (or unbounded)."
-  else
-    if ch._minOccurs == 0
-      puts "# Returns either a #{ch._class_name} object or +nil+."
-    else
-      puts "# Returns a #{ch._class_name} object (this is never +nil+)."
-    end
-  end
-  puts
-
-  puts "def self.#{PREFIX_PARSE}#{ch._class_name}(nodes, offset)"
-  puts
-
-  if is_multiples?(ch)
-    puts "  results = []"
-    puts "  reason = \": not enough elements\""
-    puts
-    puts "  while offset < nodes.length"
-  else
-    puts "  reason = \": element not found\""
-    puts
-    puts "  begin"
-  end
-
-  puts "    # Move offset to next element node"
-  puts
-  puts "    offset = skip_to_element(nodes, offset)"
-
-  puts "    if offset < nodes.length"
-  puts
-
-  puts "      # Match element to one of the choice options"
-  puts
-
-  puts "      node = nodes[offset]"
-  if ! is_multiples?(ch)
-    puts "  result = #{module_name}::#{ch._class_name}.new(nodes[offset])"
-  end
-  puts
-
-  if is_multiples?(ch)
-    puts "      r = #{module_name}::#{ch._class_name}.new(node)"
-    puts
-  end
-
-  first = true
-  ch.choice.each do |el_se_ch|
-    case el_se_ch._option
-    when :element
-      ns, name, parse_method = element_info(el_se_ch.element)
-      condition = "node.name == '#{name}' && node.namespace == #{ns}"
-
-      if first
-        puts "      if #{condition}"
+    seq.choice.each do |member|
+      case member._option
+      when :element
+        generate_parser_element(member.element, false)
+      when :sequence
+        raise # TODO
+      when :choice
+        generate_parser_choice(member.choice)
       else
-        puts "      elsif #{condition}"
+        raise 'internal error'
       end
-
-      variable = is_multiples?(ch) ? 'r' : 'result'
-
-      if is_multiples?(el_se_ch.element)
-        repeating_elements << el_se_ch.element
-        puts "        #{variable}.#{el_se_ch.element._member_name}, offset = #{PREFIX_PARSE}#{ch._class_name}_element#{repeating_elements.length}(nodes, offset)"
-      else
-        puts "        #{variable}.#{el_se_ch.element._member_name} = #{parse_method}(node)"
-        puts "        offset += 1"
-      end
-
-    when :sequence
-      raise 'not supported yet'
-    when :choice
-      raise 'not supported yet'
-    else
-      raise 'internal error'
     end
-    first = false
-  end
 
-  puts "      else"
-  puts "        reason = \": unexpected element: {\#{node.namespace}}\#{node.name}\""
-  if is_multiples?(ch)
-    # Break out of loop
-    puts "        break # element does not match any option"
-  end
-  puts "      end"
+    # Generate parser for this sequence
 
-  if is_multiples?(ch)
-    puts
-    puts "      results << r"
-    if ch._maxOccurs
-      # Not unbounded, so stop once maxOccurs reached
-      puts "      if #{ch._maxOccurs} <= results.length"
-      puts "        break # maxOccurs reached"
-      puts "      end"
-    end
-  end
-
-  puts "    end"
-  puts "  end" # end loop/block
-
-  puts
-
-  # Finish up. The code at this point will be reached when either:
-  # This is a non-repeating choice (i.e. maxOccurs != 1) and either
-  # the first element node was matched or it wasn't; or This is a
-  # repeating choice (i.e. 1 < maxOccurs or is unbounded) and an
-  # element (perhaps not the first) was not matched, maxOccurs matches
-  # were matched. And in both cases, if the end of nodes was reached.
-
-  # Under all those conditions, check if minOccurs is satisfied
-  # and return the result if it is.
-
-  if 0 < ch._minOccurs
-    # Choice requires a match, so generate code to check this
-
-    if is_multiples?(ch)
-      puts "  if results.length < #{ch._minOccurs}"
-      puts "    raise InvalidXMLError, \"choice incomplete#\{reason}\""
-      puts "  end"
-    else
-      puts "  if ! result._option"
-      puts "    raise InvalidXMLError, \"choice not found#\{reason}\""
-      puts "  end"
-    end
-    puts
-  end
-
-  # Return result
-
-  if is_multiples?(ch)
-    # Repeatable choice. Returns an array (which could be empty).
-    puts "  return [ results, offset ]"
-
-  else
-    # Singular choice. Returns nil or a choice object.
-
-    if 0 < ch._minOccurs
-      # Simply return the result because to reach this point
-      # it will have to have passed the minOccurs checking code
-      # (generated above) and therefore it will have an option set.
-      puts "  return [ result, offset ]"
-    else
-      # No minOccurs checking code was generated, so the return
-      # value will be nil if no match was found.
-      puts "  if result._option"
-      puts "    return [ result, offset ]"
-      puts "  else"
-      puts "    return [ nil, offset ] # no match"
-      puts "  end"
-    end
-  end
-  puts "end"
-  puts
-
-  # Generate additional methods to parse the repeating options of the choice
-
-  count = 0
-  repeating_elements.each do |element|
-    count += 1
-
-    puts "# Parser for repeating option's element #{count} of choice: <code>#{ch._class_name}</code>"
+    puts "private"
+    puts "# Parser for a sequence."
     puts "#"
-    puts "# This method must be called with the nodes[offset] being an element"
-    puts "# node that matches."
+    puts "# Starting at the +offset+ node in the +nodes+ array."
+    puts "# Returns matched object and next offset index after parsed nodes."
+    puts "def self.#{PREFIX_PARSE}#{seq._class_name}(nodes, offset)"
+    puts
+    puts "  result = #{seq._class_name}.new(nil)"
     puts
 
-    puts "def self.#{PREFIX_PARSE}#{ch._class_name}_element#{count}(nodes, offset)"
-    puts
-    puts "  # Create result object"
-    puts
-    puts "  results = []"
+    # Determine which is the last member that is mandatory
 
-    ns, name, parse_method = element_info(element)
+    last_required_mname = nil
+    last_required_length = nil
+    last_required_multiples = nil
 
-    puts "  node = nodes[offset]"
-    puts "  while offset < nodes.length && node.name == '#{name}' && node.namespace == #{ns}"
-    puts "    results << #{parse_method}(node)"
-    puts "    offset += 1"
-    puts "    offset = skip_to_element(nodes, offset)"
-    puts "    node = nodes[offset]"
-    puts "  end"
+    # Output code
+
+    mcount = 0
+    seq.choice.each do |member|
+      mcount += 1
+
+      case member._option
+      when :element
+        gen_parser_sequence_element(member.element, mcount)
+        if member.element._minOccurs != 0
+          last_required_mname = member.element._member_name
+          last_required_length = member.element._minOccurs
+          last_required_multiples = is_multiples?(member.element)
+        end
+
+      when :sequence
+        raise # TODO: sequence inside sequence
+
+      when :choice
+        gen_parser_sequence_choice(member.choice, mcount)
+        if member.choice._minOccurs != 0
+          last_required_mname = member.choice._member_name
+          last_required_length = member.choice._minOccurs
+          last_required_multiples = is_multiples?(member.choice)
+        end
+      else
+        raise 'internal error'
+      end
+    end
+
+    # Completeness check for the sequence
+
+    if last_required_mname
+      puts "  # Completeness check"
+      puts
+      if last_required_multiples
+        puts "  if result.#{last_required_mname}.length < #{last_required_length}"
+        puts "    raise InvalidXMLError, \"incomplete sequence\""
+        puts "  end"
+      else
+        puts "  if ! result.#{last_required_mname}"
+        puts "    raise InvalidXMLError, \"incomplete sequence\""
+        puts "  end"
+      end
+    end
+
     puts
-    puts "  raise 'internal error' if results.empty?"
-    puts "  [ results, offset ]"
+    puts "  return [result, offset]"
     puts "end"
     puts
   end
 
-end
+  def gen_parser_sequence_element(element, number)
 
-def element_info(element)
-  case element._form
-  when :element_type
-    name_def = element
-    type_def = element._type_target
-  when :element_ref
-    name_def = element._ref_target
-    type_def = element._ref_target
-  when :element_anonymous_complexType
-    name_def = element
-    type_def = element.choice.complexType
-  when :element_empty
-    name_def = element
-    type_def = nil #TODO
-  else
-    raise 'internal error'
-  end
+    ns, name, parse_method = element_info(element)
 
-  # Determine expected element name and namespace
+    puts
+    puts "  # #{number}: element: #{name}"
+    puts
+    puts "  offset = skip_to_element(nodes, offset)"
+    puts
 
-  if name_def._member_module == @module_name
-    element_ns = 'NAMESPACE' # from this module's namespace
-  else
-    element_ns = "#{name_def._member_module}::NAMESPACE" # from another module's namespace
-  end
+    if ! is_multiples?(element)
+      # Single element
+      puts "  r = nil"
+      puts "  if offset < nodes.length"
+      puts "    if nodes[offset].name == '#{name}' && nodes[offset].namespace == #{ns}"
+      puts "      r = #{parse_method}(nodes[offset])"
+      puts "      offset += 1"
+      puts "    end"
+      puts "  end"
+      if ! element._minOccurs.zero?
+        puts "  if ! r"
+        puts "    raise InvalidXMLError, \"sequence missing #{element._member_name}\""
+        puts "  end"
+      end
 
-  element_name = name_def.name
+    else
+      # Repeatable element
+      puts "  r = []"
 
-  # Determine parse method name
+      puts "  while offset < nodes.length &&"
+      print "        nodes[offset].name == '#{name}' && nodes[offset].namespace == #{ns}"
+      if element._maxOccurs
+        puts " &&"
+        print "        r.length < #{element._maxOccurs}"
+      end
+      puts
 
-  if type_def
-    parse_method = ''
-    if type_def._class_module != @module_name
-      # Class defined in a different module
-      #raise "DEBUG: _class_module is nil: #{type_def}" if ! type_def._class_module
-      type_def._class_module = "HACKING_WAS_HERE" if ! type_def._class_module
-      parse_method << type_def._class_module
-      parse_method << '.'
+      puts "    r << #{parse_method}(nodes[offset])"
+      puts "    offset = skip_to_element(nodes, offset + 1)"
+      puts "  end"
+      if ! element._minOccurs.zero?
+        puts "  if r.length < #{element._minOccurs}"
+        puts "    raise InvalidXMLError, \"sequence not enough #{element._member_name} elements\""
+        puts "  end"
+      end
     end
-    parse_method << PREFIX_PARSE
-    parse_method << type_def._class_name
-
-  else
-    raise if element._form != :element_empty
-    parse_method = "#{PREFIX_PARSE}element_empty"
+    puts "  result.#{element._member_name} = r"
+    puts
   end
 
-  return [ element_ns, element_name, parse_method ]
-end
+  def gen_parser_sequence_choice(ch, number)
 
-#----------------------------------------------------------------
+    mname = ch._member_name
+
+    puts
+    puts "  # #{number}: choice: #{mname}"
+    puts
+    puts "  offset = skip_to_element(nodes, offset)"
+    puts
+
+    #  if ! is_multiples?(ch)
+    #    # Single choice
+
+    puts "  r = nil"
+    puts "  if offset < nodes.length"
+    puts "    if #{ gen_if_match_choice(ch, 'nodes[offset]') }"
+    puts "      r, offset = #{PREFIX_PARSE}#{ch._class_name}(nodes, offset)"
+    puts "      result.#{mname} = r"
+    puts "    end"
+    puts "  end"
+    puts
+
+
+    #    if ! ch._minOccurs.zero?
+    #      puts "  if ! r"
+    #      puts "    raise InvalidXMLError, \"sequence missing #{mname}\""
+    #      puts "  end"
+    #    end
+    #
+    #  else
+    #    # Repeatable choice
+    #    puts "  r = []"
+    #    puts "        while offset < nodes.length &&"
+    #    print "          #{ gen_if_match_choice(ch, 'nodes[offset]') }"
+    #    if ch._maxOccurs
+    #      puts " &&"
+    #      print "        r.length < #{ch._maxOccurs}"
+    #    end
+    #    puts
+    #
+    #    puts "          r1, offset = #{PREFIX_PARSE}#{ch._class_name}(nodes, offset)"
+    #    puts "          r << r1"
+    #    puts "          offset = skip_to_element(nodes, offset + 1)"
+    #    puts "        end"
+    #    if ! ch._minOccurs.zero?
+    #      puts "  if result.#{mname}.length < #{ch._minOccurs}"
+    #      puts "    raise InvalidXMLError, \"sequence not enough #{mname}\""
+    #      puts "  end"
+    #    end
+    #  end
+
+  end
+
+  #----------------------------------------------------------------
+  # Choice
+
+  # Creates the conditional part of an if statement to test
+  # if the node_name can match at least one of the options
+  # in the choice.
+
+  def gen_if_match_choice(ch, node_name)
+
+    #  "#{ch._class_name}.match(#{node_name})"
+
+    str = ''
+
+    first = true
+    ch.choice.each do |option|
+      str << " || \\\n           " if ! first
+
+      case option._option
+      when :element
+        ns, name, _ = element_info(option.element)
+        str << "#{node_name}.name == '#{name}' && #{node_name}.namespace == #{ns}"
+
+      else
+        raise 'internal error: only elements inside choices are supported'
+      end
+
+      first = false
+    end
+
+    if first
+      # Choice has no options, so it never matches
+      str << "false # choice has no options, so never matches"
+    end
+
+    str # result
+  end
+
+
+
+  def generate_parser_choice(ch)
+
+    # Generate for nested subcomponents
+
+    ch.choice.each do |el_se_ch|
+      case el_se_ch._option
+      when :element
+        generate_parser_element(el_se_ch.element)
+      when :sequence
+        generate_parser_sequence(el_se_ch.sequence)
+      when :choice
+        generate_parser_choice(el_se_ch.choice)
+      else
+        raise 'internal error'
+      end
+    end
+
+    # Generate for this choice
+
+    repeating_elements = [] # collects elements that need additional methods
+
+    puts "private"
+    puts "# Parser for choice: <code>#{ch._class_name}</code>"
+    puts "#"
+    if is_multiples?(ch)
+      print "# Returns an array of [#{ch._minOccurs}.."
+      print ch._maxOccurs ? ch._maxOccurs : '*'
+      print "] #{ch._class_name} objects, since this choice"
+      puts " has been defined with a maxOccurs greater than 1 (or unbounded)."
+    else
+      if ch._minOccurs == 0
+        puts "# Returns either a #{ch._class_name} object or +nil+."
+      else
+        puts "# Returns a #{ch._class_name} object (this is never +nil+)."
+      end
+    end
+    puts
+
+    puts "def self.#{PREFIX_PARSE}#{ch._class_name}(nodes, offset)"
+    puts
+
+    if is_multiples?(ch)
+      puts "  results = []"
+      puts "  reason = \": not enough elements\""
+      puts
+      puts "  while offset < nodes.length"
+    else
+      puts "  reason = \": element not found\""
+      puts
+      puts "  begin"
+    end
+
+    puts "    # Move offset to next element node"
+    puts
+    puts "    offset = skip_to_element(nodes, offset)"
+
+    puts "    if offset < nodes.length"
+    puts
+
+    puts "      # Match element to one of the choice options"
+    puts
+
+    puts "      node = nodes[offset]"
+    if ! is_multiples?(ch)
+      puts "  result = #{module_name}::#{ch._class_name}.new(nodes[offset])"
+    end
+    puts
+
+    if is_multiples?(ch)
+      puts "      r = #{module_name}::#{ch._class_name}.new(node)"
+      puts
+    end
+
+    first = true
+    ch.choice.each do |el_se_ch|
+      case el_se_ch._option
+      when :element
+        ns, name, parse_method = element_info(el_se_ch.element)
+        condition = "node.name == '#{name}' && node.namespace == #{ns}"
+
+        if first
+          puts "      if #{condition}"
+        else
+          puts "      elsif #{condition}"
+        end
+
+        variable = is_multiples?(ch) ? 'r' : 'result'
+
+        if is_multiples?(el_se_ch.element)
+          repeating_elements << el_se_ch.element
+          puts "        #{variable}.#{el_se_ch.element._member_name}, offset = #{PREFIX_PARSE}#{ch._class_name}_element#{repeating_elements.length}(nodes, offset)"
+        else
+          puts "        #{variable}.#{el_se_ch.element._member_name} = #{parse_method}(node)"
+          puts "        offset += 1"
+        end
+
+      when :sequence
+        raise 'not supported yet'
+      when :choice
+        raise 'not supported yet'
+      else
+        raise 'internal error'
+      end
+      first = false
+    end
+
+    puts "      else"
+    puts "        reason = \": unexpected element: {\#{node.namespace}}\#{node.name}\""
+    if is_multiples?(ch)
+      # Break out of loop
+      puts "        break # element does not match any option"
+    end
+    puts "      end"
+
+    if is_multiples?(ch)
+      puts
+      puts "      results << r"
+      if ch._maxOccurs
+        # Not unbounded, so stop once maxOccurs reached
+        puts "      if #{ch._maxOccurs} <= results.length"
+        puts "        break # maxOccurs reached"
+        puts "      end"
+      end
+    end
+
+    puts "    end"
+    puts "  end" # end loop/block
+
+    puts
+
+    # Finish up. The code at this point will be reached when either:
+    # This is a non-repeating choice (i.e. maxOccurs != 1) and either
+    # the first element node was matched or it wasn't; or This is a
+    # repeating choice (i.e. 1 < maxOccurs or is unbounded) and an
+    # element (perhaps not the first) was not matched, maxOccurs matches
+    # were matched. And in both cases, if the end of nodes was reached.
+
+    # Under all those conditions, check if minOccurs is satisfied
+    # and return the result if it is.
+
+    if 0 < ch._minOccurs
+      # Choice requires a match, so generate code to check this
+
+      if is_multiples?(ch)
+        puts "  if results.length < #{ch._minOccurs}"
+        puts "    raise InvalidXMLError, \"choice incomplete#\{reason}\""
+        puts "  end"
+      else
+        puts "  if ! result._option"
+        puts "    raise InvalidXMLError, \"choice not found#\{reason}\""
+        puts "  end"
+      end
+      puts
+    end
+
+    # Return result
+
+    if is_multiples?(ch)
+      # Repeatable choice. Returns an array (which could be empty).
+      puts "  return [ results, offset ]"
+
+    else
+      # Singular choice. Returns nil or a choice object.
+
+      if 0 < ch._minOccurs
+        # Simply return the result because to reach this point
+        # it will have to have passed the minOccurs checking code
+        # (generated above) and therefore it will have an option set.
+        puts "  return [ result, offset ]"
+      else
+        # No minOccurs checking code was generated, so the return
+        # value will be nil if no match was found.
+        puts "  if result._option"
+        puts "    return [ result, offset ]"
+        puts "  else"
+        puts "    return [ nil, offset ] # no match"
+        puts "  end"
+      end
+    end
+    puts "end"
+    puts
+
+    # Generate additional methods to parse the repeating options of the choice
+
+    count = 0
+    repeating_elements.each do |element|
+      count += 1
+
+      puts "# Parser for repeating option's element #{count} of choice: <code>#{ch._class_name}</code>"
+      puts "#"
+      puts "# This method must be called with the nodes[offset] being an element"
+      puts "# node that matches."
+      puts
+
+      puts "def self.#{PREFIX_PARSE}#{ch._class_name}_element#{count}(nodes, offset)"
+      puts
+      puts "  # Create result object"
+      puts
+      puts "  results = []"
+
+      ns, name, parse_method = element_info(element)
+
+      puts "  node = nodes[offset]"
+      puts "  while offset < nodes.length && node.name == '#{name}' && node.namespace == #{ns}"
+      puts "    results << #{parse_method}(node)"
+      puts "    offset += 1"
+      puts "    offset = skip_to_element(nodes, offset)"
+      puts "    node = nodes[offset]"
+      puts "  end"
+      puts
+      puts "  raise 'internal error' if results.empty?"
+      puts "  [ results, offset ]"
+      puts "end"
+      puts
+    end
+
+  end
+
+  def element_info(element)
+    case element._form
+    when :element_type
+      name_def = element
+      type_def = element._type_target
+    when :element_ref
+      name_def = element._ref_target
+      type_def = element._ref_target
+    when :element_anonymous_complexType
+      name_def = element
+      type_def = element.choice.complexType
+    when :element_empty
+      name_def = element
+      type_def = nil #TODO
+    else
+      raise 'internal error'
+    end
+
+    # Determine expected element name and namespace
+
+    if name_def._member_module == @module_name
+      element_ns = 'NAMESPACE' # from this module's namespace
+    else
+      element_ns = "#{name_def._member_module}::NAMESPACE" # from another module's namespace
+    end
+
+    element_name = name_def.name
+
+    # Determine parse method name
+
+    if type_def
+      parse_method = ''
+      if type_def._class_module != @module_name
+        # Class defined in a different module
+        #raise "DEBUG: _class_module is nil: #{type_def}" if ! type_def._class_module
+        type_def._class_module = "HACKING_WAS_HERE" if ! type_def._class_module
+        parse_method << type_def._class_module
+        parse_method << '.'
+      end
+      parse_method << PREFIX_PARSE
+      parse_method << type_def._class_name
+
+    else
+      raise if element._form != :element_empty
+      parse_method = "#{PREFIX_PARSE}element_empty"
+    end
+
+    return [ element_ns, element_name, parse_method ]
+  end
+
+  #----------------------------------------------------------------
 
   def generate_parser_complexType(ct, is_top=false)
 
@@ -2415,145 +2415,145 @@ end
   end
 
 
-#  def gen_parser_complexType_choice(ch, node_name, result_name)
+  #  def gen_parser_complexType_choice(ch, node_name, result_name)
 
-#  if is_multiples?(ch)
-#    puts "  # complexType with choice (repeatable)"
-#    puts "  #{result_name}._choices = #{PREFIX_PARSE}#{ch._class_name}("
-#  else
-#    puts "  # complexType with choice (single)"
-#    puts "  #{result_name}._choice = nil"
-#  end
-#
-#  # Process all children of the node
-#
-#  puts "  offset = 0"
-#  puts "  while offset < #{node_name}.children.length"
-#  puts "    child = #{node_name}.children[offset]"
-#  puts "    if child.is_a?(REXML::Element)"
-#
-#  if ! is_multiples?(ch)
-#    puts "      if #{result_name}._choice"
-#    puts "        raise InvalidXMLError, \"unexpected element in complexType choice\""
-#    puts "      end"
-#  end
-#
-##TODO  puts "      if #{XSD::PREFIX_CLASS_CH}#{ch.internal_class_name}.match(child)"
-##TODO  puts "        r, offset = #{XSD::PREFIX_PARSE_CH}#{ch.internal_member_name}(#{node_name}.children, offset)"
-#
-#    puts "      if #{ gen_if_match_choice(ch, 'child') }"
-#    puts "        r, offset = #{PREFIX_PARSE}#{ch._class_name}(#{node_name}.children, offset)"
-#
-#  if is_multiples?(ch)
-#    puts "        #{result_name}._choices << r"
-#  else
-#    puts "        #{result_name}._choice = r"
-#  end
-#
-#  puts "      else"
-#  puts "        raise InvalidXMLError, \"unexpected element in complexType's choice\""
-#  puts "      end"
-#
-#  puts "    elsif child.is_a?(REXML::Text)"
-#  puts "      expecting_whitespace child"
-#  puts "      offset += 1"
-#  puts "    elsif child.is_a?(REXML::Comment)"
-#  puts "      # Ignore comments"
-#  puts "      offset += 1"
-#  puts "    else"
-#  puts "      raise InvalidXMLError, \"internal error: unsupported node type: \#{child.class}\""
-#  puts "    end"
-#  puts "  end"
-#
-#  # Check cardinality
-#
-#  if is_multiples?(ch)
-#    if ch._minOccurs != 0
-#      puts "  if #{result_name}._choices.length < #{ch._minOccurs}"
-#      puts "    raise InvalidXMLError, \"insufficient occurances of repeating choice\""
-#      puts "  end"
-#    end
-#    if ch._maxOccurs
-#      puts "  if #{ch._maxOccurs} < #{result_name}._choices.length"
-#      puts "    raise InvalidXMLError, \"too many occurances of repeating choice\""
-#      puts "  end"
-#    end
-#
-#  else
-#    if ch._minOccurs != 0
-#      puts "  if ! #{result_name}._choice"
-#      puts "    raise InvalidXMLError, \"missing occurances of choice\""
-#      puts "  end"
-#    end
-#  end
-#end
+  #  if is_multiples?(ch)
+  #    puts "  # complexType with choice (repeatable)"
+  #    puts "  #{result_name}._choices = #{PREFIX_PARSE}#{ch._class_name}("
+  #  else
+  #    puts "  # complexType with choice (single)"
+  #    puts "  #{result_name}._choice = nil"
+  #  end
+  #
+  #  # Process all children of the node
+  #
+  #  puts "  offset = 0"
+  #  puts "  while offset < #{node_name}.children.length"
+  #  puts "    child = #{node_name}.children[offset]"
+  #  puts "    if child.is_a?(REXML::Element)"
+  #
+  #  if ! is_multiples?(ch)
+  #    puts "      if #{result_name}._choice"
+  #    puts "        raise InvalidXMLError, \"unexpected element in complexType choice\""
+  #    puts "      end"
+  #  end
+  #
+  ##TODO  puts "      if #{XSD::PREFIX_CLASS_CH}#{ch.internal_class_name}.match(child)"
+  ##TODO  puts "        r, offset = #{XSD::PREFIX_PARSE_CH}#{ch.internal_member_name}(#{node_name}.children, offset)"
+  #
+  #    puts "      if #{ gen_if_match_choice(ch, 'child') }"
+  #    puts "        r, offset = #{PREFIX_PARSE}#{ch._class_name}(#{node_name}.children, offset)"
+  #
+  #  if is_multiples?(ch)
+  #    puts "        #{result_name}._choices << r"
+  #  else
+  #    puts "        #{result_name}._choice = r"
+  #  end
+  #
+  #  puts "      else"
+  #  puts "        raise InvalidXMLError, \"unexpected element in complexType's choice\""
+  #  puts "      end"
+  #
+  #  puts "    elsif child.is_a?(REXML::Text)"
+  #  puts "      expecting_whitespace child"
+  #  puts "      offset += 1"
+  #  puts "    elsif child.is_a?(REXML::Comment)"
+  #  puts "      # Ignore comments"
+  #  puts "      offset += 1"
+  #  puts "    else"
+  #  puts "      raise InvalidXMLError, \"internal error: unsupported node type: \#{child.class}\""
+  #  puts "    end"
+  #  puts "  end"
+  #
+  #  # Check cardinality
+  #
+  #  if is_multiples?(ch)
+  #    if ch._minOccurs != 0
+  #      puts "  if #{result_name}._choices.length < #{ch._minOccurs}"
+  #      puts "    raise InvalidXMLError, \"insufficient occurances of repeating choice\""
+  #      puts "  end"
+  #    end
+  #    if ch._maxOccurs
+  #      puts "  if #{ch._maxOccurs} < #{result_name}._choices.length"
+  #      puts "    raise InvalidXMLError, \"too many occurances of repeating choice\""
+  #      puts "  end"
+  #    end
+  #
+  #  else
+  #    if ch._minOccurs != 0
+  #      puts "  if ! #{result_name}._choice"
+  #      puts "    raise InvalidXMLError, \"missing occurances of choice\""
+  #      puts "  end"
+  #    end
+  #  end
+  #end
 
-def gen_parser_complexType_empty(node_name)
+  def gen_parser_complexType_empty(node_name)
 
-  # empty content model
+    # empty content model
 
-  puts "  # Empty content model: must only contain non-significant whitespace"
-  puts "  offset = 0"
-  puts "  while offset < #{node_name}.children.length"
-  puts "    child = #{node_name}.children[offset]"
-  puts "    if child.is_a?(REXML::Element)"
-  puts "      raise InvalidXMLError, \"unexpected element in empty complexType\""
-  puts "    elsif child.is_a?(REXML::Text)"
-  puts "      expecting_whitespace child"
-  puts "      offset += 1"
-  puts "    elsif child.is_a?(REXML::Comment)"
-  puts "      # Ignore comments"
-  puts "      offset += 1"
-  puts "    else"
-  puts "      raise InvalidXMLError, \"internal error: unsupported #{node_name} type: \#{child.class}\""
-  puts "    end"
-  puts "  end"
-end
-
-#----------------------------------------------------------------
-
-# Generates element parsing code.
-
-def generate_parser_element(element, is_top=false)
-
-  # Parser for nested subcomponents of this element
-
-  if element.choice
-    case element.choice._option
-    when :complexType
-      generate_parser_complexType(element.choice.complexType)
-    else
-      raise 'internal error'
-    end
-  end
-
-  # There is no additional parsing method for elements needed, because
-  # they will use the parsing method for their underlying datatype,
-  # unless it is a top level element.
-
-  if is_top
-    puts "public"
-    puts "# Parser for top level element +#{element.name}+"
-    puts "# Returns a <code>#{element._class_name}</code> object."
-
-    ns, name, parse_method = element_info(element)
-
-    puts "def self.#{PREFIX_PARSE}#{element.name}(element)"
-    puts "  if element.name == '#{name}' && element.namespace == #{ns}"
-    puts "    #{parse_method}(element)"
-    puts "  else"
-    puts "    raise InvalidXMLError, \"unexpected element: expecting {#{ns}}#{name}: got {\#\{element.namespace}}\#\{element.name}\""
+    puts "  # Empty content model: must only contain non-significant whitespace"
+    puts "  offset = 0"
+    puts "  while offset < #{node_name}.children.length"
+    puts "    child = #{node_name}.children[offset]"
+    puts "    if child.is_a?(REXML::Element)"
+    puts "      raise InvalidXMLError, \"unexpected element in empty complexType\""
+    puts "    elsif child.is_a?(REXML::Text)"
+    puts "      expecting_whitespace child"
+    puts "      offset += 1"
+    puts "    elsif child.is_a?(REXML::Comment)"
+    puts "      # Ignore comments"
+    puts "      offset += 1"
+    puts "    else"
+    puts "      raise InvalidXMLError, \"internal error: unsupported #{node_name} type: \#{child.class}\""
+    puts "    end"
     puts "  end"
-    puts "end"
-    puts
   end
 
-end
+  #----------------------------------------------------------------
 
-#----------------------------------------------------------------
+  # Generates element parsing code.
 
-def output_top_parser_method
-  puts <<"END_PARSER_MAIN"
+  def generate_parser_element(element, is_top=false)
+
+    # Parser for nested subcomponents of this element
+
+    if element.choice
+      case element.choice._option
+      when :complexType
+        generate_parser_complexType(element.choice.complexType)
+      else
+        raise 'internal error'
+      end
+    end
+
+    # There is no additional parsing method for elements needed, because
+    # they will use the parsing method for their underlying datatype,
+    # unless it is a top level element.
+
+    if is_top
+      puts "public"
+      puts "# Parser for top level element +#{element.name}+"
+      puts "# Returns a <code>#{element._class_name}</code> object."
+
+      ns, name, parse_method = element_info(element)
+
+      puts "def self.#{PREFIX_PARSE}#{element.name}(element)"
+      puts "  if element.name == '#{name}' && element.namespace == #{ns}"
+      puts "    #{parse_method}(element)"
+      puts "  else"
+      puts "    raise InvalidXMLError, \"unexpected element: expecting {#{ns}}#{name}: got {\#\{element.namespace}}\#\{element.name}\""
+      puts "  end"
+      puts "end"
+      puts
+    end
+
+  end
+
+  #----------------------------------------------------------------
+
+  def output_top_parser_method
+    puts <<"END_PARSER_MAIN"
   #----------------
 
   public
@@ -2581,52 +2581,52 @@ def output_top_parser_method
   # Possible names:
 END_PARSER_MAIN
 
-  @named_elements.sort.each do |name, item|
-    puts "  # * <code>#{name}</code>"
-  end
+    @named_elements.sort.each do |name, item|
+      puts "  # * <code>#{name}</code>"
+    end
 
-  puts <<"END_PARSER_MAIN2"
+    puts <<"END_PARSER_MAIN2"
   #
   # === Exceptions
   # InvalidXMLError
   #
 END_PARSER_MAIN2
 
-  puts "  def self.parse(src)"
-  puts "    if src.is_a? REXML::Element"
-  puts "      root = src"
-  puts "    elsif src.is_a? File"
-  puts "      root = REXML::Document.new(src).root"
-  puts "    elsif src.is_a? String"
-  puts "      root = REXML::Document.new(src).root"
-  puts "    else"
-  puts "      e = ArgumentError.new \"\#\{__method__} expects a File, String or REXML::Element\""
-  puts "      e.set_backtrace caller"
-  puts "      raise e"
-  puts "    end"
-  puts
+    puts "  def self.parse(src)"
+    puts "    if src.is_a? REXML::Element"
+    puts "      root = src"
+    puts "    elsif src.is_a? File"
+    puts "      root = REXML::Document.new(src).root"
+    puts "    elsif src.is_a? String"
+    puts "      root = REXML::Document.new(src).root"
+    puts "    else"
+    puts "      e = ArgumentError.new \"\#\{__method__} expects a File, String or REXML::Element\""
+    puts "      e.set_backtrace caller"
+    puts "      raise e"
+    puts "    end"
+    puts
 
-  first = true
-  @named_elements.sort.each do |ename, item|
+    first = true
+    @named_elements.sort.each do |ename, item|
 
-    ns, name, parse_method = element_info(item)
-    raise 'internal error' if name != ename
+      ns, name, parse_method = element_info(item)
+      raise 'internal error' if name != ename
 
-    print first ? '    if ' : '    elsif '
-    puts "root.name == '#{name}' && root.namespace == #{ns}"
-    puts "      return [ #{parse_method}(root), '#{name}' ]"
-#    puts "      return [ #{PREFIX_PARSE}#{item.name}(root), '#{name}' ]"
-    first = false
+      print first ? '    if ' : '    elsif '
+      puts "root.name == '#{name}' && root.namespace == #{ns}"
+      puts "      return [ #{parse_method}(root), '#{name}' ]"
+      #    puts "      return [ #{PREFIX_PARSE}#{item.name}(root), '#{name}' ]"
+      first = false
+    end
+
+    puts "    else"
+    puts "      raise InvalidXMLError, \"element not defined in \#{NAMESPACE}: {#\{root.namespace}}#\{root.name}\""
+    puts "    end"
+    puts "  end"
+    puts
   end
 
-  puts "    else"
-  puts "      raise InvalidXMLError, \"element not defined in \#{NAMESPACE}: {#\{root.namespace}}#\{root.name}\""
-  puts "    end"
-  puts "  end"
-  puts
-end
-
-#----------------------------------------------------------------
+  #----------------------------------------------------------------
 
 end
 
