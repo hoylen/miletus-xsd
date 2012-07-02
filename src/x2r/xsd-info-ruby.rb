@@ -753,7 +753,7 @@ END_HEADER2
     puts "#--"
     puts "# GENERATED CODE: DO NOT EDIT"
     puts
-    puts "require 'REXML/document'"
+    puts "require 'rexml/document'"
     puts "require 'xmlobj/XSDPrimitives'"
     puts
 

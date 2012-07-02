@@ -2243,7 +2243,7 @@ def output_ruby_header(namespace, module_name)
 #
 # Created by x2r-bootstrap.rb
 
-require 'REXML/document'
+require 'rexml/document'
 
 module #{module_name}
 
