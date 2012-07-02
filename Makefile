@@ -2,7 +2,7 @@
 
 .PHONY: build doc
 
-BUILD=./build
+BUILD=build
 XMLOBJ_DIR=${BUILD}/xmlobj
 DOCDIR=doc
 
@@ -248,6 +248,20 @@ test-xsd-more: \
 	  test/addressbook/addressbook.xsd
 	${XML_TOOL} --parser ${XMLOBJ_DIR}/XSD.rb --module XSD --verbose \
 	  test/rifcs/xsd/registryObjects.xsd
+
+
+#----------------------------------------------------------------
+# Parse RIFCS
+
+${XMLOBJ_DIR}/RIFCS-extensions.rb: src/rifcs/RIFCS-extensions.rb
+	cp $? $@
+
+test-high: \
+  ${XMLOBJ_DIR}/XSDPrimitives.rb \
+  ${XMLOBJ_DIR}/RIFCS.rb \
+  ${XMLOBJ_DIR}/RIFCS-extensions.rb
+	ruby -I ${BUILD} src/rifcs/rifcs-tool.rb --all test/rifcs/party/input-01.xml
+	ruby -I ${BUILD} src/rifcs/rifcs-tool.rb --all test/rifcs/party/input-02-name.xml
 
 #----------------------------------------------------------------
 # Documentation

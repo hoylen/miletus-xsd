@@ -4,8 +4,8 @@ $VERBOSE = true
 
 require 'optparse'
 
-require 'RIFCS'
-require 'RIFCS-extensions'
+require 'xmlobj/RIFCS'
+require 'xmlobj/RIFCS-extensions'
 
 #================================================================
 
@@ -67,7 +67,13 @@ def print_party(p, all)
     puts "    dateModified not specified" if all
   end
 
-  p.all.each { |x| puts "    Got anything: #{x}" }
+  p.all.each do |x|
+    if x.is_a?(RIFCS::ComplexType_nameType)
+      puts "nameType"
+    else
+      puts "Got: #{x.class.to_s}"
+    end
+  end
 end
 
 def print_collection(c, all)
