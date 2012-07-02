@@ -902,6 +902,7 @@ END_HEADER3
 
     puts <<"END_OPTION_METHODS"
   def initialize(node)
+
     super(node)
     @_index = nil # indicates which option (0..#{ch.choice.length - 1} or nil)
     @_value = nil # the value of the option
@@ -937,74 +938,74 @@ END_HEADER3
 
 END_OPTION_METHODS
 
-  # Named accessor methods
+    # Named accessor methods
 
-  puts "  # Named accessors"
-  puts
-
-  count = 0
-  ch.choice.each do |el_se_ch|
-
-    case el_se_ch._option
-    when :element
-      identifier = el_se_ch.element._member_name
-      cname = el_se_ch.element._class_name
-    when :sequence
-      identifier = el_se_ch.sequence._member_name
-      cname = el_se_ch.sequence._class_name
-    when :choice
-      identifier = el_se_ch.choice._member_name
-      cname = el_se_ch.choice._class_name
-    else
-      raise 'internal error'
-    end
-
-    puts "  # Get the value of option +#{identifier}+."
-    if is_multiples?(el_se_ch)
-      puts "# Returns an array of <code>#{cname}</code> objects."
-    else
-      puts "# Returns a <code>#{cname}</code> object."
-    end
-    puts "# Returns +nil+ if not the option."
-    puts "  def #{identifier}"
-    puts "    #{count} == @_index ? @_value : nil"
-    puts "  end"
-
-    puts "  # Set the choice to be the +#{identifier}+ option with the +value+."
-    if is_multiples?(el_se_ch)
-      puts "  # The value needs to be an array of <code>#{cname}</code> objects."
-    else
-      puts "  # The value needs to be a <code>#{cname}</code> object."
-    end
-    puts "  def #{identifier}=(value)"
-    puts "    @_index = #{count}"
-    puts "    @_value = value"
-    puts "  end"
+    puts "  # Named accessors"
     puts
-    count += 1
-  end
 
-  output_to_xml_method_choice(ch)
+    count = 0
+    ch.choice.each do |el_se_ch|
 
-  puts 'end'
-  puts
+      case el_se_ch._option
+      when :element
+        identifier = el_se_ch.element._member_name
+        cname = el_se_ch.element._class_name
+      when :sequence
+        identifier = el_se_ch.sequence._member_name
+        cname = el_se_ch.sequence._class_name
+      when :choice
+        identifier = el_se_ch.choice._member_name
+        cname = el_se_ch.choice._class_name
+      else
+        raise 'internal error'
+      end
 
-  # Recurse for nested subcomponents
+      puts "  # Get the value of option +#{identifier}+."
+      if is_multiples?(el_se_ch)
+        puts "# Returns an array of <code>#{cname}</code> objects."
+      else
+        puts "# Returns a <code>#{cname}</code> object."
+      end
+      puts "# Returns +nil+ if not the option."
+      puts "  def #{identifier}"
+      puts "    #{count} == @_index ? @_value : nil"
+      puts "  end"
 
-  ch.choice.each do |el_se_ch|
-    case el_se_ch._option
-    when :element
-      output_ruby_classes_element(el_se_ch.element)
-    when :sequence
-      raise 'not supported yet'
-    when :choice
-      raise 'not supported yet'
-    else
-      raise 'internal error'
+      puts "  # Set the choice to be the +#{identifier}+ option with the +value+."
+      if is_multiples?(el_se_ch)
+        puts "  # The value needs to be an array of <code>#{cname}</code> objects."
+      else
+        puts "  # The value needs to be a <code>#{cname}</code> object."
+      end
+      puts "  def #{identifier}=(value)"
+      puts "    @_index = #{count}"
+      puts "    @_value = value"
+      puts "  end"
+      puts
+      count += 1
     end
-  end
 
-end
+    output_to_xml_method_choice(ch)
+
+    puts 'end'
+    puts
+
+    # Recurse for nested subcomponents
+
+    ch.choice.each do |el_se_ch|
+      case el_se_ch._option
+      when :element
+        output_ruby_classes_element(el_se_ch.element)
+      when :sequence
+        raise 'not supported yet'
+      when :choice
+        raise 'not supported yet'
+      else
+        raise 'internal error'
+      end
+    end
+
+  end
 
 def output_ruby_classes_complexType(ct)
 
