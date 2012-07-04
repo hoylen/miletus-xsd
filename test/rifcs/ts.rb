@@ -3,18 +3,13 @@
 
 $VERBOSE = true
 
+BASEDIR = File.expand_path(File.dirname(__FILE__))
+
 # Include all the RIF-CS test cases
 
-$input_dir = 'example/'
-require 'example/tc.rb'
-
-$input_dir = 'registryObjects/'
-require 'registryObjects/tc.rb'
-
-$input_dir = 'party/'
-require 'party/tc.rb'
-
-# $input_dir = 'collection/'
-# require 'collection/tc.rb'
+require "#{BASEDIR}/example/tc.rb"
+require "#{BASEDIR}/registryObjects/tc.rb"
+require "#{BASEDIR}/party/tc.rb"
+# require "#{BASEDIR}/collection/tc.rb"
 
 #EOF

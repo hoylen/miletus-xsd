@@ -7,8 +7,10 @@ require 'xsd-features/ElementRef.rb'
 
 class ElementEmptyTestCase < Test::Unit::TestCase
 
+  INPUTDIR = File.expand_path(File.dirname(__FILE__))
+
   def test01
-    file = File.new('test/xsd-features/element-ref/test-01.xml')
+    file = File.new("#{INPUTDIR}/input-01.xml")
     doc, name = ElementEmpty.parse(file)
 
     assert_equal 'book', name

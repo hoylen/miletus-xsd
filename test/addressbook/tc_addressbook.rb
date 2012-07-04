@@ -6,8 +6,12 @@ require 'test/unit'
 require 'xmlobj/AddressBook.rb'
 
 class Test1 < Test::Unit::TestCase
+
+  INPUTDIR = File.expand_path(File.dirname(__FILE__))
+
   def test1
-    file = File.new('test/addressbook/input-01.xml')
+
+    file = File.new("#{INPUTDIR}/input-01.xml")
     doc, element_name = AddressBook.parse(file)
 
     assert_equal 'person', element_name

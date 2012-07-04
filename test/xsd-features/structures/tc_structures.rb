@@ -7,8 +7,10 @@ require 'xmlobj/xsd-features/Structures.rb'
 
 class StructuresTestCase < Test::Unit::TestCase
 
+  INPUTDIR = File.expand_path(File.dirname(__FILE__))
+
   def test01
-    file = File.new('test/xsd-features/structures/input-01.xml')
+    file = File.new("#{INPUTDIR}/input-01.xml")
     doc, name = Structures.parse(file)
 
     assert_equal 'element_with_sequence', name
@@ -30,7 +32,7 @@ class StructuresTestCase < Test::Unit::TestCase
   end
 
   def test02
-    file = File.new('test/xsd-features/structures/input-02.xml')
+    file = File.new("#{INPUTDIR}/input-02.xml")
     doc, name = Structures.parse(file)
 
     # Check character entities are expanded correctly
@@ -44,7 +46,7 @@ class StructuresTestCase < Test::Unit::TestCase
   end
 
   def test03
-    file = File.new('test/xsd-features/structures/input-03.xml')
+    file = File.new("#{INPUTDIR}/input-03.xml")
     doc, name = Structures.parse(file)
 
     assert_equal 'element_with_choice', name

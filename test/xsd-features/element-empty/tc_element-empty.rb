@@ -7,8 +7,10 @@ require 'xmlobj/xsd-features/ElementEmpty.rb'
 
 class ElementEmptyTestCase < Test::Unit::TestCase
 
+  INPUTDIR = File.expand_path(File.dirname(__FILE__))
+
   def test01
-    file = File.new('test/xsd-features/element-empty/test-01.xml')
+    file = File.new("#{INPUTDIR}/input-01.xml")
     doc, name = ElementEmpty.parse(file)
 
     assert_equal 'root', name
@@ -16,7 +18,7 @@ class ElementEmptyTestCase < Test::Unit::TestCase
   end
 
   def test02
-    file = File.new('test/xsd-features/element-empty/test-02.xml')
+    file = File.new("#{INPUTDIR}/input-02.xml")
     doc, name = ElementEmpty.parse(file)
 
     assert_equal 'root', name
@@ -24,7 +26,7 @@ class ElementEmptyTestCase < Test::Unit::TestCase
   end
 
   def test03
-    file = File.new('test/xsd-features/element-empty/test-03.xml')
+    file = File.new("#{INPUTDIR}/input-03.xml")
     doc, name = ElementEmpty.parse(file)
 
     assert_equal 'root', name
@@ -32,7 +34,7 @@ class ElementEmptyTestCase < Test::Unit::TestCase
   end
 
   def test04
-    file = File.new('test/xsd-features/element-empty/test-04.xml')
+    file = File.new("#{INPUTDIR}/input-04.xml")
     doc, name = ElementEmpty.parse(file)
 
     assert_equal 'root', name
@@ -40,7 +42,7 @@ class ElementEmptyTestCase < Test::Unit::TestCase
   end
 
   def test05
-    file = File.new('test/xsd-features/element-empty/test-05.xml')
+    file = File.new("#{INPUTDIR}/input-05.xml")
     assert_raise(ElementEmpty::InvalidXMLError) { ElementEmpty.parse(file) }
   end
 end

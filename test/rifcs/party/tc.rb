@@ -7,15 +7,10 @@ require 'xmlobj/RIFCS'
 
 class RIFCS_XML_party_TestCase < Test::Unit::TestCase
 
-  if global_variables.include?(:$input_dir) || # for Ruby 1.9
-     global_variables.include?('$input_dir')   # for Ruby 1.8
-    DIR = $input_dir
-  else
-    DIR = ''
-  end
+  INPUTDIR = File.expand_path(File.dirname(__FILE__))
 
   def test_01
-    file = File.new("#{DIR}input-01.xml")
+    file = File.new("#{INPUTDIR}/input-01.xml")
     doc, name = RIFCS.parse(file)
 
     assert_equal 'registryObjects', name
@@ -44,7 +39,7 @@ class RIFCS_XML_party_TestCase < Test::Unit::TestCase
   end
 
   def test_02
-    file = File.new("#{DIR}input-02-name.xml")
+    file = File.new("#{INPUTDIR}/input-02-name.xml")
     doc, name = RIFCS.parse(file)
 
     party = doc.registryObject[0].choice[:party]

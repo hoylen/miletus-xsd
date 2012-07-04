@@ -7,12 +7,7 @@ require 'xmlobj/RIFCS'
 
 class RIFCS_registryObjects_TestCase < Test::Unit::TestCase
 
-  if global_variables.include?(:$input_dir) || # for Ruby 1.9
-     global_variables.include?('$input_dir')   # for Ruby 1.8
-    DIR = $input_dir
-  else
-    DIR = ''
-  end
+  INPUTDIR = File.expand_path(File.dirname(__FILE__))
 
   def load(filename)
     file = File.new(filename)
@@ -20,7 +15,7 @@ class RIFCS_registryObjects_TestCase < Test::Unit::TestCase
   end
 
   def test_01
-    doc, name = load("#{DIR}input-01.xml")
+    doc, name = load("#{INPUTDIR}/input-01.xml")
 
     assert_equal 'registryObjects', name
     assert_equal 0, doc.registryObject.length
@@ -28,7 +23,7 @@ class RIFCS_registryObjects_TestCase < Test::Unit::TestCase
   end
 
   def test_02
-    doc, name = load("#{DIR}input-02.xml")
+    doc, name = load("#{INPUTDIR}/input-02.xml")
 
     assert_equal 'registryObjects', name
     assert_equal 1, doc.registryObject.length
@@ -64,7 +59,7 @@ class RIFCS_registryObjects_TestCase < Test::Unit::TestCase
   end
 
   def test_03
-    doc, name = load("#{DIR}input-03.xml")
+    doc, name = load("#{INPUTDIR}/input-03.xml")
 
     assert_equal 'registryObjects', name
     assert_equal 4, doc.registryObject.length
@@ -133,23 +128,23 @@ class RIFCS_registryObjects_TestCase < Test::Unit::TestCase
   end
 
   def test_04
-    assert_raise(RIFCS::InvalidXMLError) { load("#{DIR}input-04-invalid-no-group.xml") }
+    assert_raise(RIFCS::InvalidXMLError) { load("#{INPUTDIR}/input-04-invalid-no-group.xml") }
   end
 
   def test_05
-    assert_raise(RIFCS::InvalidXMLError) { load("#{DIR}input-05-invalid-no-key.xml") }
+    assert_raise(RIFCS::InvalidXMLError) { load("#{INPUTDIR}/input-05-invalid-no-key.xml") }
   end
 
   def test_06
-    assert_raise(RIFCS::InvalidXMLError) { load("#{DIR}input-06-invalid-no-originatingSource.xml") }
+    assert_raise(RIFCS::InvalidXMLError) { load("#{INPUTDIR}/input-06-invalid-no-originatingSource.xml") }
   end
 
   def test_07
-    assert_raise(RIFCS::InvalidXMLError) { load("#{DIR}input-07-invalid-missing-collection.xml") }
+    assert_raise(RIFCS::InvalidXMLError) { load("#{INPUTDIR}/input-07-invalid-missing-collection.xml") }
   end
 
   def test_08
-    assert_raise(RIFCS::InvalidXMLError) { load("#{DIR}input-08-unexpected.xml") }
+    assert_raise(RIFCS::InvalidXMLError) { load("#{INPUTDIR}/input-08-unexpected.xml") }
   end
 
 end

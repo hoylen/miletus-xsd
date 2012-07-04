@@ -157,7 +157,7 @@ test-xsd-features: \
   ${XMLOBJ_DIR}/xsd-features/AttributeGroup.rb \
   ${XMLOBJ_DIR}/xsd-features/Structures.rb \
   ${XMLOBJ_DIR}/XSDPrimitives.rb
-	ruby -I ${BUILD} -I test \
+	ruby -I ${BUILD} \
 	  test/xsd-features/ts_xsd-features.rb
 
 test-xsd-features-element-empty: \
@@ -191,22 +191,22 @@ test-addressbook: \
 test-rifcs: \
   ${XMLOBJ_DIR}/RIFCS.rb \
   ${XMLOBJ_DIR}/XSDPrimitives.rb
-	@cd test/rifcs && ruby -I . -I ../../${BUILD} ts.rb
+	ruby -I ${BUILD} test/rifcs/ts.rb
 
 test-rifcs-example: \
   ${XMLOBJ_DIR}/RIFCS.rb \
   ${XMLOBJ_DIR}/XSDPrimitives.rb
-	@cd test/rifcs/example && ruby -I . -I ../../../${BUILD} tc.rb
+	ruby -I ${BUILD} test/rifcs/example/tc.rb
 
 test-rifcs-registryObjects: \
   ${XMLOBJ_DIR}/RIFCS.rb \
   ${XMLOBJ_DIR}/XSDPrimitives.rb
-	@cd test/rifcs/registryObjects && ruby -I . -I ../../../${BUILD} tc.rb
+	ruby -I ${BUILD} test/rifcs/registryObjects/tc.rb
 
 test-rifcs-party: \
   ${XMLOBJ_DIR}/RIFCS.rb \
   ${XMLOBJ_DIR}/XSDPrimitives.rb
-	@cd test/rifcs/party && ruby -I . -I ../../../${BUILD} tc.rb
+	ruby -I ${BUILD} test/rifcs/party/tc.rb
 
 #----------------------------------------------------------------
 # Parse XML and output XML
