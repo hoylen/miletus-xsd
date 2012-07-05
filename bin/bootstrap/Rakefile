@@ -1,0 +1,61 @@
+# rakefile
+#
+# The main purpose of this Rakefile is to generate 'XSD.rb'
+# using the x2r-bootstrap program. That 'XSD.rb' was
+# then manually copied into 'lib/x2r/xmlobj' to be used
+# as the XML Schema parser by 'x2r'.
+
+OUTDIR = File.dirname(__FILE__) + '/../../out/bootstrap'
+
+BOOTSTRAP_X2P = "bin/bootstrap/xml-to-preparse"
+BOOTSTRAP_X2R = "bin/bootstrap/x2r-bootstrap"
+PREPARSE_DUMP = "bin/bootstrap/preparse-dump"
+
+task :default => :generate
+
+directory OUTDIR
+
+#----------------------------------------------------------------
+
+desc 'Generate XSD parsing code using x2r-bootstrap'
+task :generate => "#{OUTDIR}/XSD.rb"
+
+desc 'Dump the preparsed XSD schema into a text file'
+task :dump => [ "#{OUTDIR}/XSD.txt" ]
+
+file "#{OUTDIR}/XSD.rb" => OUTDIR do |f|
+  preparsed = File.join(File.dirname(f.to_s), File.basename(f.to_s, '.rb') + '.pre')
+  sh %{ #{BOOTSTRAP_X2P} --output #{preparsed} test/xsd/subset/xsd.xsd test/xsd/subset/xml.xsd }
+  sh %{ #{BOOTSTRAP_X2R} --module XSD,XML --outdir #{OUTDIR} --preparsed #{preparsed} }
+end
+
+#----------------------------------------------------------------
+
+desc 'Generate parsing code for other example XML schemas'
+task :more_generate => [ "#{OUTDIR}/AddressBook.rb" ]
+
+desc 'Dump the parsing code for the other examples into text files'
+task :more_dump => [ "#{OUTDIR}/AddressBook.txt" ]
+
+
+file "#{OUTDIR}/AddressBook.rb" => OUTDIR do |f|
+  preparsed = File.join(File.dirname(f.to_s), File.basename(f.to_s, '.rb') + '.pre')
+  sh %{ #{BOOTSTRAP_X2P} --output #{preparsed} test/addressbook/addressbook.xsd }
+  sh %{ #{BOOTSTRAP_X2R} --module AddressBook --outdir #{OUTDIR} --preparsed #{preparsed} }
+end
+
+#----------------------------------------------------------------
+
+rule '.txt' => '.pre' do |r|
+  sh %{ #{PREPARSE_DUMP} --preparsed "#{r.source}" --output "#{r.name}" }
+end
+
+#----------------------------------------------------------------
+# Clean
+
+desc 'Remove up generated files'
+task :clean do
+  rm_rf OUTDIR
+end
+
+#EOF

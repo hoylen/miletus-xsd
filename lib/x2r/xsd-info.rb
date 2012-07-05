@@ -5,7 +5,7 @@
 
 $VERBOSE = true
 
-require 'xsd-datatypes'
+require 'x2r/xsd-datatypes'
 
 #================================================================
 

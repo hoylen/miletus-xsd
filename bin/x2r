@@ -9,9 +9,13 @@
 
 $VERBOSE = true
 
+$LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
+
 require 'optparse'
-require 'XSD'
-require 'xsd-info-ruby'
+require 'x2r.rb'
+
+#require 'x2r/xmlobj/XSD'
+#require 'x2r/xsd-info-ruby'
 
 #----------------------------------------------------------------
 

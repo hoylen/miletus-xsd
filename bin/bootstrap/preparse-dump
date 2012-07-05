@@ -4,8 +4,13 @@ $VERBOSE = true
 
 require 'optparse'
 
-#================================================================
 # This implementation of the XML Schema classes simply dumps them out.
+#
+# Dumps the contents of the preprocessed schema file created by the
+# bootstrap program <code>xml-to-code</code>.
+#
+# Example:
+#   preparsed-dump --preparsed Foobar.rb-tmp.rb
 
 module XSD
 
@@ -188,6 +193,11 @@ end
 
 #================================================================
 
+# Dump out an XML schema.
+#
+# schemas - the schemas to dump out
+# output_file - the name of the output file (or +nil+ to use stdout)
+
 def dump(schemas, output_filename)
 
   # Redirect output to output_filename (or use stdout)
@@ -219,6 +229,7 @@ end # def generate_ruby
 
 #----------------------------------------------------------------
 
+private
 def process_command_line
 
   # Specify command line options
@@ -276,6 +287,9 @@ end # def process_command_line
 
 #----------------------------------------------------------------
 
+# Main entry point for this program.
+
+public
 def main
 
   filenames, verbose, outfile_name, preparsed = process_command_line
@@ -287,7 +301,7 @@ def main
     if ! filenames.empty? then
       $stderr.puts "Warning: ignoring supplied schema files, using preparsed code: #{preparsed}"
     end
-    require preparsed
+    load preparsed
     schemas = parse_XSD # to be replaced
   else
     # Normal operation parses XML Schema files directly

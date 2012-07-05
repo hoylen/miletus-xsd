@@ -1,6 +1,10 @@
 #!/usr/bin/env ruby
+#
+# This program exercises the RIF-CS parser.
 
 $VERBOSE = true
+
+$LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 
 require 'optparse'
 

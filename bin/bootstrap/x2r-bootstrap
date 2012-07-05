@@ -2678,7 +2678,7 @@ def main
       $stderr.puts "Warning: ignoring files, using preparsed: #{preparsed}"
     end
 
-    require preparsed
+    load preparsed
     schemas = parse_XSD
 
     count = 0

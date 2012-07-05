@@ -3,6 +3,8 @@
 
 $VERBOSE = true
 
+$LOAD_PATH.unshift File.dirname(__FILE__) + '/../../lib'
+
 INPUTDIR = File.expand_path(File.dirname(__FILE__))
 
 # Include all the XSD features test cases

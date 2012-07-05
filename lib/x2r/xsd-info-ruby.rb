@@ -3,8 +3,8 @@
 
 $VERBOSE = true
 
-require 'xsd-info'
-require 'codegen-to-xml'
+require 'x2r/xsd-info'
+require 'x2r/codegen-to-xml'
 
 #================================================================
 
