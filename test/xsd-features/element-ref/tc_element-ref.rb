@@ -5,15 +5,15 @@ $VERBOSE = true
 $LOAD_PATH.unshift File.dirname(__FILE__) + '/../../../lib'
 
 require 'test/unit'
-require 'xsd-features/ElementRef.rb'
+require 'xmlobj/xsd-features/ElementRef.rb'
 
-class ElementEmptyTestCase < Test::Unit::TestCase
+class ElementRefTestCase < Test::Unit::TestCase
 
   INPUTDIR = File.expand_path(File.dirname(__FILE__))
 
   def test01
     file = File.new("#{INPUTDIR}/input-01.xml")
-    doc, name = ElementEmpty.parse(file)
+    doc, name = ElementRef.parse(file)
 
     assert_equal 'book', name
   end
