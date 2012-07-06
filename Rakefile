@@ -22,9 +22,6 @@ directory "#{XMLOBJ_DIR}/xsd-features"
 # modules in the XMLOBJ_DIR directory.  The main module is the first
 # one (RIFCS.rb), but the other ones are used for testing.
 
-desc "Generate RIF-CS code"
-task :generate => [ :generate_rifcs ]
-
 ALL_PARSERS = [
   "#{XMLOBJ_DIR}/RIFCS.rb",
   "#{XMLOBJ_DIR}/AddressBook.rb",
@@ -35,8 +32,12 @@ ALL_PARSERS = [
   "#{XMLOBJ_DIR}/xsd-features/AttributeGroup.rb"
 ]
 
+desc "Generate RIF-CS code"
+task :generate_rifcs => [ "#{XMLOBJ_DIR}/RIFCS.rb" ]
+
 desc "Generate all code"
 task :generate_all => ALL_PARSERS
+
 
 RIFCS_XSD = FileList['test/rifcs/xsd/*.xsd']
 
