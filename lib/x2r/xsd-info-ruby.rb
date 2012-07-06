@@ -50,8 +50,7 @@ class XSDInfoRuby < XSDInfo
       raise "internal error: no prefix in CLASS_PREFIX for #{type}"
     end
 
-    str = ncname
-    str.gsub!('-', '_')
+    str = ncname.gsub('-', '_')
     str.gsub!('.', '_')
 
     CLASS_PREFIX[type] + str
@@ -74,8 +73,7 @@ class XSDInfoRuby < XSDInfo
 
     # Use provided ncname, but with unsuitable characters changed
 
-    str = ncname
-    str.gsub!('-', '_')
+    str = ncname.gsub('-', '_')
     str.gsub!('.', '_')
 
     if Object.method_defined?(str) || str == 'type'
@@ -644,7 +642,6 @@ class XSDInfoRuby < XSDInfo
       # Set member name based on the provided name
       element._member_module = @module_name
       element._member_name = ncname_to_membername(:element, element.name)
-
     else
       raise 'internal error' if element._form != :element_ref
     end
@@ -1417,7 +1414,6 @@ def output_accessor_complexType_sequence(seq)
 
     when :element
       # Redirect accessors to the members of the sequence
-      n = member.element._member_name
 
       desc = ''
       if is_multiples?(member.element)
@@ -1431,20 +1427,22 @@ def output_accessor_complexType_sequence(seq)
         if is_multiples?(member.element)
           desc << ' Can be an empty array.'
         else
-          desc << ' Optional, so could be +nil+.'
+          desc << ' Optional element, so could be +nil+.'
         end
       else
         if is_multiples?(member.element)
           desc << ' Has a minimum length of #{member.element.minOccurs}.'
         else
-          desc << ' Mandatory, so is never +nil+.'
+          desc << ' Mandatory element, so is never +nil+.'
         end
       end
 
-      puts "  # Gets the child <code>#{n}</code>. #{desc}"
+      n = member.element._member_name
+
+      puts "  # Gets the child <code>#{member.element.name}</code> element. #{desc}"
       puts "  def #{n}; @_sequence.#{n} end"
 
-      puts "  # Sets the child <code>#{n}</code>. #{desc}"
+      puts "  # Sets the child <code>#{member.element.name}</code> element. #{desc}"
       puts "  def #{n}=(value); @_sequence.#{n}(value) end"
       puts
 
@@ -1929,7 +1927,7 @@ end
       puts "  end"
       if ! element._minOccurs.zero?
         puts "  if ! r"
-        puts "    raise InvalidXMLError, \"sequence missing '#{element._member_name}': got '#\{nodes[offset].name}'\""
+        puts "    raise InvalidXMLError, \"sequence missing '#{name}': got '#\{nodes[offset].name}'\""
         puts "  end"
       end
 
@@ -2260,7 +2258,7 @@ end
       puts "    node = nodes[offset]"
       puts "  end"
       puts
-      puts "  raise 'internal error' if results.empty?"
+      puts "  raise 'internal error' if results.empty\?"
       puts "  [ results, offset ]"
       puts "end"
       puts

@@ -16,10 +16,10 @@
     <xsd:complexType>
       <xsd:sequence>
 	<xsd:element name="Title" type="xsd:string"/>
-	<xsd:element name="book_author">
+	<xsd:element name="book.author">
 	  <xsd:complexType>
 	    <xsd:sequence>
-	      <xsd:element name="given_name" type="xsd:string"/>
+	      <xsd:element name="given-name" type="xsd:string"/>
 	      <xsd:element name="surname" type="xsd:string"/>
 	    </xsd:sequence>
 	  </xsd:complexType> 
