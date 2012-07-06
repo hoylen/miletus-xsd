@@ -1929,7 +1929,7 @@ end
       puts "  end"
       if ! element._minOccurs.zero?
         puts "  if ! r"
-        puts "    raise InvalidXMLError, \"sequence missing #{element._member_name}\""
+        puts "    raise InvalidXMLError, \"sequence missing '#{element._member_name}': got '#\{nodes[offset].name}'\""
         puts "  end"
       end
 
