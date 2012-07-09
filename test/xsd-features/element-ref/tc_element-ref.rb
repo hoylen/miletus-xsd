@@ -16,6 +16,7 @@ class ElementRefTestCase < Test::Unit::TestCase
     doc, name = ElementRef.parse(file)
 
     assert_equal 'book', name
+    assert_not_nil doc
   end
 
 end
