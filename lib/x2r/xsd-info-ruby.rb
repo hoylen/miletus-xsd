@@ -675,7 +675,7 @@ class XSDInfoRuby < XSDInfo
   def output_ruby_header
 
     puts <<"END_HEADER1"
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby
 #
 # :title: #{module_name}: objects for XML namespace #{namespace}
 #
