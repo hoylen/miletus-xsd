@@ -89,25 +89,25 @@ desc 'Test generated parsers by using them to parse/validate examples'
 task :demo => [ :d1, :d2, :d3, :d4, :d5 ]
 
 task :d1 => "#{XMLOBJ_DIR}/AddressBook.rb" do |t|
-  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites} --module AddressBook --verbose test/addressbook/input-01.xml }
-  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites} --module AddressBook --verbose test/addressbook/input-02.xml }
+  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites[0]} --module AddressBook --verbose test/addressbook/input-01.xml }
+  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites[0]} --module AddressBook --verbose test/addressbook/input-02.xml }
 end
 
 task :d2 => "#{XMLOBJ_DIR}/RIFCS.rb" do |t|
-  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites} --module RIFCS --verbose test/rifcs/example/input-01.xml }
-  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites} --module RIFCS --verbose test/rifcs/example/input-02.xml }
-  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites} --module RIFCS --verbose test/rifcs/example/input-03.xml }
+  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites[0]} --module RIFCS --verbose test/rifcs/example/input-01.xml }
+  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites[0]} --module RIFCS --verbose test/rifcs/example/input-02.xml }
+  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites[0]} --module RIFCS --verbose test/rifcs/example/input-03.xml }
 end
 
 task :d3 => "#{XMLOBJ_DIR}/XSD.rb" do |t|
-  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites} --module XSD --verbose test/addressbook/addressbook.xsd }
-  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites} --module XSD --verbose test/rifcs/xsd/registryObjects.xsd }
+  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites[0]} --module XSD --verbose test/addressbook/addressbook.xsd }
+  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites[0]} --module XSD --verbose test/rifcs/xsd/registryObjects.xsd }
 end
 
 task :d4 => "#{XMLOBJ_DIR}/xsd-features/Structures.rb" do |t|
-  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites} --module Structures --verbose test/xsd-features/structures/input-01.xml }
-  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites} --module Structures --verbose test/xsd-features/structures/input-02.xml }
-  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites} --module Structures --verbose test/xsd-features/structures/input-03.xml }
+  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites[0]} --module Structures --verbose test/xsd-features/structures/input-01.xml }
+  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites[0]} --module Structures --verbose test/xsd-features/structures/input-02.xml }
+  ruby %{ -I #{OUTDIR} bin/xml-tool --parser #{t.prerequisites[0]} --module Structures --verbose test/xsd-features/structures/input-03.xml }
 end
 
 task :d5 => "#{XMLOBJ_DIR}/RIFCS.rb" do
