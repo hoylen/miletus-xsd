@@ -1,1314 +1,402 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby
 #
-# :title: XML objects
-# = XML objects
+# :title: XSD: objects for XML namespace http://www.w3.org/2001/XMLSchema
 #
-# This module defines clases to represent an XML infoset that
-# was defined by a set of XML Schemas. It also defines methods
-# to parse an XML document into those objects and to serialize
-# those objects into an XML document.
+# = XSD
+#
+# This module defines classes to represent an XML infoset
+# for the XML namespace:
+#
+#   http://www.w3.org/2001/XMLSchema
+#
+# It also defines methods to parse an XML document into those
+# objects and to serialize those objects into an XML document.
 #
 # Use the parse method to convert an XML document (from either
 # a +File+ or a +String+) into objects.
 #
 # Invoke the +xml+ method on an object to serialize it into XML.
 #
-# == Example
+# == Methods to parse for elements
 #
-# <pre>
-# begin
-#   src = File.new("example.xml")
-#   obj, name = XSD.parser(src)
+# <code>parse_ComplexType_schemaType</code>::
+#   the <code>schema</code> element
+#
+# == Examples
+#
+# === Parsing for a specific element
+#
+#   file = File.new("example.xml")
+#   doc = REXML::Document.new(file)
+#   root_node = doc.root
+#   root_element = XSDparse_ComplexType_schemaType(root_node) # parsing for the schema element
+#
+# === Parsing for any element declared at the top level
+#
+#   file = File.new("example.xml")
+#   doc = REXML::Document.new(file)
+#   obj, name = XSD.parser(doc.root)
 #   if name != 'expectedRootElementName'
-#     ...
+#     ... # root element matched some other element
 #   end
 #
 #   src.xml($stdout)
 #
-# rescue InvalidXMLError => e
-#   ...
-# rescue REXML:...
-#   ...
-# end
-# </pre>
-
-#--
-# Generated code: do not edit
+# === Error handling
 #
-# Created by x2r-bootstrap.rb
+#   begin
+#     elem = XSDparse_ComplexType_schemaType(root_node)
+#   rescue InvalidXMLError => e
+#     ... # schema validity error
+#   rescue REXML:...
+#     ... # well-formed XML error
+#   end
+#--
+# GENERATED CODE: DO NOT EDIT
 
 require 'rexml/document'
+require 'xmlobj/XSDPrimitives'
 
 module XSD
 
-# Target XML namespace for this module.
+#----------------------------------------------------------------
+
+# Target XML namespace this module represents.
 NAMESPACE='http://www.w3.org/2001/XMLSchema'
 
-  class Base
-    # The REXML::node from which this object was parsed,
-    # or +nil+ if this object was not parsed from XML.
-    attr_writer :xml_src_node
+#----------------------------------------------------------------
 
-    def expand_qname(qname)
-      a, b = qname.split(':')
-      if b
-        # a=prefix; b=localname
-        [ "http://debug.namespace/prefix/#{a}", b ] # TODO
+class Base
+  # The REXML::node from which this object was parsed,
+  # or +nil+ if this object was not parsed from XML.
+  #
+  attr_accessor :xml_src_node
+
+  # Constructor.
+  # The +node+ is the REXML::node that provides the
+  # namespace context for interpreting any QNames.
+  # The +node+ can be +nil+, but then +expand_qname+ cannot be invoked
+  # (which is fine for some objects where QNames are not used).
+  #
+  def initialize(node)
+    @xml_src_node = node
+  end
+
+  # Gets the namespace name and local part of a QName (XML qualified
+  # name) from a lexical representation of that QName. The lexical
+  # representation consists an optional prefix followed by a colon,
+  # followed by the local part. The prefix is mapped into the
+  # namespace name according to the namespace declarations of the
+  # current XML node. If there is no prefix, then the default namespace
+  # is the namespace name of the QName.
+  #
+  # For example, if this object represents the following element,
+  # this method can be used to expand the two attribute values.
+  #
+  #   <myelement xmlns="http://ns.example.com/def/1.0"
+  #              xmlns:foo="http://ns.example.com/foo/1.0"
+  #              myqname1="foo:bar"
+  #              myqname2="baz"/>
+  #
+  #   expand_qname("foo:bar" => [ "http://ns.example.com/foo/1.0", "bar" ]
+  #   expand_qname("baz" => [ "http://ns.example.com/def/1.0", "baz" ]
+
+  def expand_qname(qname)
+    a, b = qname.split(':')
+    if b
+      # a=prefix; b=localname
+      ns = @xml_src_node.namespace(a)
+      localname = b
+    else
+      # a=localname (in current namespace)
+      ns = @xml_src_node.namespace('')
+      localname = a
+    end
+    if ! ns
+      if b && a == 'xml'
+        ns = 'http://www.w3.org/XML/1998/namespace'
       else
-        # a=localname (in current namespace)
-        [ 'http://debug.namespace/default-namespace', a ] # TODO
+        raise "unknown namespace for QName "#{qname}""
       end
     end
+    [ ns, localname ]
 
-  end # class Base
+  end
+end
 
-# Class to represent the choice: choice1
+#----------------
+
+# Class to represent the complexType: <code>annotationType</code>.
 #
-# XSD::XSD_choice {
-#   @maxOccurs = nil
-#   @minOccurs = 0
-#   @internal_member_name = "choice1"
-#   @internal_class_name = "_anon2"
-#   @element = [
-#     XSD::XSD_element {
-#       @maxOccurs = nil
-#       @name = "annotation"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "annotation"
-#       @minOccurs = 0
-#       @type = "annotationType"
-#       @type_local = "annotationType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = nil
-#       @name = "include"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "include"
-#       @minOccurs = 0
-#       @type = "includeType"
-#       @type_local = "includeType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = nil
-#       @name = "import"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "import"
-#       @minOccurs = 0
-#       @type = "importType"
-#       @type_local = "importType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#   ]
-# }
-class Choice__anon2 < Base
-  attr_accessor :xml_src_node
-  # Names for the options in this choice.
-  NAMES = [ :annotation, :include, :import,]
-
-  def initialize
-    super()
-    @_index = nil
-    @_value = nil
-  end
-
-  # Returns a symbol indicating which option for the choice. Result is one of
-  # the symbols from +NAME+, or +nil+ if no option has been set.
-  def _option
-    @_index != nil ? NAMES[@_index] : nil
-  end
-
-  # Set the choice to the option identified by +symbol+ and to have the +value+.
-  # See the +NAMES+ constant for permitted values for +symbol+.
-  def []=(symbol, value)
-    match = NAMES.index(symbol)
-    if match
-      @_index = match
-      @_value = value
-    else
-      raise IndexError, "choice has no option: #{symbol}"
-    end
-  end
-
-  # Get value of the option indicated by +symbol+.
-  # Returns +nil+ if the choice is not set to that option.
-  # See the +NAMES+ constant for permitted values for +symbol+.
-  def [](symbol)
-    match = NAMES.index(symbol)
-    match == @_index ? @_value : nil
-  end
-
-  # Get the value of option +annotation+. Returns +nil+ if not the option.
-  def annotation
-    0 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +annotation+ with the +value+.
-  def annotation=(value)
-    @_index = 0
-    @_value = value
-  end
-
-  # Get the value of option +include+. Returns +nil+ if not the option.
-  def include
-    1 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +include+ with the +value+.
-  def include=(value)
-    @_index = 1
-    @_value = value
-  end
-
-  # Get the value of option +import+. Returns +nil+ if not the option.
-  def import
-    2 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +import+ with the +value+.
-  def import=(value)
-    @_index = 2
-    @_value = value
-  end
-
-def self.match(node)
-  if node.name == 'annotation' && node.namespace == XSD::NAMESPACE
-    true
-  elsif node.name == 'include' && node.namespace == XSD::NAMESPACE
-    true
-  elsif node.name == 'import' && node.namespace == XSD::NAMESPACE
-    true
-  else
-    false
-  end
-end # def match
-
-  # Serialize as XML
-  def xml(out, indent)
-    if @_index
-        # Non-primitive
-        @_value.xml(NAMES[@_index], out, indent)
-    end
-  end
-
-end # class Choice__anon2
-
-#
-# An array of Choice__anon2
-#
-class ChoiceList__anon2 < Array
-  attr_accessor :xml_src_node
-
-  # Serialize repeatable choices as XML
-  def xml(out, indent)
-    self.each { |opt| opt.xml(out, indent) }
-  end
-
-end # class ChoiceList__anon2
-
-# Class to represent the choice: choice2
-#
-# XSD::XSD_choice {
-#   @maxOccurs = nil
-#   @minOccurs = 0
-#   @internal_member_name = "choice2"
-#   @internal_class_name = "_anon3"
-#   @element = [
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "annotation"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "annotation"
-#       @minOccurs = 1
-#       @type = "annotationType"
-#       @type_local = "annotationType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "element"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "element"
-#       @minOccurs = 1
-#       @type = "elementType"
-#       @type_local = "elementType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "attribute"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "attribute"
-#       @minOccurs = 1
-#       @type = "attributeType"
-#       @type_local = "attributeType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "simpleType"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "simpleType"
-#       @minOccurs = 1
-#       @type = "simpleTypeType"
-#       @type_local = "simpleTypeType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "complexType"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "complexType"
-#       @minOccurs = 1
-#       @type = "complexTypeType"
-#       @type_local = "complexTypeType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "attributeGroup"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "attributeGroup"
-#       @minOccurs = 1
-#       @type = "attributeGroupType"
-#       @type_local = "attributeGroupType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#   ]
-# }
-class Choice__anon3 < Base
-  attr_accessor :xml_src_node
-  # Names for the options in this choice.
-  NAMES = [ :annotation, :element, :attribute, :simpleType, :complexType, :attributeGroup,]
-
-  def initialize
-    super()
-    @_index = nil
-    @_value = nil
-  end
-
-  # Returns a symbol indicating which option for the choice. Result is one of
-  # the symbols from +NAME+, or +nil+ if no option has been set.
-  def _option
-    @_index != nil ? NAMES[@_index] : nil
-  end
-
-  # Set the choice to the option identified by +symbol+ and to have the +value+.
-  # See the +NAMES+ constant for permitted values for +symbol+.
-  def []=(symbol, value)
-    match = NAMES.index(symbol)
-    if match
-      @_index = match
-      @_value = value
-    else
-      raise IndexError, "choice has no option: #{symbol}"
-    end
-  end
-
-  # Get value of the option indicated by +symbol+.
-  # Returns +nil+ if the choice is not set to that option.
-  # See the +NAMES+ constant for permitted values for +symbol+.
-  def [](symbol)
-    match = NAMES.index(symbol)
-    match == @_index ? @_value : nil
-  end
-
-  # Get the value of option +annotation+. Returns +nil+ if not the option.
-  def annotation
-    0 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +annotation+ with the +value+.
-  def annotation=(value)
-    @_index = 0
-    @_value = value
-  end
-
-  # Get the value of option +element+. Returns +nil+ if not the option.
-  def element
-    1 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +element+ with the +value+.
-  def element=(value)
-    @_index = 1
-    @_value = value
-  end
-
-  # Get the value of option +attribute+. Returns +nil+ if not the option.
-  def attribute
-    2 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +attribute+ with the +value+.
-  def attribute=(value)
-    @_index = 2
-    @_value = value
-  end
-
-  # Get the value of option +simpleType+. Returns +nil+ if not the option.
-  def simpleType
-    3 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +simpleType+ with the +value+.
-  def simpleType=(value)
-    @_index = 3
-    @_value = value
-  end
-
-  # Get the value of option +complexType+. Returns +nil+ if not the option.
-  def complexType
-    4 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +complexType+ with the +value+.
-  def complexType=(value)
-    @_index = 4
-    @_value = value
-  end
-
-  # Get the value of option +attributeGroup+. Returns +nil+ if not the option.
-  def attributeGroup
-    5 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +attributeGroup+ with the +value+.
-  def attributeGroup=(value)
-    @_index = 5
-    @_value = value
-  end
-
-def self.match(node)
-  if node.name == 'annotation' && node.namespace == XSD::NAMESPACE
-    true
-  elsif node.name == 'element' && node.namespace == XSD::NAMESPACE
-    true
-  elsif node.name == 'attribute' && node.namespace == XSD::NAMESPACE
-    true
-  elsif node.name == 'simpleType' && node.namespace == XSD::NAMESPACE
-    true
-  elsif node.name == 'complexType' && node.namespace == XSD::NAMESPACE
-    true
-  elsif node.name == 'attributeGroup' && node.namespace == XSD::NAMESPACE
-    true
-  else
-    false
-  end
-end # def match
-
-  # Serialize as XML
-  def xml(out, indent)
-    if @_index
-        # Non-primitive
-        @_value.xml(NAMES[@_index], out, indent)
-    end
-  end
-
-end # class Choice__anon3
-
-#
-# An array of Choice__anon3
-#
-class ChoiceList__anon3 < Array
-  attr_accessor :xml_src_node
-
-  # Serialize repeatable choices as XML
-  def xml(out, indent)
-    self.each { |opt| opt.xml(out, indent) }
-  end
-
-end # class ChoiceList__anon3
-
-# Class to represent the sequence: _anon1
-#
-# XSD::XSD_sequence {
-#   @maxOccurs = 1
-#   @internal_name = "_anon1"
-#   @minOccurs = 1
-#   @members = [
-#     XSD::XSD_choice {
-#       @maxOccurs = nil
-#       @minOccurs = 0
-#       @internal_member_name = "choice1"
-#       @internal_class_name = "_anon2"
-#       @element = [
-#         XSD::XSD_element {
-#           @maxOccurs = nil
-#           @name = "annotation"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "annotation"
-#           @minOccurs = 0
-#           @type = "annotationType"
-#           @type_local = "annotationType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = nil
-#           @name = "include"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "include"
-#           @minOccurs = 0
-#           @type = "includeType"
-#           @type_local = "includeType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = nil
-#           @name = "import"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "import"
-#           @minOccurs = 0
-#           @type = "importType"
-#           @type_local = "importType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#       ]
-#     }
-#     XSD::XSD_choice {
-#       @maxOccurs = nil
-#       @minOccurs = 0
-#       @internal_member_name = "choice2"
-#       @internal_class_name = "_anon3"
-#       @element = [
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "annotation"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "annotation"
-#           @minOccurs = 1
-#           @type = "annotationType"
-#           @type_local = "annotationType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "element"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "element"
-#           @minOccurs = 1
-#           @type = "elementType"
-#           @type_local = "elementType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "attribute"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "attribute"
-#           @minOccurs = 1
-#           @type = "attributeType"
-#           @type_local = "attributeType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "simpleType"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "simpleType"
-#           @minOccurs = 1
-#           @type = "simpleTypeType"
-#           @type_local = "simpleTypeType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "complexType"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "complexType"
-#           @minOccurs = 1
-#           @type = "complexTypeType"
-#           @type_local = "complexTypeType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "attributeGroup"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "attributeGroup"
-#           @minOccurs = 1
-#           @type = "attributeGroupType"
-#           @type_local = "attributeGroupType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#       ]
-#     }
-#   ]
-# }
-class Sequence__anon1
-  attr_accessor :xml_src_node
-  # Optional and repeatable elements represented by an array.
-  # The array could be empty.
-  attr_accessor :choice1
-  # Optional and repeatable elements represented by an array.
-  # The array could be empty.
-  attr_accessor :choice2
-
-  def initialize
-    super()
-    @choice1 = []
-    @choice2 = []
-  end
-
-  # Serialize sequence as XML
-  def xml(out, indent)
-    indent += '  '
-       @choice1.each { |m| m.xml(out, indent) }
-       @choice2.each { |m| m.xml(out, indent) }
-  end
-
-end # class Sequence__anon1
-
-# Class to represent the complexType: schemaType
-#
-# XSD::XSD_complexType {
-#   @name = "schemaType"
-#   @internal_name = "schemaType"
-#   @attribute = [
-#     XSD::XSD_attribute {
-#       @name = "version"
-#       @internal_name = "version"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#     XSD::XSD_attribute {
-#       @name = "targetNamespace"
-#       @internal_name = "targetNamespace"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#     XSD::XSD_attribute {
-#       @name = "elementFormDefault"
-#       @internal_name = "elementFormDefault"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#     XSD::XSD_attribute {
-#       @name = "attributeFormDefault"
-#       @internal_name = "attributeFormDefault"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#     XSD::XSD_attribute {
-#       @name = nil
-#       @type = nil
-#       @use = nil
-#       @ref = "xml:lang"
-#     }
-#   ]
-#   @sequence = [
-#     XSD::XSD_sequence {
-#       @maxOccurs = 1
-#       @internal_name = "_anon1"
-#       @minOccurs = 1
-#       @members = [
-#         XSD::XSD_choice {
-#           @maxOccurs = nil
-#           @minOccurs = 0
-#           @internal_member_name = "choice1"
-#           @internal_class_name = "_anon2"
-#           @element = [
-#             XSD::XSD_element {
-#               @maxOccurs = nil
-#               @name = "annotation"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "annotation"
-#               @minOccurs = 0
-#               @type = "annotationType"
-#               @type_local = "annotationType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#             XSD::XSD_element {
-#               @maxOccurs = nil
-#               @name = "include"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "include"
-#               @minOccurs = 0
-#               @type = "includeType"
-#               @type_local = "includeType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#             XSD::XSD_element {
-#               @maxOccurs = nil
-#               @name = "import"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "import"
-#               @minOccurs = 0
-#               @type = "importType"
-#               @type_local = "importType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#           ]
-#         }
-#         XSD::XSD_choice {
-#           @maxOccurs = nil
-#           @minOccurs = 0
-#           @internal_member_name = "choice2"
-#           @internal_class_name = "_anon3"
-#           @element = [
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "annotation"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "annotation"
-#               @minOccurs = 1
-#               @type = "annotationType"
-#               @type_local = "annotationType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "element"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "element"
-#               @minOccurs = 1
-#               @type = "elementType"
-#               @type_local = "elementType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "attribute"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "attribute"
-#               @minOccurs = 1
-#               @type = "attributeType"
-#               @type_local = "attributeType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "simpleType"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "simpleType"
-#               @minOccurs = 1
-#               @type = "simpleTypeType"
-#               @type_local = "simpleTypeType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "complexType"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "complexType"
-#               @minOccurs = 1
-#               @type = "complexTypeType"
-#               @type_local = "complexTypeType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "attributeGroup"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "attributeGroup"
-#               @minOccurs = 1
-#               @type = "attributeGroupType"
-#               @type_local = "attributeGroupType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#           ]
-#         }
-#       ]
-#     }
-#   ]
-# }
-class ComplexType_schemaType < Base
-  attr_accessor :xml_src_node
-  # Attribute <code>version</code> (optional, might be +nil+)
-  attr_accessor :version
-  # Attribute <code>targetNamespace</code> (optional, might be +nil+)
-  attr_accessor :targetNamespace
-  # Attribute <code>elementFormDefault</code> (optional, might be +nil+)
-  attr_accessor :elementFormDefault
-  # Attribute <code>attributeFormDefault</code> (optional, might be +nil+)
-  attr_accessor :attributeFormDefault
-  # Attribute <code></code> (optional, might be +nil+)
+class ComplexType_annotationType < Base
+  # The <code></code> attribute.
   attr_accessor :lang
-  # For internal use
-  attr_writer :_sequence # the sequence object
-  # Child element getter
-  def choice1; @_sequence.choice1 end
-  # Child element setter
-  def choice1=(value); @_sequence.choice1(value) end
-  # Child element getter
-  def choice2; @_sequence.choice2 end
-  # Child element setter
-  def choice2=(value); @_sequence.choice2(value) end
-  def initialize
-    super()
-    @version = nil
-    @targetNamespace = nil
-    @elementFormDefault = nil
-    @attributeFormDefault = nil
+  # An instance of <code>Sequence_in_ComplexType_annotationType</code>
+  # to represent the sequence which defines the content model
+  # of this complexType. Users of this class will invoke
+  # the methods of the sequence that have been replicated
+  # by this class: they do not need to directly access the sequence.
+  attr_accessor :_sequence
+
+  # Since this is a complexType defined by a sequence,
+  # the members of that sequence can be accessed through
+  # the following getters and setters. They invoke the
+  # corresponding method on the _sequence object, so
+  # the user doesn't have to interact with the underlying
+  # _sequence at all.
+
+  # Gets the child <code>documentation</code> element.  An array of <code>ComplexType_documentationType</code>. Can be an empty array.
+  def documentation; @_sequence.documentation end
+  # Sets the child <code>documentation</code> element.  An array of <code>ComplexType_documentationType</code>. Can be an empty array.
+  def documentation=(value); @_sequence.documentation(value) end
+
+  def initialize(node)
+    super(node)
+    # Attribute
     @lang = nil
-  end
-  # Serialize as XML.
-  # The +ename+ (+String+) is used as the element name and the
-  # XML is written to +out+ (+IO+) with indenting of +indent+.
-  def xml(ename, out, indent='')
-    out.print "#{indent}<#{ename}" # start tag
-    if @version
-      out.print " version=\"#{XSD.pcdata(@version)}\""
-    end
-    if @targetNamespace
-      out.print " targetNamespace=\"#{XSD.pcdata(@targetNamespace)}\""
-    end
-    if @elementFormDefault
-      out.print " elementFormDefault=\"#{XSD.pcdata(@elementFormDefault)}\""
-    end
-    if @attributeFormDefault
-      out.print " attributeFormDefault=\"#{XSD.pcdata(@attributeFormDefault)}\""
-    end
-    if @lang
-      out.print " xsd:lang=\"#{XSD.pcdata(@lang)}\""
-    end
-    out.print ">"
-    out.puts
-    @_sequence.xml(out, indent)
-    out.print indent
-    out.print "</#{ename}>\n" # end tag
+    @_sequence = nil
   end
 
-end # class ComplexType_schemaType
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
 
-# Class to represent the sequence: _anon4
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      if lang
+        io.print " =\""
+        io.print XSDPrimitives.pcdata(@lang)
+        io.print '"'
+      end
+      io.print '>'
+
+      if indent
+        nested_indent = indent + '  '
+      else
+        nested_indent = nil
+      end
+      io.puts
+      _sequence.to_xml(new_inscope_ns, nested_indent, io)
+      if indent
+        io.print indent
+      end
+      io.print "</#{qualifier}#{element_name}>"
+      if indent
+        io.puts
+      end
+    end
+end
+
+#----------------
+
+# Class to represent a sequence.
 #
-# XSD::XSD_sequence {
-#   @maxOccurs = 1
-#   @internal_name = "_anon4"
-#   @minOccurs = 1
-#   @members = [
-#     XSD::XSD_element {
-#       @maxOccurs = nil
-#       @name = "documentation"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "documentation"
-#       @minOccurs = 0
-#       @type = "documentationType"
-#       @type_local = "documentationType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#   ]
-# }
-class Sequence__anon4
-  attr_accessor :xml_src_node
-  # Optional and repeatable elements represented by an array.
-  # The array could be empty.
+class Sequence_in_ComplexType_annotationType < Base
+  # An array of [0..*] <code>ComplexType_documentationType</code> objects.
   attr_accessor :documentation
-
-  def initialize
-    super()
+  def initialize(node)
+    super(node)
     @documentation = []
   end
-
-  # Serialize sequence as XML
-  def xml(out, indent)
-    indent += '  '
-    if ! @documentation.empty?
-      @documentation.each { |m| m.xml('documentation', out, indent) }
+  def to_xml(inscope_ns, indent, io)
+    @documentation.each do |i|
+      i.to_xml(XSD::NAMESPACE, 'documentation', inscope_ns, indent, io)
     end
   end
+end
 
-end # class Sequence__anon4
+#----------------
 
-# Class to represent the complexType: annotationType
+# Class to represent the complexType: <code>attributeGroupType</code>.
 #
-# XSD::XSD_complexType {
-#   @name = "annotationType"
-#   @internal_name = "annotationType"
-#   @attribute = [
-#     XSD::XSD_attribute {
-#       @name = nil
-#       @type = nil
-#       @use = nil
-#       @ref = "xml:lang"
-#     }
-#   ]
-#   @sequence = [
-#     XSD::XSD_sequence {
-#       @maxOccurs = 1
-#       @internal_name = "_anon4"
-#       @minOccurs = 1
-#       @members = [
-#         XSD::XSD_element {
-#           @maxOccurs = nil
-#           @name = "documentation"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "documentation"
-#           @minOccurs = 0
-#           @type = "documentationType"
-#           @type_local = "documentationType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#       ]
-#     }
-#   ]
-# }
-class ComplexType_annotationType < Base
-  attr_accessor :xml_src_node
-  # Attribute <code></code> (optional, might be +nil+)
-  attr_accessor :lang
-  # For internal use
-  attr_writer :_sequence # the sequence object
-  # Child element getter
-  def documentation; @_sequence.documentation end
-  # Child element setter
-  def documentation=(value); @_sequence.documentation(value) end
-  def initialize
-    super()
-    @lang = nil
-  end
-  # Serialize as XML.
-  # The +ename+ (+String+) is used as the element name and the
-  # XML is written to +out+ (+IO+) with indenting of +indent+.
-  def xml(ename, out, indent='')
-    out.print "#{indent}<#{ename}" # start tag
-    if @lang
-      out.print " xsd:lang=\"#{XSD.pcdata(@lang)}\""
-    end
-    out.print ">"
-    out.puts
-    @_sequence.xml(out, indent)
-    out.print indent
-    out.print "</#{ename}>\n" # end tag
-  end
+class ComplexType_attributeGroupType < Base
+  # The <code>name</code> attribute.
+  attr_accessor :name
+  # The <code>ref</code> attribute.
+  attr_accessor :ref
+  # An instance of <code>Sequence_in_ComplexType_attributeGroupType</code>
+  # to represent the sequence which defines the content model
+  # of this complexType. Users of this class will invoke
+  # the methods of the sequence that have been replicated
+  # by this class: they do not need to directly access the sequence.
+  attr_accessor :_sequence
 
-end # class ComplexType_annotationType
+  # Since this is a complexType defined by a sequence,
+  # the members of that sequence can be accessed through
+  # the following getters and setters. They invoke the
+  # corresponding method on the _sequence object, so
+  # the user doesn't have to interact with the underlying
+  # _sequence at all.
 
-# Class to represent the complexType: documentationType
-#
-# XSD::XSD_complexType {
-#   @name = "documentationType"
-#   @internal_name = "documentationType"
-#   @simpleContent = [
-#     XSD::XSD_simpleContent {
-#       @extension = [
-#         XSD::XSD_extension {
-#           @base = "xsd:string"
-#           @attribute = [
-#             XSD::XSD_attribute {
-#               @name = "source"
-#               @internal_name = "source"
-#               @type = "xsd:string"
-#               @use = nil
-#               @ref = nil
-#             }
-#             XSD::XSD_attribute {
-#               @name = nil
-#               @type = nil
-#               @use = nil
-#               @ref = "xml:lang"
-#             }
-#           ]
-#         }
-#       ]
-#     }
-#   ]
-# }
-class ComplexType_documentationType < Base
-  attr_accessor :xml_src_node
-  # Attribute <code>source</code> (optional, might be +nil+)
-  attr_accessor :source
-  # Attribute <code></code> (optional, might be +nil+)
-  attr_accessor :lang
-  # The simpleContent value as a +String+.
-  # In XML Schema, this is an extension of <code>xsd:string</code>.
-  attr_accessor :_value
-
-  def initialize
-    super()
-  end
-  # Serialize as XML
-  def xml(ename, out, indent)
-    out.print "#{indent}<#{ename}" # start tag for extension
-    if @source
-      out.print " source=\"#{XSD.pcdata(@source)}\""
-    end
-    if @lang
-      out.print " xsd:lang=\"#{XSD.pcdata(@lang)}\""
-    end
-    out.print '>'
-    out.print XSD.cdata(@_value)
-    out.print "</#{ename}>\n" # end tag
-  end # def xml
-
-end # class ComplexType_documentationType
-
-# Class to represent the complexType: includeType
-#
-# XSD::XSD_complexType {
-#   @name = "includeType"
-#   @internal_name = "includeType"
-#   @attribute = [
-#     XSD::XSD_attribute {
-#       @name = "schemaLocation"
-#       @internal_name = "schemaLocation"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#   ]
-# }
-class ComplexType_includeType < Base
-  attr_accessor :xml_src_node
-  # Attribute <code>schemaLocation</code> (optional, might be +nil+)
-  attr_accessor :schemaLocation
-  def initialize
-    super()
-    @schemaLocation = nil
-  end
-  # Serialize as XML.
-  # The +ename+ (+String+) is used as the element name and the
-  # XML is written to +out+ (+IO+) with indenting of +indent+.
-  def xml(ename, out, indent='')
-    out.print "#{indent}<#{ename}" # start tag
-    if @schemaLocation
-      out.print " schemaLocation=\"#{XSD.pcdata(@schemaLocation)}\""
-    end
-    out.print ">"
-    out.print "</#{ename}>\n" # end tag
-  end
-
-end # class ComplexType_includeType
-
-# Class to represent the complexType: importType
-#
-# XSD::XSD_complexType {
-#   @name = "importType"
-#   @internal_name = "importType"
-#   @attribute = [
-#     XSD::XSD_attribute {
-#       @name = "namespace"
-#       @internal_name = "namespace"
-#       @type = "xsd:string"
-#       @use = "required"
-#       @ref = nil
-#     }
-#     XSD::XSD_attribute {
-#       @name = "schemaLocation"
-#       @internal_name = "schemaLocation"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#   ]
-# }
-class ComplexType_importType < Base
-  attr_accessor :xml_src_node
-  # Attribute <code>namespace</code> (required, always has a value)
-  attr_accessor :namespace
-  # Attribute <code>schemaLocation</code> (optional, might be +nil+)
-  attr_accessor :schemaLocation
-  def initialize
-    super()
-    @namespace = nil
-    @schemaLocation = nil
-  end
-  # Serialize as XML.
-  # The +ename+ (+String+) is used as the element name and the
-  # XML is written to +out+ (+IO+) with indenting of +indent+.
-  def xml(ename, out, indent='')
-    out.print "#{indent}<#{ename}" # start tag
-    if @namespace
-      out.print " namespace=\"#{XSD.pcdata(@namespace)}\""
-    end
-    if @schemaLocation
-      out.print " schemaLocation=\"#{XSD.pcdata(@schemaLocation)}\""
-    end
-    out.print ">"
-    out.print "</#{ename}>\n" # end tag
-  end
-
-end # class ComplexType_importType
-
-# Class to represent the sequence: _anon5
-#
-# XSD::XSD_sequence {
-#   @maxOccurs = 1
-#   @internal_name = "_anon5"
-#   @minOccurs = 1
-#   @members = [
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "extension"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "extension"
-#       @minOccurs = 1
-#       @type = "extensionType"
-#       @type_local = "extensionType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#   ]
-# }
-class Sequence__anon5
-  attr_accessor :xml_src_node
-  # Single mandatory child element.
-  # Value is never +nil+.
-  attr_accessor :extension
-
-  def initialize
-    super()
-    @extension = nil
-  end
-
-  # Serialize sequence as XML
-  def xml(out, indent)
-    indent += '  '
-    if @extension
-      @extension.xml('extension', out, indent)
-    end
-  end
-
-end # class Sequence__anon5
-
-# Class to represent the complexType: simpleContentType
-#
-# XSD::XSD_complexType {
-#   @name = "simpleContentType"
-#   @internal_name = "simpleContentType"
-#   @sequence = [
-#     XSD::XSD_sequence {
-#       @maxOccurs = 1
-#       @internal_name = "_anon5"
-#       @minOccurs = 1
-#       @members = [
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "extension"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "extension"
-#           @minOccurs = 1
-#           @type = "extensionType"
-#           @type_local = "extensionType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#       ]
-#     }
-#   ]
-# }
-class ComplexType_simpleContentType < Base
-  attr_accessor :xml_src_node
-  # For internal use
-  attr_writer :_sequence # the sequence object
-  # Child element getter
-  def extension; @_sequence.extension end
-  # Child element setter
-  def extension=(value); @_sequence.extension(value) end
-  def initialize
-    super()
-  end
-  # Serialize as XML.
-  # The +ename+ (+String+) is used as the element name and the
-  # XML is written to +out+ (+IO+) with indenting of +indent+.
-  def xml(ename, out, indent='')
-    out.print "#{indent}<#{ename}" # start tag
-    out.print ">"
-    out.puts
-    @_sequence.xml(out, indent)
-    out.print indent
-    out.print "</#{ename}>\n" # end tag
-  end
-
-end # class ComplexType_simpleContentType
-
-# Class to represent the sequence: _anon6
-#
-# XSD::XSD_sequence {
-#   @maxOccurs = 1
-#   @internal_name = "_anon6"
-#   @minOccurs = 1
-#   @members = [
-#     XSD::XSD_element {
-#       @maxOccurs = nil
-#       @name = "attribute"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "attribute"
-#       @minOccurs = 1
-#       @type = "attributeType"
-#       @type_local = "attributeType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = nil
-#       @name = "annotation"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "annotation"
-#       @minOccurs = 0
-#       @type = "annotationType"
-#       @type_local = "annotationType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#   ]
-# }
-class Sequence__anon6
-  attr_accessor :xml_src_node
-  # Mandatory and repeatable elements represented by an array.
-  # The array always has at least 1 members.
-  attr_accessor :attribute
-  # Optional and repeatable elements represented by an array.
-  # The array could be empty.
-  attr_accessor :annotation
-
-  def initialize
-    super()
-    @attribute = []
-    @annotation = []
-  end
-
-  # Serialize sequence as XML
-  def xml(out, indent)
-    indent += '  '
-    if ! @attribute.empty?
-      @attribute.each { |m| m.xml('attribute', out, indent) }
-    end
-    if ! @annotation.empty?
-      @annotation.each { |m| m.xml('annotation', out, indent) }
-    end
-  end
-
-end # class Sequence__anon6
-
-# Class to represent the complexType: extensionType
-#
-# XSD::XSD_complexType {
-#   @name = "extensionType"
-#   @internal_name = "extensionType"
-#   @attribute = [
-#     XSD::XSD_attribute {
-#       @name = "base"
-#       @internal_name = "base"
-#       @type = "xsd:string"
-#       @use = "required"
-#       @ref = nil
-#     }
-#   ]
-#   @sequence = [
-#     XSD::XSD_sequence {
-#       @maxOccurs = 1
-#       @internal_name = "_anon6"
-#       @minOccurs = 1
-#       @members = [
-#         XSD::XSD_element {
-#           @maxOccurs = nil
-#           @name = "attribute"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "attribute"
-#           @minOccurs = 1
-#           @type = "attributeType"
-#           @type_local = "attributeType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = nil
-#           @name = "annotation"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "annotation"
-#           @minOccurs = 0
-#           @type = "annotationType"
-#           @type_local = "annotationType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#       ]
-#     }
-#   ]
-# }
-class ComplexType_extensionType < Base
-  attr_accessor :xml_src_node
-  # Attribute <code>base</code> (required, always has a value)
-  attr_accessor :base
-  # For internal use
-  attr_writer :_sequence # the sequence object
-  # Child element getter
-  def attribute; @_sequence.attribute end
-  # Child element setter
-  def attribute=(value); @_sequence.attribute(value) end
-  # Child element getter
+  # Gets the child <code>annotation</code> element.  An array of <code>ComplexType_annotationType</code>. Can be an empty array.
   def annotation; @_sequence.annotation end
-  # Child element setter
+  # Sets the child <code>annotation</code> element.  An array of <code>ComplexType_annotationType</code>. Can be an empty array.
   def annotation=(value); @_sequence.annotation(value) end
-  def initialize
-    super()
-    @base = nil
+
+  # Gets the child <code>choice</code>.  An array of <code>Choice_in_Sequence_in_ComplexType_attributeGroupType</code>. Can be an empty array.
+  def choice; @_sequence.choice end
+  # Sets the child <code>choice</code>.  An array of <code>Choice_in_Sequence_in_ComplexType_attributeGroupType</code>. Can be an empty array.
+  def choice=(value); @_sequence.choice(value) end
+
+  def initialize(node)
+    super(node)
+    # Attribute
+    @name = nil
+    # Attribute
+    @ref = nil
+    @_sequence = nil
   end
-  # Serialize as XML.
-  # The +ename+ (+String+) is used as the element name and the
-  # XML is written to +out+ (+IO+) with indenting of +indent+.
-  def xml(ename, out, indent='')
-    out.print "#{indent}<#{ename}" # start tag
-    if @base
-      out.print " base=\"#{XSD.pcdata(@base)}\""
+
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
+
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      if name
+        io.print " name=\""
+        io.print XSDPrimitives.pcdata(@name)
+        io.print '"'
+      end
+      if ref
+        io.print " ref=\""
+        io.print XSDPrimitives.pcdata(@ref)
+        io.print '"'
+      end
+      io.print '>'
+
+      if indent
+        nested_indent = indent + '  '
+      else
+        nested_indent = nil
+      end
+      io.puts
+      _sequence.to_xml(new_inscope_ns, nested_indent, io)
+      if indent
+        io.print indent
+      end
+      io.print "</#{qualifier}#{element_name}>"
+      if indent
+        io.puts
+      end
     end
-    out.print ">"
-    out.puts
-    @_sequence.xml(out, indent)
-    out.print indent
-    out.print "</#{ename}>\n" # end tag
-  end
+end
 
-end # class ComplexType_extensionType
+#----------------
 
-# Class to represent the choice: choice
+# Class to represent a sequence.
 #
-# XSD::XSD_choice {
-#   @maxOccurs = 1
-#   @minOccurs = 0
-#   @internal_member_name = "choice"
-#   @internal_class_name = "_anon8"
-#   @element = [
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "complexType"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "complexType"
-#       @minOccurs = 1
-#       @type = "complexTypeType"
-#       @type_local = "complexTypeType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#   ]
-# }
-class Choice__anon8 < Base
-  attr_accessor :xml_src_node
-  # Names for the options in this choice.
-  NAMES = [ :complexType,]
-
-  def initialize
-    super()
-    @_index = nil
-    @_value = nil
+class Sequence_in_ComplexType_attributeGroupType < Base
+  # An array of [0..*] <code>ComplexType_annotationType</code> objects.
+  attr_accessor :annotation
+  # An array of [0..*] <code>Choice_in_Sequence_in_ComplexType_attributeGroupType</code> objects.
+  attr_accessor :choice
+  def initialize(node)
+    super(node)
+    @annotation = []
+    @choice = []
   end
+  def to_xml(inscope_ns, indent, io)
+    @annotation.each do |i|
+      i.to_xml(XSD::NAMESPACE, 'annotation', inscope_ns, indent, io)
+    end
+    choice.each do |i|
+      i.to_xml(inscope_ns, indent, io)
+    end
+  end
+end
+
+#----------------
+
+# Class to represent a choice.
+#
+# The choice's option can be determined by the _option method, which
+# will return one of the symbols in the NAMES array. The value of
+# that option can be obtained by calling [] with that symbol or the
+# method with the same name as the symbol. Only one option of the
+# choice will be chosen: attempting to obtain the values of any
+# other option will return +nil+.
+#
+class Choice_in_Sequence_in_ComplexType_attributeGroupType < Base
+  # Names for the options in this choice.
+  NAMES = [ :attribute, :attributeGroup,]
+
+  def initialize(node)
+
+    super(node)
+    @_index = nil # indicates which option (0..1 or nil)
+    @_value = nil # the value of the option
+  end
+
+  # Indexed accessors
 
   # Returns a symbol indicating which option for the choice. Result is one of
   # the symbols from +NAME+, or +nil+ if no option has been set.
@@ -1333,545 +421,615 @@ class Choice__anon8 < Base
   # See the +NAMES+ constant for permitted values for +symbol+.
   def [](symbol)
     match = NAMES.index(symbol)
-    match == @_index ? @_value : nil
+    (match == @_index) ? @_value : nil
   end
 
-  # Get the value of option +complexType+. Returns +nil+ if not the option.
-  def complexType
-    0 == @_index ? @_value : nil
+  # Named accessors
+
+  # Get the value of option +attribute+.
+# Returns an array of <code>ComplexType_attributeType</code> objects.
+# Returns +nil+ if not the option.
+  def attribute
+    (0 == @_index) ? @_value : nil
   end
-  # Set the choice to be option +complexType+ with the +value+.
-  def complexType=(value)
+  # Set the choice to be the +attribute+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_attributeType</code> objects.
+  def attribute=(value)
     @_index = 0
     @_value = value
   end
 
-def self.match(node)
-  if node.name == 'complexType' && node.namespace == XSD::NAMESPACE
-    true
-  else
-    false
+  # Get the value of option +attributeGroup+.
+# Returns an array of <code>ComplexType_attributeGroupType</code> objects.
+# Returns +nil+ if not the option.
+  def attributeGroup
+    (1 == @_index) ? @_value : nil
   end
-end # def match
+  # Set the choice to be the +attributeGroup+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_attributeGroupType</code> objects.
+  def attributeGroup=(value)
+    @_index = 1
+    @_value = value
+  end
 
-  # Serialize as XML
-  def xml(out, indent)
-    if @_index
-        # Non-primitive
-        @_value.xml(NAMES[@_index], out, indent)
+def to_xml(inscope_ns, indent, io)
+  case @_index
+  when 0
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'attribute', inscope_ns, indent, io)
+    end
+  when 1
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'attributeGroup', inscope_ns, indent, io)
     end
   end
+end
+end
 
-end # class Choice__anon8
+#----------------
 
-# Class to represent the sequence: _anon7
+# Class to represent the complexType: <code>attributeType</code>.
 #
-# XSD::XSD_sequence {
-#   @maxOccurs = 1
-#   @internal_name = "_anon7"
-#   @minOccurs = 1
-#   @members = [
-#     XSD::XSD_element {
-#       @maxOccurs = nil
-#       @name = "annotation"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "annotation"
-#       @minOccurs = 0
-#       @type = "annotationType"
-#       @type_local = "annotationType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_choice {
-#       @maxOccurs = 1
-#       @minOccurs = 0
-#       @internal_member_name = "choice"
-#       @internal_class_name = "_anon8"
-#       @element = [
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "complexType"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "complexType"
-#           @minOccurs = 1
-#           @type = "complexTypeType"
-#           @type_local = "complexTypeType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#       ]
-#     }
-#   ]
-# }
-class Sequence__anon7
-  attr_accessor :xml_src_node
-  # Optional and repeatable elements represented by an array.
-  # The array could be empty.
-  attr_accessor :annotation
-  # Single optional child element.
-  # Value is +nil+ if the element is not present.
-  attr_accessor :choice
-
-  def initialize
-    super()
-    @annotation = []
-    @choice = nil
-  end
-
-  # Serialize sequence as XML
-  def xml(out, indent)
-    indent += '  '
-    if ! @annotation.empty?
-      @annotation.each { |m| m.xml('annotation', out, indent) }
-    end
-    if @choice
-      @choice.xml(out, indent)
-    end
-  end
-
-end # class Sequence__anon7
-
-# Class to represent the complexType: elementType
-#
-# XSD::XSD_complexType {
-#   @name = "elementType"
-#   @internal_name = "elementType"
-#   @attribute = [
-#     XSD::XSD_attribute {
-#       @name = "name"
-#       @internal_name = "name"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#     XSD::XSD_attribute {
-#       @name = "type"
-#       @internal_name = "type_attribute"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#     XSD::XSD_attribute {
-#       @name = "minOccurs"
-#       @internal_name = "minOccurs"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#     XSD::XSD_attribute {
-#       @name = "maxOccurs"
-#       @internal_name = "maxOccurs"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#     XSD::XSD_attribute {
-#       @name = "ref"
-#       @internal_name = "ref"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#   ]
-#   @sequence = [
-#     XSD::XSD_sequence {
-#       @maxOccurs = 1
-#       @internal_name = "_anon7"
-#       @minOccurs = 1
-#       @members = [
-#         XSD::XSD_element {
-#           @maxOccurs = nil
-#           @name = "annotation"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "annotation"
-#           @minOccurs = 0
-#           @type = "annotationType"
-#           @type_local = "annotationType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_choice {
-#           @maxOccurs = 1
-#           @minOccurs = 0
-#           @internal_member_name = "choice"
-#           @internal_class_name = "_anon8"
-#           @element = [
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "complexType"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "complexType"
-#               @minOccurs = 1
-#               @type = "complexTypeType"
-#               @type_local = "complexTypeType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#           ]
-#         }
-#       ]
-#     }
-#   ]
-# }
-class ComplexType_elementType < Base
-  attr_accessor :xml_src_node
-  # Attribute <code>name</code> (optional, might be +nil+)
+class ComplexType_attributeType < Base
+  # The <code>name</code> attribute.
   attr_accessor :name
-  # Attribute <code>type</code> (optional, might be +nil+)
+  # The <code>type</code> attribute.
   attr_accessor :type_attribute
-  # Attribute <code>minOccurs</code> (optional, might be +nil+)
-  attr_accessor :minOccurs
-  # Attribute <code>maxOccurs</code> (optional, might be +nil+)
-  attr_accessor :maxOccurs
-  # Attribute <code>ref</code> (optional, might be +nil+)
+  # The <code>ref</code> attribute.
   attr_accessor :ref
-  # For internal use
-  attr_writer :_sequence # the sequence object
-  # Child element getter
+  # The <code>use</code> attribute.
+  attr_accessor :use
+  # An instance of <code>Sequence_in_ComplexType_attributeType</code>
+  # to represent the sequence which defines the content model
+  # of this complexType. Users of this class will invoke
+  # the methods of the sequence that have been replicated
+  # by this class: they do not need to directly access the sequence.
+  attr_accessor :_sequence
+
+  # Since this is a complexType defined by a sequence,
+  # the members of that sequence can be accessed through
+  # the following getters and setters. They invoke the
+  # corresponding method on the _sequence object, so
+  # the user doesn't have to interact with the underlying
+  # _sequence at all.
+
+  # Gets the child <code>annotation</code> element.  An array of <code>ComplexType_annotationType</code>. Can be an empty array.
   def annotation; @_sequence.annotation end
-  # Child element setter
+  # Sets the child <code>annotation</code> element.  An array of <code>ComplexType_annotationType</code>. Can be an empty array.
   def annotation=(value); @_sequence.annotation(value) end
-  # Child element getter
-  def choice; @_sequence.choice end
-  # Child element setter
-  def choice=(value); @_sequence.choice(value) end
-  def initialize
-    super()
+
+  # Gets the child <code>simpleType</code> element.  A single <code>ComplexType_simpleTypeType</code>. Optional element, so could be +nil+.
+  def simpleType; @_sequence.simpleType end
+  # Sets the child <code>simpleType</code> element.  A single <code>ComplexType_simpleTypeType</code>. Optional element, so could be +nil+.
+  def simpleType=(value); @_sequence.simpleType(value) end
+
+  def initialize(node)
+    super(node)
+    # Attribute
     @name = nil
+    # Attribute
     @type_attribute = nil
-    @minOccurs = nil
-    @maxOccurs = nil
+    # Attribute
     @ref = nil
-  end
-  # Serialize as XML.
-  # The +ename+ (+String+) is used as the element name and the
-  # XML is written to +out+ (+IO+) with indenting of +indent+.
-  def xml(ename, out, indent='')
-    out.print "#{indent}<#{ename}" # start tag
-    if @name
-      out.print " name=\"#{XSD.pcdata(@name)}\""
-    end
-    if @type_attribute
-      out.print " type=\"#{XSD.pcdata(@type_attribute)}\""
-    end
-    if @minOccurs
-      out.print " minOccurs=\"#{XSD.pcdata(@minOccurs)}\""
-    end
-    if @maxOccurs
-      out.print " maxOccurs=\"#{XSD.pcdata(@maxOccurs)}\""
-    end
-    if @ref
-      out.print " ref=\"#{XSD.pcdata(@ref)}\""
-    end
-    out.print ">"
-    out.puts
-    @_sequence.xml(out, indent)
-    out.print indent
-    out.print "</#{ename}>\n" # end tag
+    # Attribute
+    @use = nil
+    @_sequence = nil
   end
 
-end # class ComplexType_elementType
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
 
-# Class to represent the complexType: enumerationType
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      if name
+        io.print " name=\""
+        io.print XSDPrimitives.pcdata(@name)
+        io.print '"'
+      end
+      if type_attribute
+        io.print " type=\""
+        io.print XSDPrimitives.pcdata(@type_attribute)
+        io.print '"'
+      end
+      if ref
+        io.print " ref=\""
+        io.print XSDPrimitives.pcdata(@ref)
+        io.print '"'
+      end
+      if use
+        io.print " use=\""
+        io.print XSDPrimitives.pcdata(@use)
+        io.print '"'
+      end
+      io.print '>'
+
+      if indent
+        nested_indent = indent + '  '
+      else
+        nested_indent = nil
+      end
+      io.puts
+      _sequence.to_xml(new_inscope_ns, nested_indent, io)
+      if indent
+        io.print indent
+      end
+      io.print "</#{qualifier}#{element_name}>"
+      if indent
+        io.puts
+      end
+    end
+end
+
+#----------------
+
+# Class to represent a sequence.
 #
-# XSD::XSD_complexType {
-#   @name = "enumerationType"
-#   @internal_name = "enumerationType"
-#   @simpleContent = [
-#     XSD::XSD_simpleContent {
-#       @extension = [
-#         XSD::XSD_extension {
-#           @base = "xsd:string"
-#           @attribute = [
-#             XSD::XSD_attribute {
-#               @name = "value"
-#               @internal_name = "value"
-#               @type = "xsd:string"
-#               @use = nil
-#               @ref = nil
-#             }
-#           ]
-#         }
-#       ]
-#     }
-#   ]
-# }
-class ComplexType_enumerationType < Base
-  attr_accessor :xml_src_node
-  # Attribute <code>value</code> (optional, might be +nil+)
-  attr_accessor :value
-  # The simpleContent value as a +String+.
-  # In XML Schema, this is an extension of <code>xsd:string</code>.
-  attr_accessor :_value
-
-  def initialize
-    super()
+class Sequence_in_ComplexType_attributeType < Base
+  # An array of [0..*] <code>ComplexType_annotationType</code> objects.
+  attr_accessor :annotation
+  # An instance of <code>ComplexType_simpleTypeType</code> (optional element, can be +nil+).
+  attr_accessor :simpleType
+  def initialize(node)
+    super(node)
+    @annotation = []
+    @simpleType = nil
   end
-  # Serialize as XML
-  def xml(ename, out, indent)
-    out.print "#{indent}<#{ename}" # start tag for extension
-    if @value
-      out.print " value=\"#{XSD.pcdata(@value)}\""
+  def to_xml(inscope_ns, indent, io)
+    @annotation.each do |i|
+      i.to_xml(XSD::NAMESPACE, 'annotation', inscope_ns, indent, io)
     end
-    out.print '>'
-    out.print XSD.cdata(@_value)
-    out.print "</#{ename}>\n" # end tag
-  end # def xml
-
-end # class ComplexType_enumerationType
-
-# Class to represent the sequence: _anon9
-#
-# XSD::XSD_sequence {
-#   @maxOccurs = 1
-#   @internal_name = "_anon9"
-#   @minOccurs = 1
-#   @members = [
-#     XSD::XSD_element {
-#       @maxOccurs = nil
-#       @name = "enumeration"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "enumeration"
-#       @minOccurs = 0
-#       @type = "enumerationType"
-#       @type_local = "enumerationType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#   ]
-# }
-class Sequence__anon9
-  attr_accessor :xml_src_node
-  # Optional and repeatable elements represented by an array.
-  # The array could be empty.
-  attr_accessor :enumeration
-
-  def initialize
-    super()
-    @enumeration = []
-  end
-
-  # Serialize sequence as XML
-  def xml(out, indent)
-    indent += '  '
-    if ! @enumeration.empty?
-      @enumeration.each { |m| m.xml('enumeration', out, indent) }
+    m = @simpleType
+    if m
+      m.to_xml(XSD::NAMESPACE, 'simpleType', inscope_ns, indent, io)
     end
   end
+end
 
-end # class Sequence__anon9
+#----------------
 
-# Class to represent the complexType: restrictionType
+# Class to represent the complexType: <code>choiceType</code>.
 #
-# XSD::XSD_complexType {
-#   @name = "restrictionType"
-#   @internal_name = "restrictionType"
-#   @attribute = [
-#     XSD::XSD_attribute {
-#       @name = "base"
-#       @internal_name = "base"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#   ]
-#   @sequence = [
-#     XSD::XSD_sequence {
-#       @maxOccurs = 1
-#       @internal_name = "_anon9"
-#       @minOccurs = 1
-#       @members = [
-#         XSD::XSD_element {
-#           @maxOccurs = nil
-#           @name = "enumeration"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "enumeration"
-#           @minOccurs = 0
-#           @type = "enumerationType"
-#           @type_local = "enumerationType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#       ]
-#     }
-#   ]
-# }
-class ComplexType_restrictionType < Base
-  attr_accessor :xml_src_node
-  # Attribute <code>base</code> (optional, might be +nil+)
-  attr_accessor :base
-  # For internal use
-  attr_writer :_sequence # the sequence object
-  # Child element getter
-  def enumeration; @_sequence.enumeration end
-  # Child element setter
-  def enumeration=(value); @_sequence.enumeration(value) end
-  def initialize
-    super()
-    @base = nil
+class ComplexType_choiceType < Base
+  # The <code>minOccurs</code> attribute.
+  attr_accessor :minOccurs
+  # The <code>maxOccurs</code> attribute.
+  attr_accessor :maxOccurs
+  # An instance of <code>Sequence_in_ComplexType_choiceType</code>
+  # to represent the sequence which defines the content model
+  # of this complexType. Users of this class will invoke
+  # the methods of the sequence that have been replicated
+  # by this class: they do not need to directly access the sequence.
+  attr_accessor :_sequence
+
+  # Since this is a complexType defined by a sequence,
+  # the members of that sequence can be accessed through
+  # the following getters and setters. They invoke the
+  # corresponding method on the _sequence object, so
+  # the user doesn't have to interact with the underlying
+  # _sequence at all.
+
+  # Gets the child <code>annotation</code> element.  An array of <code>ComplexType_annotationType</code>. Can be an empty array.
+  def annotation; @_sequence.annotation end
+  # Sets the child <code>annotation</code> element.  An array of <code>ComplexType_annotationType</code>. Can be an empty array.
+  def annotation=(value); @_sequence.annotation(value) end
+
+  # Gets the child <code>choice</code>.  An array of <code>Choice_in_Sequence_in_ComplexType_choiceType</code>. Has a minimum length of #{member.choice.minOccurs}.
+  def choice; @_sequence.choice end
+  # Sets the child <code>choice</code>.  An array of <code>Choice_in_Sequence_in_ComplexType_choiceType</code>. Has a minimum length of #{member.choice.minOccurs}.
+  def choice=(value); @_sequence.choice(value) end
+
+  def initialize(node)
+    super(node)
+    # Attribute
+    @minOccurs = nil
+    # Attribute
+    @maxOccurs = nil
+    @_sequence = nil
   end
-  # Serialize as XML.
-  # The +ename+ (+String+) is used as the element name and the
-  # XML is written to +out+ (+IO+) with indenting of +indent+.
-  def xml(ename, out, indent='')
-    out.print "#{indent}<#{ename}" # start tag
-    if @base
-      out.print " base=\"#{XSD.pcdata(@base)}\""
+
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
+
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      if minOccurs
+        io.print " minOccurs=\""
+        io.print XSDPrimitives.pcdata(@minOccurs)
+        io.print '"'
+      end
+      if maxOccurs
+        io.print " maxOccurs=\""
+        io.print XSDPrimitives.pcdata(@maxOccurs)
+        io.print '"'
+      end
+      io.print '>'
+
+      if indent
+        nested_indent = indent + '  '
+      else
+        nested_indent = nil
+      end
+      io.puts
+      _sequence.to_xml(new_inscope_ns, nested_indent, io)
+      if indent
+        io.print indent
+      end
+      io.print "</#{qualifier}#{element_name}>"
+      if indent
+        io.puts
+      end
     end
-    out.print ">"
-    out.puts
-    @_sequence.xml(out, indent)
-    out.print indent
-    out.print "</#{ename}>\n" # end tag
-  end
+end
 
-end # class ComplexType_restrictionType
+#----------------
 
-# Class to represent the sequence: _anon10
+# Class to represent a sequence.
 #
-# XSD::XSD_sequence {
-#   @maxOccurs = 1
-#   @internal_name = "_anon10"
-#   @minOccurs = 1
-#   @members = [
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "restriction"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "restriction"
-#       @minOccurs = 1
-#       @type = "restrictionType"
-#       @type_local = "restrictionType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#   ]
-# }
-class Sequence__anon10
-  attr_accessor :xml_src_node
-  # Single mandatory child element.
-  # Value is never +nil+.
-  attr_accessor :restriction
+class Sequence_in_ComplexType_choiceType < Base
+  # An array of [0..*] <code>ComplexType_annotationType</code> objects.
+  attr_accessor :annotation
+  # An array of [1..*] <code>Choice_in_Sequence_in_ComplexType_choiceType</code> objects.
+  attr_accessor :choice
+  def initialize(node)
+    super(node)
+    @annotation = []
+    @choice = []
+  end
+  def to_xml(inscope_ns, indent, io)
+    @annotation.each do |i|
+      i.to_xml(XSD::NAMESPACE, 'annotation', inscope_ns, indent, io)
+    end
+    choice.each do |i|
+      i.to_xml(inscope_ns, indent, io)
+    end
+  end
+end
 
-  def initialize
-    super()
-    @restriction = nil
+#----------------
+
+# Class to represent a choice.
+#
+# The choice's option can be determined by the _option method, which
+# will return one of the symbols in the NAMES array. The value of
+# that option can be obtained by calling [] with that symbol or the
+# method with the same name as the symbol. Only one option of the
+# choice will be chosen: attempting to obtain the values of any
+# other option will return +nil+.
+#
+class Choice_in_Sequence_in_ComplexType_choiceType < Base
+  # Names for the options in this choice.
+  NAMES = [ :element, :sequence, :choice,]
+
+  def initialize(node)
+
+    super(node)
+    @_index = nil # indicates which option (0..2 or nil)
+    @_value = nil # the value of the option
   end
 
-  # Serialize sequence as XML
-  def xml(out, indent)
-    indent += '  '
-    if @restriction
-      @restriction.xml('restriction', out, indent)
+  # Indexed accessors
+
+  # Returns a symbol indicating which option for the choice. Result is one of
+  # the symbols from +NAME+, or +nil+ if no option has been set.
+  def _option
+    @_index != nil ? NAMES[@_index] : nil
+  end
+
+  # Set the choice to the option identified by +symbol+ and to have the +value+.
+  # See the +NAMES+ constant for permitted values for +symbol+.
+  def []=(symbol, value)
+    match = NAMES.index(symbol)
+    if match
+      @_index = match
+      @_value = value
+    else
+      raise IndexError, "choice has no option: #{symbol}"
     end
   end
 
-end # class Sequence__anon10
-
-# Class to represent the complexType: simpleTypeType
-#
-# XSD::XSD_complexType {
-#   @name = "simpleTypeType"
-#   @internal_name = "simpleTypeType"
-#   @sequence = [
-#     XSD::XSD_sequence {
-#       @maxOccurs = 1
-#       @internal_name = "_anon10"
-#       @minOccurs = 1
-#       @members = [
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "restriction"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "restriction"
-#           @minOccurs = 1
-#           @type = "restrictionType"
-#           @type_local = "restrictionType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#       ]
-#     }
-#   ]
-# }
-class ComplexType_simpleTypeType < Base
-  attr_accessor :xml_src_node
-  # For internal use
-  attr_writer :_sequence # the sequence object
-  # Child element getter
-  def restriction; @_sequence.restriction end
-  # Child element setter
-  def restriction=(value); @_sequence.restriction(value) end
-  def initialize
-    super()
-  end
-  # Serialize as XML.
-  # The +ename+ (+String+) is used as the element name and the
-  # XML is written to +out+ (+IO+) with indenting of +indent+.
-  def xml(ename, out, indent='')
-    out.print "#{indent}<#{ename}" # start tag
-    out.print ">"
-    out.puts
-    @_sequence.xml(out, indent)
-    out.print indent
-    out.print "</#{ename}>\n" # end tag
+  # Get value of the option indicated by +symbol+.
+  # Returns +nil+ if the choice is not set to that option.
+  # See the +NAMES+ constant for permitted values for +symbol+.
+  def [](symbol)
+    match = NAMES.index(symbol)
+    (match == @_index) ? @_value : nil
   end
 
-end # class ComplexType_simpleTypeType
+  # Named accessors
 
-# Class to represent the choice: choice1
+  # Get the value of option +element+.
+# Returns an array of <code>ComplexType_elementType</code> objects.
+# Returns +nil+ if not the option.
+  def element
+    (0 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +element+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_elementType</code> objects.
+  def element=(value)
+    @_index = 0
+    @_value = value
+  end
+
+  # Get the value of option +sequence+.
+# Returns an array of <code>ComplexType_sequenceType</code> objects.
+# Returns +nil+ if not the option.
+  def sequence
+    (1 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +sequence+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_sequenceType</code> objects.
+  def sequence=(value)
+    @_index = 1
+    @_value = value
+  end
+
+  # Get the value of option +choice+.
+# Returns an array of <code>ComplexType_choiceType</code> objects.
+# Returns +nil+ if not the option.
+  def choice
+    (2 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +choice+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_choiceType</code> objects.
+  def choice=(value)
+    @_index = 2
+    @_value = value
+  end
+
+def to_xml(inscope_ns, indent, io)
+  case @_index
+  when 0
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'element', inscope_ns, indent, io)
+    end
+  when 1
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'sequence', inscope_ns, indent, io)
+    end
+  when 2
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'choice', inscope_ns, indent, io)
+    end
+  end
+end
+end
+
+#----------------
+
+# Class to represent the complexType: <code>complexTypeType</code>.
 #
-# XSD::XSD_choice {
-#   @maxOccurs = 1
-#   @minOccurs = 0
-#   @internal_member_name = "choice1"
-#   @internal_class_name = "_anon12"
-#   @element = [
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "simpleContent"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "simpleContent"
-#       @minOccurs = 1
-#       @type = "simpleContentType"
-#       @type_local = "simpleContentType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "sequence"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "sequence"
-#       @minOccurs = 1
-#       @type = "sequenceType"
-#       @type_local = "sequenceType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "choice"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "choice"
-#       @minOccurs = 1
-#       @type = "choiceType"
-#       @type_local = "choiceType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#   ]
-# }
-class Choice__anon12 < Base
-  attr_accessor :xml_src_node
+class ComplexType_complexTypeType < Base
+  # The <code>name</code> attribute.
+  attr_accessor :name
+  # An instance of <code>Sequence_in_ComplexType_complexTypeType</code>
+  # to represent the sequence which defines the content model
+  # of this complexType. Users of this class will invoke
+  # the methods of the sequence that have been replicated
+  # by this class: they do not need to directly access the sequence.
+  attr_accessor :_sequence
+
+  # Since this is a complexType defined by a sequence,
+  # the members of that sequence can be accessed through
+  # the following getters and setters. They invoke the
+  # corresponding method on the _sequence object, so
+  # the user doesn't have to interact with the underlying
+  # _sequence at all.
+
+  # Gets the child <code>annotation</code> element.  An array of <code>ComplexType_annotationType</code>. Can be an empty array.
+  def annotation; @_sequence.annotation end
+  # Sets the child <code>annotation</code> element.  An array of <code>ComplexType_annotationType</code>. Can be an empty array.
+  def annotation=(value); @_sequence.annotation(value) end
+
+  # Gets the child <code>choice1</code>.  A single <code>Choice_in_Sequence_in_ComplexType_complexTypeType</code>. Optional, so could be +nil+.
+  def choice1; @_sequence.choice1 end
+  # Sets the child <code>choice1</code>.  A single <code>Choice_in_Sequence_in_ComplexType_complexTypeType</code>. Optional, so could be +nil+.
+  def choice1=(value); @_sequence.choice1(value) end
+
+  # Gets the child <code>choice2</code>.  An array of <code>Choice_in_Sequence_in_ComplexType_complexTypeType1</code>. Can be an empty array.
+  def choice2; @_sequence.choice2 end
+  # Sets the child <code>choice2</code>.  An array of <code>Choice_in_Sequence_in_ComplexType_complexTypeType1</code>. Can be an empty array.
+  def choice2=(value); @_sequence.choice2(value) end
+
+  def initialize(node)
+    super(node)
+    # Attribute
+    @name = nil
+    @_sequence = nil
+  end
+
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
+
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      if name
+        io.print " name=\""
+        io.print XSDPrimitives.pcdata(@name)
+        io.print '"'
+      end
+      io.print '>'
+
+      if indent
+        nested_indent = indent + '  '
+      else
+        nested_indent = nil
+      end
+      io.puts
+      _sequence.to_xml(new_inscope_ns, nested_indent, io)
+      if indent
+        io.print indent
+      end
+      io.print "</#{qualifier}#{element_name}>"
+      if indent
+        io.puts
+      end
+    end
+end
+
+#----------------
+
+# Class to represent a sequence.
+#
+class Sequence_in_ComplexType_complexTypeType < Base
+  # An array of [0..*] <code>ComplexType_annotationType</code> objects.
+  attr_accessor :annotation
+  # An instance of <code>Choice_in_Sequence_in_ComplexType_complexTypeType</code> (optional choice, can be +nil+).
+  attr_accessor :choice1
+  # An array of [0..*] <code>Choice_in_Sequence_in_ComplexType_complexTypeType1</code> objects.
+  attr_accessor :choice2
+  def initialize(node)
+    super(node)
+    @annotation = []
+    @choice1 = nil
+    @choice2 = []
+  end
+  def to_xml(inscope_ns, indent, io)
+    @annotation.each do |i|
+      i.to_xml(XSD::NAMESPACE, 'annotation', inscope_ns, indent, io)
+    end
+    m =  choice1
+    if m
+      m.to_xml(inscope_ns, indent, io)
+    end
+    choice2.each do |i|
+      i.to_xml(inscope_ns, indent, io)
+    end
+  end
+end
+
+#----------------
+
+# Class to represent a choice.
+#
+# The choice's option can be determined by the _option method, which
+# will return one of the symbols in the NAMES array. The value of
+# that option can be obtained by calling [] with that symbol or the
+# method with the same name as the symbol. Only one option of the
+# choice will be chosen: attempting to obtain the values of any
+# other option will return +nil+.
+#
+class Choice_in_Sequence_in_ComplexType_complexTypeType < Base
   # Names for the options in this choice.
   NAMES = [ :simpleContent, :sequence, :choice,]
 
-  def initialize
-    super()
-    @_index = nil
-    @_value = nil
+  def initialize(node)
+
+    super(node)
+    @_index = nil # indicates which option (0..2 or nil)
+    @_value = nil # the value of the option
   end
+
+  # Indexed accessors
 
   # Returns a symbol indicating which option for the choice. Result is one of
   # the symbols from +NAME+, or +nil+ if no option has been set.
@@ -1896,3030 +1054,3235 @@ class Choice__anon12 < Base
   # See the +NAMES+ constant for permitted values for +symbol+.
   def [](symbol)
     match = NAMES.index(symbol)
-    match == @_index ? @_value : nil
+    (match == @_index) ? @_value : nil
   end
 
-  # Get the value of option +simpleContent+. Returns +nil+ if not the option.
+  # Named accessors
+
+  # Get the value of option +simpleContent+.
+# Returns an array of <code>ComplexType_simpleContentType</code> objects.
+# Returns +nil+ if not the option.
   def simpleContent
-    0 == @_index ? @_value : nil
+    (0 == @_index) ? @_value : nil
   end
-  # Set the choice to be option +simpleContent+ with the +value+.
+  # Set the choice to be the +simpleContent+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_simpleContentType</code> objects.
   def simpleContent=(value)
     @_index = 0
     @_value = value
   end
 
-  # Get the value of option +sequence+. Returns +nil+ if not the option.
+  # Get the value of option +sequence+.
+# Returns an array of <code>ComplexType_sequenceType</code> objects.
+# Returns +nil+ if not the option.
   def sequence
-    1 == @_index ? @_value : nil
+    (1 == @_index) ? @_value : nil
   end
-  # Set the choice to be option +sequence+ with the +value+.
+  # Set the choice to be the +sequence+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_sequenceType</code> objects.
   def sequence=(value)
     @_index = 1
     @_value = value
   end
 
-  # Get the value of option +choice+. Returns +nil+ if not the option.
+  # Get the value of option +choice+.
+# Returns an array of <code>ComplexType_choiceType</code> objects.
+# Returns +nil+ if not the option.
   def choice
-    2 == @_index ? @_value : nil
+    (2 == @_index) ? @_value : nil
   end
-  # Set the choice to be option +choice+ with the +value+.
+  # Set the choice to be the +choice+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_choiceType</code> objects.
   def choice=(value)
     @_index = 2
     @_value = value
   end
 
-def self.match(node)
-  if node.name == 'simpleContent' && node.namespace == XSD::NAMESPACE
-    true
-  elsif node.name == 'sequence' && node.namespace == XSD::NAMESPACE
-    true
-  elsif node.name == 'choice' && node.namespace == XSD::NAMESPACE
-    true
-  else
-    false
-  end
-end # def match
-
-  # Serialize as XML
-  def xml(out, indent)
-    if @_index
-        # Non-primitive
-        @_value.xml(NAMES[@_index], out, indent)
+def to_xml(inscope_ns, indent, io)
+  case @_index
+  when 0
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'simpleContent', inscope_ns, indent, io)
+    end
+  when 1
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'sequence', inscope_ns, indent, io)
+    end
+  when 2
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'choice', inscope_ns, indent, io)
     end
   end
-
-end # class Choice__anon12
-
-# Class to represent the choice: choice2
-#
-# XSD::XSD_choice {
-#   @maxOccurs = nil
-#   @minOccurs = 0
-#   @internal_member_name = "choice2"
-#   @internal_class_name = "_anon13"
-#   @element = [
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "attribute"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "attribute"
-#       @minOccurs = 1
-#       @type = "attributeType"
-#       @type_local = "attributeType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "attributeGroup"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "attributeGroup"
-#       @minOccurs = 1
-#       @type = "attributeGroupType"
-#       @type_local = "attributeGroupType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#   ]
-# }
-class Choice__anon13 < Base
-  attr_accessor :xml_src_node
-  # Names for the options in this choice.
-  NAMES = [ :attribute, :attributeGroup,]
-
-  def initialize
-    super()
-    @_index = nil
-    @_value = nil
-  end
-
-  # Returns a symbol indicating which option for the choice. Result is one of
-  # the symbols from +NAME+, or +nil+ if no option has been set.
-  def _option
-    @_index != nil ? NAMES[@_index] : nil
-  end
-
-  # Set the choice to the option identified by +symbol+ and to have the +value+.
-  # See the +NAMES+ constant for permitted values for +symbol+.
-  def []=(symbol, value)
-    match = NAMES.index(symbol)
-    if match
-      @_index = match
-      @_value = value
-    else
-      raise IndexError, "choice has no option: #{symbol}"
-    end
-  end
-
-  # Get value of the option indicated by +symbol+.
-  # Returns +nil+ if the choice is not set to that option.
-  # See the +NAMES+ constant for permitted values for +symbol+.
-  def [](symbol)
-    match = NAMES.index(symbol)
-    match == @_index ? @_value : nil
-  end
-
-  # Get the value of option +attribute+. Returns +nil+ if not the option.
-  def attribute
-    0 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +attribute+ with the +value+.
-  def attribute=(value)
-    @_index = 0
-    @_value = value
-  end
-
-  # Get the value of option +attributeGroup+. Returns +nil+ if not the option.
-  def attributeGroup
-    1 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +attributeGroup+ with the +value+.
-  def attributeGroup=(value)
-    @_index = 1
-    @_value = value
-  end
-
-def self.match(node)
-  if node.name == 'attribute' && node.namespace == XSD::NAMESPACE
-    true
-  elsif node.name == 'attributeGroup' && node.namespace == XSD::NAMESPACE
-    true
-  else
-    false
-  end
-end # def match
-
-  # Serialize as XML
-  def xml(out, indent)
-    if @_index
-        # Non-primitive
-        @_value.xml(NAMES[@_index], out, indent)
-    end
-  end
-
-end # class Choice__anon13
-
-#
-# An array of Choice__anon13
-#
-class ChoiceList__anon13 < Array
-  attr_accessor :xml_src_node
-
-  # Serialize repeatable choices as XML
-  def xml(out, indent)
-    self.each { |opt| opt.xml(out, indent) }
-  end
-
-end # class ChoiceList__anon13
-
-# Class to represent the sequence: _anon11
-#
-# XSD::XSD_sequence {
-#   @maxOccurs = 1
-#   @internal_name = "_anon11"
-#   @minOccurs = 1
-#   @members = [
-#     XSD::XSD_element {
-#       @maxOccurs = nil
-#       @name = "annotation"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "annotation"
-#       @minOccurs = 0
-#       @type = "annotationType"
-#       @type_local = "annotationType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_choice {
-#       @maxOccurs = 1
-#       @minOccurs = 0
-#       @internal_member_name = "choice1"
-#       @internal_class_name = "_anon12"
-#       @element = [
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "simpleContent"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "simpleContent"
-#           @minOccurs = 1
-#           @type = "simpleContentType"
-#           @type_local = "simpleContentType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "sequence"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "sequence"
-#           @minOccurs = 1
-#           @type = "sequenceType"
-#           @type_local = "sequenceType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "choice"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "choice"
-#           @minOccurs = 1
-#           @type = "choiceType"
-#           @type_local = "choiceType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#       ]
-#     }
-#     XSD::XSD_choice {
-#       @maxOccurs = nil
-#       @minOccurs = 0
-#       @internal_member_name = "choice2"
-#       @internal_class_name = "_anon13"
-#       @element = [
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "attribute"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "attribute"
-#           @minOccurs = 1
-#           @type = "attributeType"
-#           @type_local = "attributeType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "attributeGroup"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "attributeGroup"
-#           @minOccurs = 1
-#           @type = "attributeGroupType"
-#           @type_local = "attributeGroupType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#       ]
-#     }
-#   ]
-# }
-class Sequence__anon11
-  attr_accessor :xml_src_node
-  # Optional and repeatable elements represented by an array.
-  # The array could be empty.
-  attr_accessor :annotation
-  # Single optional child element.
-  # Value is +nil+ if the element is not present.
-  attr_accessor :choice1
-  # Optional and repeatable elements represented by an array.
-  # The array could be empty.
-  attr_accessor :choice2
-
-  def initialize
-    super()
-    @annotation = []
-    @choice1 = nil
-    @choice2 = []
-  end
-
-  # Serialize sequence as XML
-  def xml(out, indent)
-    indent += '  '
-    if ! @annotation.empty?
-      @annotation.each { |m| m.xml('annotation', out, indent) }
-    end
-    if @choice1
-      @choice1.xml(out, indent)
-    end
-       @choice2.each { |m| m.xml(out, indent) }
-  end
-
-end # class Sequence__anon11
-
-# Class to represent the complexType: complexTypeType
-#
-# XSD::XSD_complexType {
-#   @name = "complexTypeType"
-#   @internal_name = "complexTypeType"
-#   @attribute = [
-#     XSD::XSD_attribute {
-#       @name = "name"
-#       @internal_name = "name"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#   ]
-#   @sequence = [
-#     XSD::XSD_sequence {
-#       @maxOccurs = 1
-#       @internal_name = "_anon11"
-#       @minOccurs = 1
-#       @members = [
-#         XSD::XSD_element {
-#           @maxOccurs = nil
-#           @name = "annotation"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "annotation"
-#           @minOccurs = 0
-#           @type = "annotationType"
-#           @type_local = "annotationType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_choice {
-#           @maxOccurs = 1
-#           @minOccurs = 0
-#           @internal_member_name = "choice1"
-#           @internal_class_name = "_anon12"
-#           @element = [
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "simpleContent"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "simpleContent"
-#               @minOccurs = 1
-#               @type = "simpleContentType"
-#               @type_local = "simpleContentType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "sequence"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "sequence"
-#               @minOccurs = 1
-#               @type = "sequenceType"
-#               @type_local = "sequenceType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "choice"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "choice"
-#               @minOccurs = 1
-#               @type = "choiceType"
-#               @type_local = "choiceType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#           ]
-#         }
-#         XSD::XSD_choice {
-#           @maxOccurs = nil
-#           @minOccurs = 0
-#           @internal_member_name = "choice2"
-#           @internal_class_name = "_anon13"
-#           @element = [
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "attribute"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "attribute"
-#               @minOccurs = 1
-#               @type = "attributeType"
-#               @type_local = "attributeType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "attributeGroup"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "attributeGroup"
-#               @minOccurs = 1
-#               @type = "attributeGroupType"
-#               @type_local = "attributeGroupType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#           ]
-#         }
-#       ]
-#     }
-#   ]
-# }
-class ComplexType_complexTypeType < Base
-  attr_accessor :xml_src_node
-  # Attribute <code>name</code> (optional, might be +nil+)
-  attr_accessor :name
-  # For internal use
-  attr_writer :_sequence # the sequence object
-  # Child element getter
-  def annotation; @_sequence.annotation end
-  # Child element setter
-  def annotation=(value); @_sequence.annotation(value) end
-  # Child element getter
-  def choice1; @_sequence.choice1 end
-  # Child element setter
-  def choice1=(value); @_sequence.choice1(value) end
-  # Child element getter
-  def choice2; @_sequence.choice2 end
-  # Child element setter
-  def choice2=(value); @_sequence.choice2(value) end
-  def initialize
-    super()
-    @name = nil
-  end
-  # Serialize as XML.
-  # The +ename+ (+String+) is used as the element name and the
-  # XML is written to +out+ (+IO+) with indenting of +indent+.
-  def xml(ename, out, indent='')
-    out.print "#{indent}<#{ename}" # start tag
-    if @name
-      out.print " name=\"#{XSD.pcdata(@name)}\""
-    end
-    out.print ">"
-    out.puts
-    @_sequence.xml(out, indent)
-    out.print indent
-    out.print "</#{ename}>\n" # end tag
-  end
-
-end # class ComplexType_complexTypeType
-
-# Class to represent the choice: choice
-#
-# XSD::XSD_choice {
-#   @maxOccurs = nil
-#   @minOccurs = 1
-#   @internal_member_name = "choice"
-#   @internal_class_name = "_anon15"
-#   @element = [
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "element"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "element"
-#       @minOccurs = 1
-#       @type = "elementType"
-#       @type_local = "elementType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "sequence"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "sequence"
-#       @minOccurs = 1
-#       @type = "sequenceType"
-#       @type_local = "sequenceType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "choice"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "choice"
-#       @minOccurs = 1
-#       @type = "choiceType"
-#       @type_local = "choiceType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#   ]
-# }
-class Choice__anon15 < Base
-  attr_accessor :xml_src_node
-  # Names for the options in this choice.
-  NAMES = [ :element, :sequence, :choice,]
-
-  def initialize
-    super()
-    @_index = nil
-    @_value = nil
-  end
-
-  # Returns a symbol indicating which option for the choice. Result is one of
-  # the symbols from +NAME+, or +nil+ if no option has been set.
-  def _option
-    @_index != nil ? NAMES[@_index] : nil
-  end
-
-  # Set the choice to the option identified by +symbol+ and to have the +value+.
-  # See the +NAMES+ constant for permitted values for +symbol+.
-  def []=(symbol, value)
-    match = NAMES.index(symbol)
-    if match
-      @_index = match
-      @_value = value
-    else
-      raise IndexError, "choice has no option: #{symbol}"
-    end
-  end
-
-  # Get value of the option indicated by +symbol+.
-  # Returns +nil+ if the choice is not set to that option.
-  # See the +NAMES+ constant for permitted values for +symbol+.
-  def [](symbol)
-    match = NAMES.index(symbol)
-    match == @_index ? @_value : nil
-  end
-
-  # Get the value of option +element+. Returns +nil+ if not the option.
-  def element
-    0 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +element+ with the +value+.
-  def element=(value)
-    @_index = 0
-    @_value = value
-  end
-
-  # Get the value of option +sequence+. Returns +nil+ if not the option.
-  def sequence
-    1 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +sequence+ with the +value+.
-  def sequence=(value)
-    @_index = 1
-    @_value = value
-  end
-
-  # Get the value of option +choice+. Returns +nil+ if not the option.
-  def choice
-    2 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +choice+ with the +value+.
-  def choice=(value)
-    @_index = 2
-    @_value = value
-  end
-
-def self.match(node)
-  if node.name == 'element' && node.namespace == XSD::NAMESPACE
-    true
-  elsif node.name == 'sequence' && node.namespace == XSD::NAMESPACE
-    true
-  elsif node.name == 'choice' && node.namespace == XSD::NAMESPACE
-    true
-  else
-    false
-  end
-end # def match
-
-  # Serialize as XML
-  def xml(out, indent)
-    if @_index
-        # Non-primitive
-        @_value.xml(NAMES[@_index], out, indent)
-    end
-  end
-
-end # class Choice__anon15
-
-#
-# An array of Choice__anon15
-#
-class ChoiceList__anon15 < Array
-  attr_accessor :xml_src_node
-
-  # Serialize repeatable choices as XML
-  def xml(out, indent)
-    self.each { |opt| opt.xml(out, indent) }
-  end
-
-end # class ChoiceList__anon15
-
-# Class to represent the sequence: _anon14
-#
-# XSD::XSD_sequence {
-#   @maxOccurs = 1
-#   @internal_name = "_anon14"
-#   @minOccurs = 1
-#   @members = [
-#     XSD::XSD_element {
-#       @maxOccurs = nil
-#       @name = "annotation"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "annotation"
-#       @minOccurs = 0
-#       @type = "annotationType"
-#       @type_local = "annotationType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_choice {
-#       @maxOccurs = nil
-#       @minOccurs = 1
-#       @internal_member_name = "choice"
-#       @internal_class_name = "_anon15"
-#       @element = [
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "element"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "element"
-#           @minOccurs = 1
-#           @type = "elementType"
-#           @type_local = "elementType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "sequence"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "sequence"
-#           @minOccurs = 1
-#           @type = "sequenceType"
-#           @type_local = "sequenceType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "choice"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "choice"
-#           @minOccurs = 1
-#           @type = "choiceType"
-#           @type_local = "choiceType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#       ]
-#     }
-#   ]
-# }
-class Sequence__anon14
-  attr_accessor :xml_src_node
-  # Optional and repeatable elements represented by an array.
-  # The array could be empty.
-  attr_accessor :annotation
-  # Mandatory and repeatable elements represented by an array.
-  # The array always has at least 1 members.
-  attr_accessor :choice
-
-  def initialize
-    super()
-    @annotation = []
-    @choice = []
-  end
-
-  # Serialize sequence as XML
-  def xml(out, indent)
-    indent += '  '
-    if ! @annotation.empty?
-      @annotation.each { |m| m.xml('annotation', out, indent) }
-    end
-       @choice.each { |m| m.xml(out, indent) }
-  end
-
-end # class Sequence__anon14
-
-# Class to represent the complexType: sequenceType
-#
-# XSD::XSD_complexType {
-#   @name = "sequenceType"
-#   @internal_name = "sequenceType"
-#   @sequence = [
-#     XSD::XSD_sequence {
-#       @maxOccurs = 1
-#       @internal_name = "_anon14"
-#       @minOccurs = 1
-#       @members = [
-#         XSD::XSD_element {
-#           @maxOccurs = nil
-#           @name = "annotation"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "annotation"
-#           @minOccurs = 0
-#           @type = "annotationType"
-#           @type_local = "annotationType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_choice {
-#           @maxOccurs = nil
-#           @minOccurs = 1
-#           @internal_member_name = "choice"
-#           @internal_class_name = "_anon15"
-#           @element = [
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "element"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "element"
-#               @minOccurs = 1
-#               @type = "elementType"
-#               @type_local = "elementType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "sequence"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "sequence"
-#               @minOccurs = 1
-#               @type = "sequenceType"
-#               @type_local = "sequenceType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "choice"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "choice"
-#               @minOccurs = 1
-#               @type = "choiceType"
-#               @type_local = "choiceType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#           ]
-#         }
-#       ]
-#     }
-#   ]
-# }
-class ComplexType_sequenceType < Base
-  attr_accessor :xml_src_node
-  # For internal use
-  attr_writer :_sequence # the sequence object
-  # Child element getter
-  def annotation; @_sequence.annotation end
-  # Child element setter
-  def annotation=(value); @_sequence.annotation(value) end
-  # Child element getter
-  def choice; @_sequence.choice end
-  # Child element setter
-  def choice=(value); @_sequence.choice(value) end
-  def initialize
-    super()
-  end
-  # Serialize as XML.
-  # The +ename+ (+String+) is used as the element name and the
-  # XML is written to +out+ (+IO+) with indenting of +indent+.
-  def xml(ename, out, indent='')
-    out.print "#{indent}<#{ename}" # start tag
-    out.print ">"
-    out.puts
-    @_sequence.xml(out, indent)
-    out.print indent
-    out.print "</#{ename}>\n" # end tag
-  end
-
-end # class ComplexType_sequenceType
-
-# Class to represent the choice: choice
-#
-# XSD::XSD_choice {
-#   @maxOccurs = nil
-#   @minOccurs = 1
-#   @internal_member_name = "choice"
-#   @internal_class_name = "_anon17"
-#   @element = [
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "element"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "element"
-#       @minOccurs = 1
-#       @type = "elementType"
-#       @type_local = "elementType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "sequence"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "sequence"
-#       @minOccurs = 1
-#       @type = "sequenceType"
-#       @type_local = "sequenceType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "choice"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "choice"
-#       @minOccurs = 1
-#       @type = "choiceType"
-#       @type_local = "choiceType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#   ]
-# }
-class Choice__anon17 < Base
-  attr_accessor :xml_src_node
-  # Names for the options in this choice.
-  NAMES = [ :element, :sequence, :choice,]
-
-  def initialize
-    super()
-    @_index = nil
-    @_value = nil
-  end
-
-  # Returns a symbol indicating which option for the choice. Result is one of
-  # the symbols from +NAME+, or +nil+ if no option has been set.
-  def _option
-    @_index != nil ? NAMES[@_index] : nil
-  end
-
-  # Set the choice to the option identified by +symbol+ and to have the +value+.
-  # See the +NAMES+ constant for permitted values for +symbol+.
-  def []=(symbol, value)
-    match = NAMES.index(symbol)
-    if match
-      @_index = match
-      @_value = value
-    else
-      raise IndexError, "choice has no option: #{symbol}"
-    end
-  end
-
-  # Get value of the option indicated by +symbol+.
-  # Returns +nil+ if the choice is not set to that option.
-  # See the +NAMES+ constant for permitted values for +symbol+.
-  def [](symbol)
-    match = NAMES.index(symbol)
-    match == @_index ? @_value : nil
-  end
-
-  # Get the value of option +element+. Returns +nil+ if not the option.
-  def element
-    0 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +element+ with the +value+.
-  def element=(value)
-    @_index = 0
-    @_value = value
-  end
-
-  # Get the value of option +sequence+. Returns +nil+ if not the option.
-  def sequence
-    1 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +sequence+ with the +value+.
-  def sequence=(value)
-    @_index = 1
-    @_value = value
-  end
-
-  # Get the value of option +choice+. Returns +nil+ if not the option.
-  def choice
-    2 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +choice+ with the +value+.
-  def choice=(value)
-    @_index = 2
-    @_value = value
-  end
-
-def self.match(node)
-  if node.name == 'element' && node.namespace == XSD::NAMESPACE
-    true
-  elsif node.name == 'sequence' && node.namespace == XSD::NAMESPACE
-    true
-  elsif node.name == 'choice' && node.namespace == XSD::NAMESPACE
-    true
-  else
-    false
-  end
-end # def match
-
-  # Serialize as XML
-  def xml(out, indent)
-    if @_index
-        # Non-primitive
-        @_value.xml(NAMES[@_index], out, indent)
-    end
-  end
-
-end # class Choice__anon17
-
-#
-# An array of Choice__anon17
-#
-class ChoiceList__anon17 < Array
-  attr_accessor :xml_src_node
-
-  # Serialize repeatable choices as XML
-  def xml(out, indent)
-    self.each { |opt| opt.xml(out, indent) }
-  end
-
-end # class ChoiceList__anon17
-
-# Class to represent the sequence: _anon16
-#
-# XSD::XSD_sequence {
-#   @maxOccurs = 1
-#   @internal_name = "_anon16"
-#   @minOccurs = 1
-#   @members = [
-#     XSD::XSD_element {
-#       @maxOccurs = nil
-#       @name = "annotation"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "annotation"
-#       @minOccurs = 0
-#       @type = "annotationType"
-#       @type_local = "annotationType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_choice {
-#       @maxOccurs = nil
-#       @minOccurs = 1
-#       @internal_member_name = "choice"
-#       @internal_class_name = "_anon17"
-#       @element = [
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "element"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "element"
-#           @minOccurs = 1
-#           @type = "elementType"
-#           @type_local = "elementType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "sequence"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "sequence"
-#           @minOccurs = 1
-#           @type = "sequenceType"
-#           @type_local = "sequenceType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "choice"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "choice"
-#           @minOccurs = 1
-#           @type = "choiceType"
-#           @type_local = "choiceType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#       ]
-#     }
-#   ]
-# }
-class Sequence__anon16
-  attr_accessor :xml_src_node
-  # Optional and repeatable elements represented by an array.
-  # The array could be empty.
-  attr_accessor :annotation
-  # Mandatory and repeatable elements represented by an array.
-  # The array always has at least 1 members.
-  attr_accessor :choice
-
-  def initialize
-    super()
-    @annotation = []
-    @choice = []
-  end
-
-  # Serialize sequence as XML
-  def xml(out, indent)
-    indent += '  '
-    if ! @annotation.empty?
-      @annotation.each { |m| m.xml('annotation', out, indent) }
-    end
-       @choice.each { |m| m.xml(out, indent) }
-  end
-
-end # class Sequence__anon16
-
-# Class to represent the complexType: choiceType
-#
-# XSD::XSD_complexType {
-#   @name = "choiceType"
-#   @internal_name = "choiceType"
-#   @attribute = [
-#     XSD::XSD_attribute {
-#       @name = "minOccurs"
-#       @internal_name = "minOccurs"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#     XSD::XSD_attribute {
-#       @name = "maxOccurs"
-#       @internal_name = "maxOccurs"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#   ]
-#   @sequence = [
-#     XSD::XSD_sequence {
-#       @maxOccurs = 1
-#       @internal_name = "_anon16"
-#       @minOccurs = 1
-#       @members = [
-#         XSD::XSD_element {
-#           @maxOccurs = nil
-#           @name = "annotation"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "annotation"
-#           @minOccurs = 0
-#           @type = "annotationType"
-#           @type_local = "annotationType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_choice {
-#           @maxOccurs = nil
-#           @minOccurs = 1
-#           @internal_member_name = "choice"
-#           @internal_class_name = "_anon17"
-#           @element = [
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "element"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "element"
-#               @minOccurs = 1
-#               @type = "elementType"
-#               @type_local = "elementType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "sequence"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "sequence"
-#               @minOccurs = 1
-#               @type = "sequenceType"
-#               @type_local = "sequenceType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "choice"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "choice"
-#               @minOccurs = 1
-#               @type = "choiceType"
-#               @type_local = "choiceType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#           ]
-#         }
-#       ]
-#     }
-#   ]
-# }
-class ComplexType_choiceType < Base
-  attr_accessor :xml_src_node
-  # Attribute <code>minOccurs</code> (optional, might be +nil+)
-  attr_accessor :minOccurs
-  # Attribute <code>maxOccurs</code> (optional, might be +nil+)
-  attr_accessor :maxOccurs
-  # For internal use
-  attr_writer :_sequence # the sequence object
-  # Child element getter
-  def annotation; @_sequence.annotation end
-  # Child element setter
-  def annotation=(value); @_sequence.annotation(value) end
-  # Child element getter
-  def choice; @_sequence.choice end
-  # Child element setter
-  def choice=(value); @_sequence.choice(value) end
-  def initialize
-    super()
-    @minOccurs = nil
-    @maxOccurs = nil
-  end
-  # Serialize as XML.
-  # The +ename+ (+String+) is used as the element name and the
-  # XML is written to +out+ (+IO+) with indenting of +indent+.
-  def xml(ename, out, indent='')
-    out.print "#{indent}<#{ename}" # start tag
-    if @minOccurs
-      out.print " minOccurs=\"#{XSD.pcdata(@minOccurs)}\""
-    end
-    if @maxOccurs
-      out.print " maxOccurs=\"#{XSD.pcdata(@maxOccurs)}\""
-    end
-    out.print ">"
-    out.puts
-    @_sequence.xml(out, indent)
-    out.print indent
-    out.print "</#{ename}>\n" # end tag
-  end
-
-end # class ComplexType_choiceType
-
-# Class to represent the sequence: _anon18
-#
-# XSD::XSD_sequence {
-#   @maxOccurs = 1
-#   @internal_name = "_anon18"
-#   @minOccurs = 1
-#   @members = [
-#     XSD::XSD_element {
-#       @maxOccurs = nil
-#       @name = "annotation"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "annotation"
-#       @minOccurs = 0
-#       @type = "annotationType"
-#       @type_local = "annotationType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "simpleType"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "simpleType"
-#       @minOccurs = 0
-#       @type = "simpleTypeType"
-#       @type_local = "simpleTypeType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#   ]
-# }
-class Sequence__anon18
-  attr_accessor :xml_src_node
-  # Optional and repeatable elements represented by an array.
-  # The array could be empty.
-  attr_accessor :annotation
-  # Single optional child element.
-  # Value is +nil+ if the element is not present.
-  attr_accessor :simpleType
-
-  def initialize
-    super()
-    @annotation = []
-    @simpleType = nil
-  end
-
-  # Serialize sequence as XML
-  def xml(out, indent)
-    indent += '  '
-    if ! @annotation.empty?
-      @annotation.each { |m| m.xml('annotation', out, indent) }
-    end
-    if @simpleType
-      @simpleType.xml('simpleType', out, indent)
-    end
-  end
-
-end # class Sequence__anon18
-
-# Class to represent the complexType: attributeType
-#
-# XSD::XSD_complexType {
-#   @name = "attributeType"
-#   @internal_name = "attributeType"
-#   @attribute = [
-#     XSD::XSD_attribute {
-#       @name = "name"
-#       @internal_name = "name"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#     XSD::XSD_attribute {
-#       @name = "type"
-#       @internal_name = "type_attribute"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#     XSD::XSD_attribute {
-#       @name = "ref"
-#       @internal_name = "ref"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#     XSD::XSD_attribute {
-#       @name = "use"
-#       @internal_name = "use"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#   ]
-#   @sequence = [
-#     XSD::XSD_sequence {
-#       @maxOccurs = 1
-#       @internal_name = "_anon18"
-#       @minOccurs = 1
-#       @members = [
-#         XSD::XSD_element {
-#           @maxOccurs = nil
-#           @name = "annotation"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "annotation"
-#           @minOccurs = 0
-#           @type = "annotationType"
-#           @type_local = "annotationType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "simpleType"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "simpleType"
-#           @minOccurs = 0
-#           @type = "simpleTypeType"
-#           @type_local = "simpleTypeType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#       ]
-#     }
-#   ]
-# }
-class ComplexType_attributeType < Base
-  attr_accessor :xml_src_node
-  # Attribute <code>name</code> (optional, might be +nil+)
-  attr_accessor :name
-  # Attribute <code>type</code> (optional, might be +nil+)
-  attr_accessor :type_attribute
-  # Attribute <code>ref</code> (optional, might be +nil+)
-  attr_accessor :ref
-  # Attribute <code>use</code> (optional, might be +nil+)
-  attr_accessor :use
-  # For internal use
-  attr_writer :_sequence # the sequence object
-  # Child element getter
-  def annotation; @_sequence.annotation end
-  # Child element setter
-  def annotation=(value); @_sequence.annotation(value) end
-  # Child element getter
-  def simpleType; @_sequence.simpleType end
-  # Child element setter
-  def simpleType=(value); @_sequence.simpleType(value) end
-  def initialize
-    super()
-    @name = nil
-    @type_attribute = nil
-    @ref = nil
-    @use = nil
-  end
-  # Serialize as XML.
-  # The +ename+ (+String+) is used as the element name and the
-  # XML is written to +out+ (+IO+) with indenting of +indent+.
-  def xml(ename, out, indent='')
-    out.print "#{indent}<#{ename}" # start tag
-    if @name
-      out.print " name=\"#{XSD.pcdata(@name)}\""
-    end
-    if @type_attribute
-      out.print " type=\"#{XSD.pcdata(@type_attribute)}\""
-    end
-    if @ref
-      out.print " ref=\"#{XSD.pcdata(@ref)}\""
-    end
-    if @use
-      out.print " use=\"#{XSD.pcdata(@use)}\""
-    end
-    out.print ">"
-    out.puts
-    @_sequence.xml(out, indent)
-    out.print indent
-    out.print "</#{ename}>\n" # end tag
-  end
-
-end # class ComplexType_attributeType
-
-# Class to represent the choice: choice
-#
-# XSD::XSD_choice {
-#   @maxOccurs = nil
-#   @minOccurs = 0
-#   @internal_member_name = "choice"
-#   @internal_class_name = "_anon20"
-#   @element = [
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "attribute"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "attribute"
-#       @minOccurs = 1
-#       @type = "attributeType"
-#       @type_local = "attributeType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_element {
-#       @maxOccurs = 1
-#       @name = "attributeGroup"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "attributeGroup"
-#       @minOccurs = 1
-#       @type = "attributeGroupType"
-#       @type_local = "attributeGroupType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#   ]
-# }
-class Choice__anon20 < Base
-  attr_accessor :xml_src_node
-  # Names for the options in this choice.
-  NAMES = [ :attribute, :attributeGroup,]
-
-  def initialize
-    super()
-    @_index = nil
-    @_value = nil
-  end
-
-  # Returns a symbol indicating which option for the choice. Result is one of
-  # the symbols from +NAME+, or +nil+ if no option has been set.
-  def _option
-    @_index != nil ? NAMES[@_index] : nil
-  end
-
-  # Set the choice to the option identified by +symbol+ and to have the +value+.
-  # See the +NAMES+ constant for permitted values for +symbol+.
-  def []=(symbol, value)
-    match = NAMES.index(symbol)
-    if match
-      @_index = match
-      @_value = value
-    else
-      raise IndexError, "choice has no option: #{symbol}"
-    end
-  end
-
-  # Get value of the option indicated by +symbol+.
-  # Returns +nil+ if the choice is not set to that option.
-  # See the +NAMES+ constant for permitted values for +symbol+.
-  def [](symbol)
-    match = NAMES.index(symbol)
-    match == @_index ? @_value : nil
-  end
-
-  # Get the value of option +attribute+. Returns +nil+ if not the option.
-  def attribute
-    0 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +attribute+ with the +value+.
-  def attribute=(value)
-    @_index = 0
-    @_value = value
-  end
-
-  # Get the value of option +attributeGroup+. Returns +nil+ if not the option.
-  def attributeGroup
-    1 == @_index ? @_value : nil
-  end
-  # Set the choice to be option +attributeGroup+ with the +value+.
-  def attributeGroup=(value)
-    @_index = 1
-    @_value = value
-  end
-
-def self.match(node)
-  if node.name == 'attribute' && node.namespace == XSD::NAMESPACE
-    true
-  elsif node.name == 'attributeGroup' && node.namespace == XSD::NAMESPACE
-    true
-  else
-    false
-  end
-end # def match
-
-  # Serialize as XML
-  def xml(out, indent)
-    if @_index
-        # Non-primitive
-        @_value.xml(NAMES[@_index], out, indent)
-    end
-  end
-
-end # class Choice__anon20
-
-#
-# An array of Choice__anon20
-#
-class ChoiceList__anon20 < Array
-  attr_accessor :xml_src_node
-
-  # Serialize repeatable choices as XML
-  def xml(out, indent)
-    self.each { |opt| opt.xml(out, indent) }
-  end
-
-end # class ChoiceList__anon20
-
-# Class to represent the sequence: _anon19
-#
-# XSD::XSD_sequence {
-#   @maxOccurs = 1
-#   @internal_name = "_anon19"
-#   @minOccurs = 1
-#   @members = [
-#     XSD::XSD_element {
-#       @maxOccurs = nil
-#       @name = "annotation"
-#       @name_ns = "http://www.w3.org/2001/XMLSchema"
-#       @internal_name = "annotation"
-#       @minOccurs = 0
-#       @type = "annotationType"
-#       @type_local = "annotationType"
-#       @type_ns = "http://www.w3.org/2001/XMLSchema"
-#       @ref = nil
-#     }
-#     XSD::XSD_choice {
-#       @maxOccurs = nil
-#       @minOccurs = 0
-#       @internal_member_name = "choice"
-#       @internal_class_name = "_anon20"
-#       @element = [
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "attribute"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "attribute"
-#           @minOccurs = 1
-#           @type = "attributeType"
-#           @type_local = "attributeType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_element {
-#           @maxOccurs = 1
-#           @name = "attributeGroup"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "attributeGroup"
-#           @minOccurs = 1
-#           @type = "attributeGroupType"
-#           @type_local = "attributeGroupType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#       ]
-#     }
-#   ]
-# }
-class Sequence__anon19
-  attr_accessor :xml_src_node
-  # Optional and repeatable elements represented by an array.
-  # The array could be empty.
-  attr_accessor :annotation
-  # Optional and repeatable elements represented by an array.
-  # The array could be empty.
-  attr_accessor :choice
-
-  def initialize
-    super()
-    @annotation = []
-    @choice = []
-  end
-
-  # Serialize sequence as XML
-  def xml(out, indent)
-    indent += '  '
-    if ! @annotation.empty?
-      @annotation.each { |m| m.xml('annotation', out, indent) }
-    end
-       @choice.each { |m| m.xml(out, indent) }
-  end
-
-end # class Sequence__anon19
-
-# Class to represent the complexType: attributeGroupType
-#
-# XSD::XSD_complexType {
-#   @name = "attributeGroupType"
-#   @internal_name = "attributeGroupType"
-#   @attribute = [
-#     XSD::XSD_attribute {
-#       @name = "name"
-#       @internal_name = "name"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#     XSD::XSD_attribute {
-#       @name = "ref"
-#       @internal_name = "ref"
-#       @type = "xsd:string"
-#       @use = nil
-#       @ref = nil
-#     }
-#   ]
-#   @sequence = [
-#     XSD::XSD_sequence {
-#       @maxOccurs = 1
-#       @internal_name = "_anon19"
-#       @minOccurs = 1
-#       @members = [
-#         XSD::XSD_element {
-#           @maxOccurs = nil
-#           @name = "annotation"
-#           @name_ns = "http://www.w3.org/2001/XMLSchema"
-#           @internal_name = "annotation"
-#           @minOccurs = 0
-#           @type = "annotationType"
-#           @type_local = "annotationType"
-#           @type_ns = "http://www.w3.org/2001/XMLSchema"
-#           @ref = nil
-#         }
-#         XSD::XSD_choice {
-#           @maxOccurs = nil
-#           @minOccurs = 0
-#           @internal_member_name = "choice"
-#           @internal_class_name = "_anon20"
-#           @element = [
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "attribute"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "attribute"
-#               @minOccurs = 1
-#               @type = "attributeType"
-#               @type_local = "attributeType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#             XSD::XSD_element {
-#               @maxOccurs = 1
-#               @name = "attributeGroup"
-#               @name_ns = "http://www.w3.org/2001/XMLSchema"
-#               @internal_name = "attributeGroup"
-#               @minOccurs = 1
-#               @type = "attributeGroupType"
-#               @type_local = "attributeGroupType"
-#               @type_ns = "http://www.w3.org/2001/XMLSchema"
-#               @ref = nil
-#             }
-#           ]
-#         }
-#       ]
-#     }
-#   ]
-# }
-class ComplexType_attributeGroupType < Base
-  attr_accessor :xml_src_node
-  # Attribute <code>name</code> (optional, might be +nil+)
-  attr_accessor :name
-  # Attribute <code>ref</code> (optional, might be +nil+)
-  attr_accessor :ref
-  # For internal use
-  attr_writer :_sequence # the sequence object
-  # Child element getter
-  def annotation; @_sequence.annotation end
-  # Child element setter
-  def annotation=(value); @_sequence.annotation(value) end
-  # Child element getter
-  def choice; @_sequence.choice end
-  # Child element setter
-  def choice=(value); @_sequence.choice(value) end
-  def initialize
-    super()
-    @name = nil
-    @ref = nil
-  end
-  # Serialize as XML.
-  # The +ename+ (+String+) is used as the element name and the
-  # XML is written to +out+ (+IO+) with indenting of +indent+.
-  def xml(ename, out, indent='')
-    out.print "#{indent}<#{ename}" # start tag
-    if @name
-      out.print " name=\"#{XSD.pcdata(@name)}\""
-    end
-    if @ref
-      out.print " ref=\"#{XSD.pcdata(@ref)}\""
-    end
-    out.print ">"
-    out.puts
-    @_sequence.xml(out, indent)
-    out.print indent
-    out.print "</#{ename}>\n" # end tag
-  end
-
-end # class ComplexType_attributeGroupType
-
-
-   # Exception that is raised if the XML violates the XML Schema.
-   class InvalidXMLError < Exception; end
-
-   #----------------
-   # Methods used in the output of XML
-
-   private
-
-   # Returns a copy of +str+ with the ampersand, greater than and
-   # less than characters replaced by XML character entities. The
-   # result is suitable for output as XML *character data*.
-   def self.cdata(str)
-     s = str.gsub('&', '&amp;')
-     s.gsub!('<', '&lt;')
-     s.gsub!('>', '&gt;')
-     s
-   end
-
-   # Returns a copy of +str+ with the ampersand, greater than, less
-   # than, double and single quotes characters replaced by XML
-   # character entities. The result is suitable for output as the
-   # value of an XML attribute.
-   def self.pcdata(str)
-     s = str.gsub('&', '&amp;')
-     s.gsub!('<', '&lt;')
-     s.gsub!('>', '&gt;')
-     s.gsub!('\'', '&apos;')
-     s.gsub!('"', '&quot;')
-     s
-   end
-
-   #----------------
-   # Methods used to parse XML
-
-    private
-
-    # Parses XML from the +src+ into a REXML::Document.
-    #
-    # This method is used by all the externally invoked parsing methods
-    # to convert its source (a +File+ or +String+) into a tree of objects.
-
-    def self.src_to_dom(src)
-      if src.is_a? REXML::Element
-        return src
-      elsif src.is_a? File
-        return REXML::Document.new(src).root
-      elsif src.is_a? String
-        return REXML::Document.new(src).root
-      else
-        e = ArgumentError.new "#{__method__} expects a File, String or REXML::Element"
-        e.set_backtrace caller # TODO: fix level of nesting reported
-        raise e
-      end
-    end # def self.src_to_dom
-
-    # Parses the element +node+ for an optional attribute of the given
-    # +name+. If the attribute is present, its value (as a +String+) is
-    # returned, otherwise +nil+ is returned.
-
-    def self.attr_optional(node, name)
-      a = node.attribute(name)
-      a ? a.value : nil
-    end
-
-    # Parses the element +node+ for a required attribute of the given
-    # +name+. If the attribute is present, its value (as a +String+) is
-    # returned, otherwise an exception is raised.
-    def self.attr_required(node, name)
-      a = node.attribute(name)
-      if ! a
-        raise InvalidXMLError, "mandatory attribute missing: #{name}"
-      end
-      a.value
-    end
-
-    # Parses the +node+ for character data content. Assumes the +node+
-    # is an REXML::Element object. Returns a +String+ or raises
-    # an exception if the element does not just contain character data.
-    def self.parse_primitive_string(node)
-      # Parse element containing just text
-
-      value = ''
-      node.each_child do |child|
-        if child.is_a?(REXML::Element)
-          raise InvalidXMLError, "Unexpected element:"           " {#{child.namespace}}#{child.name}"
-
-        elsif child.is_a?(REXML::Text)
-          value << REXML::Text.unnormalize(child.to_s)
-
-        elsif child.is_a?(REXML::Comment)
-          # Ignore comments
-
-        else
-          raise InvalidXMLError, "Unknown node type: #{child.class}"
-        end
-      end
-      value
-    end # def parse_text
-
-    # Parses an empty element. Such elements contain no attributes
-    # and no content model.
-    def self.parse_empty(node)
-      # TODO: check for no attributes
-
-      node.each_child do |child|
-        if child.is_a?(REXML::Element)
-          raise InvalidXMLError, "unexpected element in empty content model: {#{child.namespace}}#{child.name}"
-        elsif child.is_a?(REXML::Text)
-          expecting_whitespace child
-        elsif child.is_a?(REXML::Comment)
-          # Ignore comments
-        else
-          raise InvalidXMLError, "unknown node type: #{child.class}"
-        end
-      end
-
-    end
-
-    # Checks if the +node+ represents an element with the given
-    # +element_name+. Assumes that the +node+ is an
-    # +REXML::element+ object. Raises an exception if it is not.
-    def self.expecting_element(element_name, node)
-
-      if node.name != element_name || node.namespace != XSD::NAMESPACE
-        raise InvalidXMLError, "Unexpected element:"         " expecting {#{XSD::NAMESPACE}}#{element_name}:"         " got {#{node.namespace}}#{node.name}"
-      end
-
-    end
-
-    # Checks if the +node+ contains just whitespace text. Assumes that
-    # the +node+ is a +REXML::Text+ object. Raises an exception there are
-    # non-whitespace characters in the text.
-    def self.expecting_whitespace(node)
-      if node.to_s !~ /^ *$/
-        raise InvalidXMLError, "Unexpected text: #{node.to_s.strip}"
-      end
-    end
-
-#================================================================
-# Parse explicitly identified element methods
-
-# Parser for choice: <code>_anon2</code>
-
-def self.parse_choice__anon2(nodes, offset)
-  # Create result object
-  result = XSD::Choice__anon2.new
-
-  # Parse choice
-  while offset < nodes.length do
-    node = nodes[offset]
-    if node.is_a?(REXML::Element)
-      if node.name == 'annotation' && node.namespace == NAMESPACE
-        result.annotation = parse_complexType_annotationType(node)
-        return result, offset + 1
-      elsif node.name == 'include' && node.namespace == NAMESPACE
-        result.include = parse_complexType_includeType(node)
-        return result, offset + 1
-      elsif node.name == 'import' && node.namespace == NAMESPACE
-        result.import = parse_complexType_importType(node)
-        return result, offset + 1
-      else
-        raise InvalidXMLError, "Unexpected element in choice: {#{node.namespace}}#{node.name}"
-      end
-
-    elsif node.is_a?(REXML::Text)
-      expecting_whitespace node
-      offset += 1
-    elsif node.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "Unknown node type: #{child.class}"
-    end
-  end # while
-  raise 'choice not found'
 end
-
-# Parser for choice: <code>_anon3</code>
-
-def self.parse_choice__anon3(nodes, offset)
-  # Create result object
-  result = XSD::Choice__anon3.new
-
-  # Parse choice
-  while offset < nodes.length do
-    node = nodes[offset]
-    if node.is_a?(REXML::Element)
-      if node.name == 'annotation' && node.namespace == NAMESPACE
-        result.annotation = parse_complexType_annotationType(node)
-        return result, offset + 1
-      elsif node.name == 'element' && node.namespace == NAMESPACE
-        result.element = parse_complexType_elementType(node)
-        return result, offset + 1
-      elsif node.name == 'attribute' && node.namespace == NAMESPACE
-        result.attribute = parse_complexType_attributeType(node)
-        return result, offset + 1
-      elsif node.name == 'simpleType' && node.namespace == NAMESPACE
-        result.simpleType = parse_complexType_simpleTypeType(node)
-        return result, offset + 1
-      elsif node.name == 'complexType' && node.namespace == NAMESPACE
-        result.complexType = parse_complexType_complexTypeType(node)
-        return result, offset + 1
-      elsif node.name == 'attributeGroup' && node.namespace == NAMESPACE
-        result.attributeGroup = parse_complexType_attributeGroupType(node)
-        return result, offset + 1
-      else
-        raise InvalidXMLError, "Unexpected element in choice: {#{node.namespace}}#{node.name}"
-      end
-
-    elsif node.is_a?(REXML::Text)
-      expecting_whitespace node
-      offset += 1
-    elsif node.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "Unknown node type: #{child.class}"
-    end
-  end # while
-  raise 'choice not found'
-end
-
-# Parser for a sequence.
-# Starting at the +offset+ node in the +nodes+ array.
-# Returns matched object and next offset index after parsed nodes.
-def self.parse_sequence__anon1(nodes, offset)
-
-  result = Sequence__anon1.new
-
-  # Parse sequence
-  state = 0
-  while offset < nodes.size
-    child = nodes[offset]
-
-    if child.is_a?(REXML::Element)
-      case state
-      when 0
-        if Choice__anon2.match(child)
-          r, offset = parse_choice__anon2(nodes, offset)
-          result.choice1 << r
-        else
-          state = 1
-        end
-      when 1
-        if Choice__anon3.match(child)
-          r, offset = parse_choice__anon3(nodes, offset)
-          result.choice2 << r
-        else
-          state = 2
-        end
-      else
-        raise InvalidXMLError, "unexpected element: {#{child.namespace}}#{child.name}"
-      end # case state
-    elsif child.is_a?(REXML::Text)
-      expecting_whitespace child
-      offset += 1
-    elsif child.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
-    end
-  end # while
-
-  # Completeness check: not required, because all members are minOccurs=0
-
-  # Success
-  return [result, offset]
-end
-
-# Parser for complexType: <code>schemaType</code>
-
-def self.parse_complexType_schemaType(node)
-
-  # Create result object
-  result = XSD::ComplexType_schemaType.new
-  result.xml_src_node = node
-
-  # Parse attributes
-  result.version = attr_optional(node, 'version')
-  result.targetNamespace = attr_optional(node, 'targetNamespace')
-  result.elementFormDefault = attr_optional(node, 'elementFormDefault')
-  result.attributeFormDefault = attr_optional(node, 'attributeFormDefault')
-  result.lang = attr_optional(node, 'lang')
-  # Content model
-  result._sequence, offset = parse_sequence__anon1(node.children, 0)
-  if offset < node.children.size
-     raise "complexType sequence has left over elements"
-  end
-
-  # Success
-  result
-end
-
-# Parser for a sequence.
-# Starting at the +offset+ node in the +nodes+ array.
-# Returns matched object and next offset index after parsed nodes.
-def self.parse_sequence__anon4(nodes, offset)
-
-  result = Sequence__anon4.new
-
-  # Parse sequence
-  state = 0
-  while offset < nodes.size
-    child = nodes[offset]
-
-    if child.is_a?(REXML::Element)
-      case state
-      when 0
-        if child.name == 'documentation' && child.namespace == XSD::NAMESPACE
-          r, offset = parse_complexType_documentationType(nodes[offset]), offset + 1
-          result.documentation << r
-        else
-          state = 1
-        end
-      else
-        raise InvalidXMLError, "unexpected element: {#{child.namespace}}#{child.name}"
-      end # case state
-    elsif child.is_a?(REXML::Text)
-      expecting_whitespace child
-      offset += 1
-    elsif child.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
-    end
-  end # while
-
-  # Completeness check: not required, because all members are minOccurs=0
-
-  # Success
-  return [result, offset]
-end
-
-# Parser for complexType: <code>annotationType</code>
-
-def self.parse_complexType_annotationType(node)
-
-  # Create result object
-  result = XSD::ComplexType_annotationType.new
-  result.xml_src_node = node
-
-  # Parse attributes
-  result.lang = attr_optional(node, 'lang')
-  # Content model
-  result._sequence, offset = parse_sequence__anon4(node.children, 0)
-  if offset < node.children.size
-     raise "complexType sequence has left over elements"
-  end
-
-  # Success
-  result
-end
-
-# Parser for complexType: <code>documentationType</code>
-
-def self.parse_complexType_documentationType(node)
-
-  # Create result object
-  result = XSD::ComplexType_documentationType.new
-  result.xml_src_node = node
-
-  # Content model
-  begin # extension parsing
-    # Parse extension's attributes
-  result.source = attr_optional(node, 'source')
-  result.lang = attr_optional(node, 'lang')
-
-    # Parse extension's base
-    result._value = parse_primitive_string(node)
-  end # extension parsing
-
-  # Success
-  result
-end
-
-# Parser for complexType: <code>includeType</code>
-
-def self.parse_complexType_includeType(node)
-
-  # Create result object
-  result = XSD::ComplexType_includeType.new
-  result.xml_src_node = node
-
-  # Parse attributes
-  result.schemaLocation = attr_optional(node, 'schemaLocation')
-  # Content model
-  # Empty content model: must only contain non-significant whitespace
-  offset = 0
-  while offset < node.children.length
-    child = node.children[offset]
-    if child.is_a?(REXML::Element)
-      raise InvalidXMLError, "unexpected element in empty complexType"
-    elsif child.is_a?(REXML::Text)
-      expecting_whitespace child
-      offset += 1
-    elsif child.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
-    end
-  end # while
-
-  # Success
-  result
-end
-
-# Parser for complexType: <code>importType</code>
-
-def self.parse_complexType_importType(node)
-
-  # Create result object
-  result = XSD::ComplexType_importType.new
-  result.xml_src_node = node
-
-  # Parse attributes
-  result.namespace = attr_required(node, 'namespace')
-  result.schemaLocation = attr_optional(node, 'schemaLocation')
-  # Content model
-  # Empty content model: must only contain non-significant whitespace
-  offset = 0
-  while offset < node.children.length
-    child = node.children[offset]
-    if child.is_a?(REXML::Element)
-      raise InvalidXMLError, "unexpected element in empty complexType"
-    elsif child.is_a?(REXML::Text)
-      expecting_whitespace child
-      offset += 1
-    elsif child.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
-    end
-  end # while
-
-  # Success
-  result
-end
-
-# Parser for a sequence.
-# Starting at the +offset+ node in the +nodes+ array.
-# Returns matched object and next offset index after parsed nodes.
-def self.parse_sequence__anon5(nodes, offset)
-
-  result = Sequence__anon5.new
-
-  # Parse sequence
-  state = 0
-  while offset < nodes.size
-    child = nodes[offset]
-
-    if child.is_a?(REXML::Element)
-      case state
-      when 0
-        if child.name == 'extension' && child.namespace == XSD::NAMESPACE
-          r, offset = parse_complexType_extensionType(nodes[offset]), offset + 1
-          result.extension = r
-        else
-          raise InvalidXMLError, "sequence not enough extension" if result.extension == nil
-          state = 1
-        end
-      else
-        raise InvalidXMLError, "unexpected element: {#{child.namespace}}#{child.name}"
-      end # case state
-    elsif child.is_a?(REXML::Text)
-      expecting_whitespace child
-      offset += 1
-    elsif child.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
-    end
-  end # while
-
-  # Completeness check
-  if result.extension == nil
-    raise InvalidXMLError, "sequence is incomplete"
-  end
-
-  # Success
-  return [result, offset]
-end
-
-# Parser for complexType: <code>simpleContentType</code>
-
-def self.parse_complexType_simpleContentType(node)
-
-  # Create result object
-  result = XSD::ComplexType_simpleContentType.new
-  result.xml_src_node = node
-
-  # Content model
-  result._sequence, offset = parse_sequence__anon5(node.children, 0)
-  if offset < node.children.size
-     raise "complexType sequence has left over elements"
-  end
-
-  # Success
-  result
-end
-
-# Parser for a sequence.
-# Starting at the +offset+ node in the +nodes+ array.
-# Returns matched object and next offset index after parsed nodes.
-def self.parse_sequence__anon6(nodes, offset)
-
-  result = Sequence__anon6.new
-
-  # Parse sequence
-  state = 0
-  while offset < nodes.size
-    child = nodes[offset]
-
-    if child.is_a?(REXML::Element)
-      case state
-      when 0
-        if child.name == 'attribute' && child.namespace == XSD::NAMESPACE
-          r, offset = parse_complexType_attributeType(nodes[offset]), offset + 1
-          result.attribute << r
-        else
-          raise InvalidXMLError, "sequence not enough attribute" if result.attribute.length < 1
-          state = 1
-        end
-      when 1
-        if child.name == 'annotation' && child.namespace == XSD::NAMESPACE
-          r, offset = parse_complexType_annotationType(nodes[offset]), offset + 1
-          result.annotation << r
-        else
-          state = 2
-        end
-      else
-        raise InvalidXMLError, "unexpected element: {#{child.namespace}}#{child.name}"
-      end # case state
-    elsif child.is_a?(REXML::Text)
-      expecting_whitespace child
-      offset += 1
-    elsif child.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
-    end
-  end # while
-
-  # Completeness check
-  if result.attribute.length < 1
-    raise InvalidXMLError, "sequence is incomplete"
-  end
-
-  # Success
-  return [result, offset]
-end
-
-# Parser for complexType: <code>extensionType</code>
-
-def self.parse_complexType_extensionType(node)
-
-  # Create result object
-  result = XSD::ComplexType_extensionType.new
-  result.xml_src_node = node
-
-  # Parse attributes
-  result.base = attr_required(node, 'base')
-  # Content model
-  result._sequence, offset = parse_sequence__anon6(node.children, 0)
-  if offset < node.children.size
-     raise "complexType sequence has left over elements"
-  end
-
-  # Success
-  result
-end
-
-# Parser for choice: <code>_anon8</code>
-
-def self.parse_choice__anon8(nodes, offset)
-  # Create result object
-  result = XSD::Choice__anon8.new
-
-  # Parse choice
-  while offset < nodes.length do
-    node = nodes[offset]
-    if node.is_a?(REXML::Element)
-      if node.name == 'complexType' && node.namespace == NAMESPACE
-        result.complexType = parse_complexType_complexTypeType(node)
-        return result, offset + 1
-      else
-        raise InvalidXMLError, "Unexpected element in choice: {#{node.namespace}}#{node.name}"
-      end
-
-    elsif node.is_a?(REXML::Text)
-      expecting_whitespace node
-      offset += 1
-    elsif node.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "Unknown node type: #{child.class}"
-    end
-  end # while
-  raise 'choice not found'
-end
-
-# Parser for a sequence.
-# Starting at the +offset+ node in the +nodes+ array.
-# Returns matched object and next offset index after parsed nodes.
-def self.parse_sequence__anon7(nodes, offset)
-
-  result = Sequence__anon7.new
-
-  # Parse sequence
-  state = 0
-  while offset < nodes.size
-    child = nodes[offset]
-
-    if child.is_a?(REXML::Element)
-      case state
-      when 0
-        if child.name == 'annotation' && child.namespace == XSD::NAMESPACE
-          r, offset = parse_complexType_annotationType(nodes[offset]), offset + 1
-          result.annotation << r
-        else
-          state = 1
-        end
-      when 1
-        if Choice__anon8.match(child)
-          r, offset = parse_choice__anon8(nodes, offset)
-          result.choice = r
-        else
-          state = 2
-        end
-      else
-        raise InvalidXMLError, "unexpected element: {#{child.namespace}}#{child.name}"
-      end # case state
-    elsif child.is_a?(REXML::Text)
-      expecting_whitespace child
-      offset += 1
-    elsif child.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
-    end
-  end # while
-
-  # Completeness check: not required, because all members are minOccurs=0
-
-  # Success
-  return [result, offset]
-end
-
-# Parser for complexType: <code>elementType</code>
-
-def self.parse_complexType_elementType(node)
-
-  # Create result object
-  result = XSD::ComplexType_elementType.new
-  result.xml_src_node = node
-
-  # Parse attributes
-  result.name = attr_optional(node, 'name')
-  result.type_attribute = attr_optional(node, 'type')
-  result.minOccurs = attr_optional(node, 'minOccurs')
-  result.maxOccurs = attr_optional(node, 'maxOccurs')
-  result.ref = attr_optional(node, 'ref')
-  # Content model
-  result._sequence, offset = parse_sequence__anon7(node.children, 0)
-  if offset < node.children.size
-     raise "complexType sequence has left over elements"
-  end
-
-  # Success
-  result
-end
-
-# Parser for complexType: <code>enumerationType</code>
-
-def self.parse_complexType_enumerationType(node)
-
-  # Create result object
-  result = XSD::ComplexType_enumerationType.new
-  result.xml_src_node = node
-
-  # Content model
-  begin # extension parsing
-    # Parse extension's attributes
-  result.value = attr_optional(node, 'value')
-
-    # Parse extension's base
-    result._value = parse_primitive_string(node)
-  end # extension parsing
-
-  # Success
-  result
-end
-
-# Parser for a sequence.
-# Starting at the +offset+ node in the +nodes+ array.
-# Returns matched object and next offset index after parsed nodes.
-def self.parse_sequence__anon9(nodes, offset)
-
-  result = Sequence__anon9.new
-
-  # Parse sequence
-  state = 0
-  while offset < nodes.size
-    child = nodes[offset]
-
-    if child.is_a?(REXML::Element)
-      case state
-      when 0
-        if child.name == 'enumeration' && child.namespace == XSD::NAMESPACE
-          r, offset = parse_complexType_enumerationType(nodes[offset]), offset + 1
-          result.enumeration << r
-        else
-          state = 1
-        end
-      else
-        raise InvalidXMLError, "unexpected element: {#{child.namespace}}#{child.name}"
-      end # case state
-    elsif child.is_a?(REXML::Text)
-      expecting_whitespace child
-      offset += 1
-    elsif child.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
-    end
-  end # while
-
-  # Completeness check: not required, because all members are minOccurs=0
-
-  # Success
-  return [result, offset]
-end
-
-# Parser for complexType: <code>restrictionType</code>
-
-def self.parse_complexType_restrictionType(node)
-
-  # Create result object
-  result = XSD::ComplexType_restrictionType.new
-  result.xml_src_node = node
-
-  # Parse attributes
-  result.base = attr_optional(node, 'base')
-  # Content model
-  result._sequence, offset = parse_sequence__anon9(node.children, 0)
-  if offset < node.children.size
-     raise "complexType sequence has left over elements"
-  end
-
-  # Success
-  result
-end
-
-# Parser for a sequence.
-# Starting at the +offset+ node in the +nodes+ array.
-# Returns matched object and next offset index after parsed nodes.
-def self.parse_sequence__anon10(nodes, offset)
-
-  result = Sequence__anon10.new
-
-  # Parse sequence
-  state = 0
-  while offset < nodes.size
-    child = nodes[offset]
-
-    if child.is_a?(REXML::Element)
-      case state
-      when 0
-        if child.name == 'restriction' && child.namespace == XSD::NAMESPACE
-          r, offset = parse_complexType_restrictionType(nodes[offset]), offset + 1
-          result.restriction = r
-        else
-          raise InvalidXMLError, "sequence not enough restriction" if result.restriction == nil
-          state = 1
-        end
-      else
-        raise InvalidXMLError, "unexpected element: {#{child.namespace}}#{child.name}"
-      end # case state
-    elsif child.is_a?(REXML::Text)
-      expecting_whitespace child
-      offset += 1
-    elsif child.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
-    end
-  end # while
-
-  # Completeness check
-  if result.restriction == nil
-    raise InvalidXMLError, "sequence is incomplete"
-  end
-
-  # Success
-  return [result, offset]
-end
-
-# Parser for complexType: <code>simpleTypeType</code>
-
-def self.parse_complexType_simpleTypeType(node)
-
-  # Create result object
-  result = XSD::ComplexType_simpleTypeType.new
-  result.xml_src_node = node
-
-  # Content model
-  result._sequence, offset = parse_sequence__anon10(node.children, 0)
-  if offset < node.children.size
-     raise "complexType sequence has left over elements"
-  end
-
-  # Success
-  result
-end
-
-# Parser for choice: <code>_anon12</code>
-
-def self.parse_choice__anon12(nodes, offset)
-  # Create result object
-  result = XSD::Choice__anon12.new
-
-  # Parse choice
-  while offset < nodes.length do
-    node = nodes[offset]
-    if node.is_a?(REXML::Element)
-      if node.name == 'simpleContent' && node.namespace == NAMESPACE
-        result.simpleContent = parse_complexType_simpleContentType(node)
-        return result, offset + 1
-      elsif node.name == 'sequence' && node.namespace == NAMESPACE
-        result.sequence = parse_complexType_sequenceType(node)
-        return result, offset + 1
-      elsif node.name == 'choice' && node.namespace == NAMESPACE
-        result.choice = parse_complexType_choiceType(node)
-        return result, offset + 1
-      else
-        raise InvalidXMLError, "Unexpected element in choice: {#{node.namespace}}#{node.name}"
-      end
-
-    elsif node.is_a?(REXML::Text)
-      expecting_whitespace node
-      offset += 1
-    elsif node.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "Unknown node type: #{child.class}"
-    end
-  end # while
-  raise 'choice not found'
-end
-
-# Parser for choice: <code>_anon13</code>
-
-def self.parse_choice__anon13(nodes, offset)
-  # Create result object
-  result = XSD::Choice__anon13.new
-
-  # Parse choice
-  while offset < nodes.length do
-    node = nodes[offset]
-    if node.is_a?(REXML::Element)
-      if node.name == 'attribute' && node.namespace == NAMESPACE
-        result.attribute = parse_complexType_attributeType(node)
-        return result, offset + 1
-      elsif node.name == 'attributeGroup' && node.namespace == NAMESPACE
-        result.attributeGroup = parse_complexType_attributeGroupType(node)
-        return result, offset + 1
-      else
-        raise InvalidXMLError, "Unexpected element in choice: {#{node.namespace}}#{node.name}"
-      end
-
-    elsif node.is_a?(REXML::Text)
-      expecting_whitespace node
-      offset += 1
-    elsif node.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "Unknown node type: #{child.class}"
-    end
-  end # while
-  raise 'choice not found'
-end
-
-# Parser for a sequence.
-# Starting at the +offset+ node in the +nodes+ array.
-# Returns matched object and next offset index after parsed nodes.
-def self.parse_sequence__anon11(nodes, offset)
-
-  result = Sequence__anon11.new
-
-  # Parse sequence
-  state = 0
-  while offset < nodes.size
-    child = nodes[offset]
-
-    if child.is_a?(REXML::Element)
-      case state
-      when 0
-        if child.name == 'annotation' && child.namespace == XSD::NAMESPACE
-          r, offset = parse_complexType_annotationType(nodes[offset]), offset + 1
-          result.annotation << r
-        else
-          state = 1
-        end
-      when 1
-        if Choice__anon12.match(child)
-          r, offset = parse_choice__anon12(nodes, offset)
-          result.choice1 = r
-        else
-          state = 2
-        end
-      when 2
-        if Choice__anon13.match(child)
-          r, offset = parse_choice__anon13(nodes, offset)
-          result.choice2 << r
-        else
-          state = 3
-        end
-      else
-        raise InvalidXMLError, "unexpected element: {#{child.namespace}}#{child.name}"
-      end # case state
-    elsif child.is_a?(REXML::Text)
-      expecting_whitespace child
-      offset += 1
-    elsif child.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
-    end
-  end # while
-
-  # Completeness check: not required, because all members are minOccurs=0
-
-  # Success
-  return [result, offset]
-end
-
-# Parser for complexType: <code>complexTypeType</code>
-
-def self.parse_complexType_complexTypeType(node)
-
-  # Create result object
-  result = XSD::ComplexType_complexTypeType.new
-  result.xml_src_node = node
-
-  # Parse attributes
-  result.name = attr_optional(node, 'name')
-  # Content model
-  result._sequence, offset = parse_sequence__anon11(node.children, 0)
-  if offset < node.children.size
-     raise "complexType sequence has left over elements"
-  end
-
-  # Success
-  result
-end
-
-# Parser for choice: <code>_anon15</code>
-
-def self.parse_choice__anon15(nodes, offset)
-  # Create result object
-  result = XSD::Choice__anon15.new
-
-  # Parse choice
-  while offset < nodes.length do
-    node = nodes[offset]
-    if node.is_a?(REXML::Element)
-      if node.name == 'element' && node.namespace == NAMESPACE
-        result.element = parse_complexType_elementType(node)
-        return result, offset + 1
-      elsif node.name == 'sequence' && node.namespace == NAMESPACE
-        result.sequence = parse_complexType_sequenceType(node)
-        return result, offset + 1
-      elsif node.name == 'choice' && node.namespace == NAMESPACE
-        result.choice = parse_complexType_choiceType(node)
-        return result, offset + 1
-      else
-        raise InvalidXMLError, "Unexpected element in choice: {#{node.namespace}}#{node.name}"
-      end
-
-    elsif node.is_a?(REXML::Text)
-      expecting_whitespace node
-      offset += 1
-    elsif node.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "Unknown node type: #{child.class}"
-    end
-  end # while
-  raise 'choice not found'
-end
-
-# Parser for a sequence.
-# Starting at the +offset+ node in the +nodes+ array.
-# Returns matched object and next offset index after parsed nodes.
-def self.parse_sequence__anon14(nodes, offset)
-
-  result = Sequence__anon14.new
-
-  # Parse sequence
-  state = 0
-  while offset < nodes.size
-    child = nodes[offset]
-
-    if child.is_a?(REXML::Element)
-      case state
-      when 0
-        if child.name == 'annotation' && child.namespace == XSD::NAMESPACE
-          r, offset = parse_complexType_annotationType(nodes[offset]), offset + 1
-          result.annotation << r
-        else
-          state = 1
-        end
-      when 1
-        if Choice__anon15.match(child)
-          r, offset = parse_choice__anon15(nodes, offset)
-          result.choice << r
-        else
-          raise InvalidXMLError, "sequence not enough choice" if result.choice.length < 1
-          state = 2
-        end
-      else
-        raise InvalidXMLError, "unexpected element: {#{child.namespace}}#{child.name}"
-      end # case state
-    elsif child.is_a?(REXML::Text)
-      expecting_whitespace child
-      offset += 1
-    elsif child.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
-    end
-  end # while
-
-  # Completeness check
-  if result.choice == nil
-    raise InvalidXMLError, "sequence is incomplete"
-  end
-
-  # Success
-  return [result, offset]
-end
-
-# Parser for complexType: <code>sequenceType</code>
-
-def self.parse_complexType_sequenceType(node)
-
-  # Create result object
-  result = XSD::ComplexType_sequenceType.new
-  result.xml_src_node = node
-
-  # Content model
-  result._sequence, offset = parse_sequence__anon14(node.children, 0)
-  if offset < node.children.size
-     raise "complexType sequence has left over elements"
-  end
-
-  # Success
-  result
-end
-
-# Parser for choice: <code>_anon17</code>
-
-def self.parse_choice__anon17(nodes, offset)
-  # Create result object
-  result = XSD::Choice__anon17.new
-
-  # Parse choice
-  while offset < nodes.length do
-    node = nodes[offset]
-    if node.is_a?(REXML::Element)
-      if node.name == 'element' && node.namespace == NAMESPACE
-        result.element = parse_complexType_elementType(node)
-        return result, offset + 1
-      elsif node.name == 'sequence' && node.namespace == NAMESPACE
-        result.sequence = parse_complexType_sequenceType(node)
-        return result, offset + 1
-      elsif node.name == 'choice' && node.namespace == NAMESPACE
-        result.choice = parse_complexType_choiceType(node)
-        return result, offset + 1
-      else
-        raise InvalidXMLError, "Unexpected element in choice: {#{node.namespace}}#{node.name}"
-      end
-
-    elsif node.is_a?(REXML::Text)
-      expecting_whitespace node
-      offset += 1
-    elsif node.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "Unknown node type: #{child.class}"
-    end
-  end # while
-  raise 'choice not found'
-end
-
-# Parser for a sequence.
-# Starting at the +offset+ node in the +nodes+ array.
-# Returns matched object and next offset index after parsed nodes.
-def self.parse_sequence__anon16(nodes, offset)
-
-  result = Sequence__anon16.new
-
-  # Parse sequence
-  state = 0
-  while offset < nodes.size
-    child = nodes[offset]
-
-    if child.is_a?(REXML::Element)
-      case state
-      when 0
-        if child.name == 'annotation' && child.namespace == XSD::NAMESPACE
-          r, offset = parse_complexType_annotationType(nodes[offset]), offset + 1
-          result.annotation << r
-        else
-          state = 1
-        end
-      when 1
-        if Choice__anon17.match(child)
-          r, offset = parse_choice__anon17(nodes, offset)
-          result.choice << r
-        else
-          raise InvalidXMLError, "sequence not enough choice" if result.choice.length < 1
-          state = 2
-        end
-      else
-        raise InvalidXMLError, "unexpected element: {#{child.namespace}}#{child.name}"
-      end # case state
-    elsif child.is_a?(REXML::Text)
-      expecting_whitespace child
-      offset += 1
-    elsif child.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
-    end
-  end # while
-
-  # Completeness check
-  if result.choice == nil
-    raise InvalidXMLError, "sequence is incomplete"
-  end
-
-  # Success
-  return [result, offset]
-end
-
-# Parser for complexType: <code>choiceType</code>
-
-def self.parse_complexType_choiceType(node)
-
-  # Create result object
-  result = XSD::ComplexType_choiceType.new
-  result.xml_src_node = node
-
-  # Parse attributes
-  result.minOccurs = attr_optional(node, 'minOccurs')
-  result.maxOccurs = attr_optional(node, 'maxOccurs')
-  # Content model
-  result._sequence, offset = parse_sequence__anon16(node.children, 0)
-  if offset < node.children.size
-     raise "complexType sequence has left over elements"
-  end
-
-  # Success
-  result
-end
-
-# Parser for a sequence.
-# Starting at the +offset+ node in the +nodes+ array.
-# Returns matched object and next offset index after parsed nodes.
-def self.parse_sequence__anon18(nodes, offset)
-
-  result = Sequence__anon18.new
-
-  # Parse sequence
-  state = 0
-  while offset < nodes.size
-    child = nodes[offset]
-
-    if child.is_a?(REXML::Element)
-      case state
-      when 0
-        if child.name == 'annotation' && child.namespace == XSD::NAMESPACE
-          r, offset = parse_complexType_annotationType(nodes[offset]), offset + 1
-          result.annotation << r
-        else
-          state = 1
-        end
-      when 1
-        if child.name == 'simpleType' && child.namespace == XSD::NAMESPACE
-          r, offset = parse_complexType_simpleTypeType(nodes[offset]), offset + 1
-          result.simpleType = r
-        else
-          state = 2
-        end
-      else
-        raise InvalidXMLError, "unexpected element: {#{child.namespace}}#{child.name}"
-      end # case state
-    elsif child.is_a?(REXML::Text)
-      expecting_whitespace child
-      offset += 1
-    elsif child.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
-    end
-  end # while
-
-  # Completeness check: not required, because all members are minOccurs=0
-
-  # Success
-  return [result, offset]
-end
-
-# Parser for complexType: <code>attributeType</code>
-
-def self.parse_complexType_attributeType(node)
-
-  # Create result object
-  result = XSD::ComplexType_attributeType.new
-  result.xml_src_node = node
-
-  # Parse attributes
-  result.name = attr_optional(node, 'name')
-  result.type_attribute = attr_optional(node, 'type')
-  result.ref = attr_optional(node, 'ref')
-  result.use = attr_optional(node, 'use')
-  # Content model
-  result._sequence, offset = parse_sequence__anon18(node.children, 0)
-  if offset < node.children.size
-     raise "complexType sequence has left over elements"
-  end
-
-  # Success
-  result
-end
-
-# Parser for choice: <code>_anon20</code>
-
-def self.parse_choice__anon20(nodes, offset)
-  # Create result object
-  result = XSD::Choice__anon20.new
-
-  # Parse choice
-  while offset < nodes.length do
-    node = nodes[offset]
-    if node.is_a?(REXML::Element)
-      if node.name == 'attribute' && node.namespace == NAMESPACE
-        result.attribute = parse_complexType_attributeType(node)
-        return result, offset + 1
-      elsif node.name == 'attributeGroup' && node.namespace == NAMESPACE
-        result.attributeGroup = parse_complexType_attributeGroupType(node)
-        return result, offset + 1
-      else
-        raise InvalidXMLError, "Unexpected element in choice: {#{node.namespace}}#{node.name}"
-      end
-
-    elsif node.is_a?(REXML::Text)
-      expecting_whitespace node
-      offset += 1
-    elsif node.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "Unknown node type: #{child.class}"
-    end
-  end # while
-  raise 'choice not found'
-end
-
-# Parser for a sequence.
-# Starting at the +offset+ node in the +nodes+ array.
-# Returns matched object and next offset index after parsed nodes.
-def self.parse_sequence__anon19(nodes, offset)
-
-  result = Sequence__anon19.new
-
-  # Parse sequence
-  state = 0
-  while offset < nodes.size
-    child = nodes[offset]
-
-    if child.is_a?(REXML::Element)
-      case state
-      when 0
-        if child.name == 'annotation' && child.namespace == XSD::NAMESPACE
-          r, offset = parse_complexType_annotationType(nodes[offset]), offset + 1
-          result.annotation << r
-        else
-          state = 1
-        end
-      when 1
-        if Choice__anon20.match(child)
-          r, offset = parse_choice__anon20(nodes, offset)
-          result.choice << r
-        else
-          state = 2
-        end
-      else
-        raise InvalidXMLError, "unexpected element: {#{child.namespace}}#{child.name}"
-      end # case state
-    elsif child.is_a?(REXML::Text)
-      expecting_whitespace child
-      offset += 1
-    elsif child.is_a?(REXML::Comment)
-      # Ignore comments
-      offset += 1
-    else
-      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
-    end
-  end # while
-
-  # Completeness check: not required, because all members are minOccurs=0
-
-  # Success
-  return [result, offset]
-end
-
-# Parser for complexType: <code>attributeGroupType</code>
-
-def self.parse_complexType_attributeGroupType(node)
-
-  # Create result object
-  result = XSD::ComplexType_attributeGroupType.new
-  result.xml_src_node = node
-
-  # Parse attributes
-  result.name = attr_optional(node, 'name')
-  result.ref = attr_optional(node, 'ref')
-  # Content model
-  result._sequence, offset = parse_sequence__anon19(node.children, 0)
-  if offset < node.children.size
-     raise "complexType sequence has left over elements"
-  end
-
-  # Success
-  result
-end
-
-# Parser for top level element +schema+
-def self.parse_element_schema(src)
-  root = src_to_dom src
-
-  expecting_element 'schema', root
-  parse_complexType_schemaType(root) # type
 end
 
 #----------------
-public
 
-# Parser for this module. Will parse the +src+ for
-# top level elements from the XML Schema or raise an
-# exception if none can be successfully parsed.
+# Class to represent a choice.
 #
-# An XML Schema does not indicate which element it expects to be the
-# root element of an XML document, and this method reflects that. If
-# the XML Schema declares only one top level element, then that is the
-# only element that can be successfully matched. But if multiple top
-# level elements are declared, then this method could successfully
-# match any one of them.  Unless the schema only defined one top level
-# element, the caller should check the returned element +name+ is the
-# expected root element.
+# The choice's option can be determined by the _option method, which
+# will return one of the symbols in the NAMES array. The value of
+# that option can be obtained by calling [] with that symbol or the
+# method with the same name as the symbol. Only one option of the
+# choice will be chosen: attempting to obtain the values of any
+# other option will return +nil+.
 #
-# === Parameters
-# * src Source of XML (either a +File+ or +String+)
-# === Results
-# [object, name]
-# * object the root element
-# * name the element name of the matched root element
-#
-# Possible names:
-# * <code>schema</code>
-#
-# === Exceptions
-# InvalidXMLError
-def self.parse(src)
-  root = src_to_dom(src)
+class Choice_in_Sequence_in_ComplexType_complexTypeType1 < Base
+  # Names for the options in this choice.
+  NAMES = [ :attribute, :attributeGroup,]
 
-  # Try to parse any of the known top level elements
-  if root.name == 'schema'
-    return [ parse_element_schema(root), 'schema' ]
-  else
-    raise "could not parse any known element"
+  def initialize(node)
+
+    super(node)
+    @_index = nil # indicates which option (0..1 or nil)
+    @_value = nil # the value of the option
+  end
+
+  # Indexed accessors
+
+  # Returns a symbol indicating which option for the choice. Result is one of
+  # the symbols from +NAME+, or +nil+ if no option has been set.
+  def _option
+    @_index != nil ? NAMES[@_index] : nil
+  end
+
+  # Set the choice to the option identified by +symbol+ and to have the +value+.
+  # See the +NAMES+ constant for permitted values for +symbol+.
+  def []=(symbol, value)
+    match = NAMES.index(symbol)
+    if match
+      @_index = match
+      @_value = value
+    else
+      raise IndexError, "choice has no option: #{symbol}"
+    end
+  end
+
+  # Get value of the option indicated by +symbol+.
+  # Returns +nil+ if the choice is not set to that option.
+  # See the +NAMES+ constant for permitted values for +symbol+.
+  def [](symbol)
+    match = NAMES.index(symbol)
+    (match == @_index) ? @_value : nil
+  end
+
+  # Named accessors
+
+  # Get the value of option +attribute+.
+# Returns an array of <code>ComplexType_attributeType</code> objects.
+# Returns +nil+ if not the option.
+  def attribute
+    (0 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +attribute+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_attributeType</code> objects.
+  def attribute=(value)
+    @_index = 0
+    @_value = value
+  end
+
+  # Get the value of option +attributeGroup+.
+# Returns an array of <code>ComplexType_attributeGroupType</code> objects.
+# Returns +nil+ if not the option.
+  def attributeGroup
+    (1 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +attributeGroup+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_attributeGroupType</code> objects.
+  def attributeGroup=(value)
+    @_index = 1
+    @_value = value
+  end
+
+def to_xml(inscope_ns, indent, io)
+  case @_index
+  when 0
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'attribute', inscope_ns, indent, io)
+    end
+  when 1
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'attributeGroup', inscope_ns, indent, io)
+    end
+  end
+end
+end
+
+#----------------
+
+# Class to represent the complexType: <code>documentationType</code>.
+#
+class ComplexType_documentationType < Base
+  # The <code>source</code> attribute.
+  attr_accessor :source # attribute from extension
+  # The <code></code> attribute.
+  attr_accessor :lang # attribute from extension
+
+  # The simpleContent value as a +String+.
+  # In XML Schema, this is an extension of <code>xsd:string</code>.
+  attr_accessor :_value
+
+  def initialize(node)
+    super(node)
+    @source = nil
+    @lang = nil
+
+    @_value = nil
+  end
+
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
+
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      if @source
+        io.print ' source="'
+        io.print XSDPrimitives.pcdata(@source)
+        io.print '"'
+      end
+      if @lang
+        io.print ' ="'
+        io.print XSDPrimitives.pcdata(@lang)
+        io.print '"'
+      end
+      io.print '>'
+
+      if indent
+        nested_indent = indent + '  '
+      else
+        nested_indent = nil
+      end
+      if @_value
+        io.print XSDPrimitives.cdata(@_value)
+      end
+      io.print "</#{qualifier}#{element_name}>"
+      if indent
+        io.puts
+      end
+    end
+end
+
+#----------------
+
+# Class to represent the complexType: <code>elementType</code>.
+#
+class ComplexType_elementType < Base
+  # The <code>name</code> attribute.
+  attr_accessor :name
+  # The <code>type</code> attribute.
+  attr_accessor :type_attribute
+  # The <code>minOccurs</code> attribute.
+  attr_accessor :minOccurs
+  # The <code>maxOccurs</code> attribute.
+  attr_accessor :maxOccurs
+  # The <code>ref</code> attribute.
+  attr_accessor :ref
+  # An instance of <code>Sequence_in_ComplexType_elementType</code>
+  # to represent the sequence which defines the content model
+  # of this complexType. Users of this class will invoke
+  # the methods of the sequence that have been replicated
+  # by this class: they do not need to directly access the sequence.
+  attr_accessor :_sequence
+
+  # Since this is a complexType defined by a sequence,
+  # the members of that sequence can be accessed through
+  # the following getters and setters. They invoke the
+  # corresponding method on the _sequence object, so
+  # the user doesn't have to interact with the underlying
+  # _sequence at all.
+
+  # Gets the child <code>annotation</code> element.  An array of <code>ComplexType_annotationType</code>. Can be an empty array.
+  def annotation; @_sequence.annotation end
+  # Sets the child <code>annotation</code> element.  An array of <code>ComplexType_annotationType</code>. Can be an empty array.
+  def annotation=(value); @_sequence.annotation(value) end
+
+  # Gets the child <code>choice</code>.  A single <code>Choice_in_Sequence_in_ComplexType_elementType</code>. Optional, so could be +nil+.
+  def choice; @_sequence.choice end
+  # Sets the child <code>choice</code>.  A single <code>Choice_in_Sequence_in_ComplexType_elementType</code>. Optional, so could be +nil+.
+  def choice=(value); @_sequence.choice(value) end
+
+  def initialize(node)
+    super(node)
+    # Attribute
+    @name = nil
+    # Attribute
+    @type_attribute = nil
+    # Attribute
+    @minOccurs = nil
+    # Attribute
+    @maxOccurs = nil
+    # Attribute
+    @ref = nil
+    @_sequence = nil
+  end
+
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
+
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      if name
+        io.print " name=\""
+        io.print XSDPrimitives.pcdata(@name)
+        io.print '"'
+      end
+      if type_attribute
+        io.print " type=\""
+        io.print XSDPrimitives.pcdata(@type_attribute)
+        io.print '"'
+      end
+      if minOccurs
+        io.print " minOccurs=\""
+        io.print XSDPrimitives.pcdata(@minOccurs)
+        io.print '"'
+      end
+      if maxOccurs
+        io.print " maxOccurs=\""
+        io.print XSDPrimitives.pcdata(@maxOccurs)
+        io.print '"'
+      end
+      if ref
+        io.print " ref=\""
+        io.print XSDPrimitives.pcdata(@ref)
+        io.print '"'
+      end
+      io.print '>'
+
+      if indent
+        nested_indent = indent + '  '
+      else
+        nested_indent = nil
+      end
+      io.puts
+      _sequence.to_xml(new_inscope_ns, nested_indent, io)
+      if indent
+        io.print indent
+      end
+      io.print "</#{qualifier}#{element_name}>"
+      if indent
+        io.puts
+      end
+    end
+end
+
+#----------------
+
+# Class to represent a sequence.
+#
+class Sequence_in_ComplexType_elementType < Base
+  # An array of [0..*] <code>ComplexType_annotationType</code> objects.
+  attr_accessor :annotation
+  # An instance of <code>Choice_in_Sequence_in_ComplexType_elementType</code> (optional choice, can be +nil+).
+  attr_accessor :choice
+  def initialize(node)
+    super(node)
+    @annotation = []
+    @choice = nil
+  end
+  def to_xml(inscope_ns, indent, io)
+    @annotation.each do |i|
+      i.to_xml(XSD::NAMESPACE, 'annotation', inscope_ns, indent, io)
+    end
+    m =  choice
+    if m
+      m.to_xml(inscope_ns, indent, io)
+    end
   end
 end
 
-end # module XSD
+#----------------
+
+# Class to represent a choice.
+#
+# The choice's option can be determined by the _option method, which
+# will return one of the symbols in the NAMES array. The value of
+# that option can be obtained by calling [] with that symbol or the
+# method with the same name as the symbol. Only one option of the
+# choice will be chosen: attempting to obtain the values of any
+# other option will return +nil+.
+#
+class Choice_in_Sequence_in_ComplexType_elementType < Base
+  # Names for the options in this choice.
+  NAMES = [ :complexType,]
+
+  def initialize(node)
+
+    super(node)
+    @_index = nil # indicates which option (0..0 or nil)
+    @_value = nil # the value of the option
+  end
+
+  # Indexed accessors
+
+  # Returns a symbol indicating which option for the choice. Result is one of
+  # the symbols from +NAME+, or +nil+ if no option has been set.
+  def _option
+    @_index != nil ? NAMES[@_index] : nil
+  end
+
+  # Set the choice to the option identified by +symbol+ and to have the +value+.
+  # See the +NAMES+ constant for permitted values for +symbol+.
+  def []=(symbol, value)
+    match = NAMES.index(symbol)
+    if match
+      @_index = match
+      @_value = value
+    else
+      raise IndexError, "choice has no option: #{symbol}"
+    end
+  end
+
+  # Get value of the option indicated by +symbol+.
+  # Returns +nil+ if the choice is not set to that option.
+  # See the +NAMES+ constant for permitted values for +symbol+.
+  def [](symbol)
+    match = NAMES.index(symbol)
+    (match == @_index) ? @_value : nil
+  end
+
+  # Named accessors
+
+  # Get the value of option +complexType+.
+# Returns an array of <code>ComplexType_complexTypeType</code> objects.
+# Returns +nil+ if not the option.
+  def complexType
+    (0 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +complexType+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_complexTypeType</code> objects.
+  def complexType=(value)
+    @_index = 0
+    @_value = value
+  end
+
+def to_xml(inscope_ns, indent, io)
+  case @_index
+  when 0
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'complexType', inscope_ns, indent, io)
+    end
+  end
+end
+end
+
+#----------------
+
+# Class to represent the complexType: <code>enumerationType</code>.
+#
+class ComplexType_enumerationType < Base
+  # The <code>value</code> attribute.
+  attr_accessor :value # attribute from extension
+
+  # The simpleContent value as a +String+.
+  # In XML Schema, this is an extension of <code>xsd:string</code>.
+  attr_accessor :_value
+
+  def initialize(node)
+    super(node)
+    @value = nil
+
+    @_value = nil
+  end
+
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
+
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      if @value
+        io.print ' value="'
+        io.print XSDPrimitives.pcdata(@value)
+        io.print '"'
+      end
+      io.print '>'
+
+      if indent
+        nested_indent = indent + '  '
+      else
+        nested_indent = nil
+      end
+      if @_value
+        io.print XSDPrimitives.cdata(@_value)
+      end
+      io.print "</#{qualifier}#{element_name}>"
+      if indent
+        io.puts
+      end
+    end
+end
+
+#----------------
+
+# Class to represent the complexType: <code>extensionType</code>.
+#
+class ComplexType_extensionType < Base
+  # The <code>base</code> attribute.
+  attr_accessor :base
+  # An instance of <code>Sequence_in_ComplexType_extensionType</code>
+  # to represent the sequence which defines the content model
+  # of this complexType. Users of this class will invoke
+  # the methods of the sequence that have been replicated
+  # by this class: they do not need to directly access the sequence.
+  attr_accessor :_sequence
+
+  # Since this is a complexType defined by a sequence,
+  # the members of that sequence can be accessed through
+  # the following getters and setters. They invoke the
+  # corresponding method on the _sequence object, so
+  # the user doesn't have to interact with the underlying
+  # _sequence at all.
+
+  # Gets the child <code>attribute</code> element.  An array of <code>ComplexType_attributeType</code>. Has a minimum length of #{member.element.minOccurs}.
+  def attribute; @_sequence.attribute end
+  # Sets the child <code>attribute</code> element.  An array of <code>ComplexType_attributeType</code>. Has a minimum length of #{member.element.minOccurs}.
+  def attribute=(value); @_sequence.attribute(value) end
+
+  # Gets the child <code>annotation</code> element.  An array of <code>ComplexType_annotationType</code>. Can be an empty array.
+  def annotation; @_sequence.annotation end
+  # Sets the child <code>annotation</code> element.  An array of <code>ComplexType_annotationType</code>. Can be an empty array.
+  def annotation=(value); @_sequence.annotation(value) end
+
+  def initialize(node)
+    super(node)
+    # Attribute
+    @base = nil
+    @_sequence = nil
+  end
+
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
+
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      if base
+        io.print " base=\""
+        io.print XSDPrimitives.pcdata(@base)
+        io.print '"'
+      end
+      io.print '>'
+
+      if indent
+        nested_indent = indent + '  '
+      else
+        nested_indent = nil
+      end
+      io.puts
+      _sequence.to_xml(new_inscope_ns, nested_indent, io)
+      if indent
+        io.print indent
+      end
+      io.print "</#{qualifier}#{element_name}>"
+      if indent
+        io.puts
+      end
+    end
+end
+
+#----------------
+
+# Class to represent a sequence.
+#
+class Sequence_in_ComplexType_extensionType < Base
+  # An array of [1..*] <code>ComplexType_attributeType</code> objects.
+  attr_accessor :attribute
+  # An array of [0..*] <code>ComplexType_annotationType</code> objects.
+  attr_accessor :annotation
+  def initialize(node)
+    super(node)
+    @attribute = []
+    @annotation = []
+  end
+  def to_xml(inscope_ns, indent, io)
+    @attribute.each do |i|
+      i.to_xml(XSD::NAMESPACE, 'attribute', inscope_ns, indent, io)
+    end
+    @annotation.each do |i|
+      i.to_xml(XSD::NAMESPACE, 'annotation', inscope_ns, indent, io)
+    end
+  end
+end
+
+#----------------
+
+# Class to represent the complexType: <code>importType</code>.
+#
+class ComplexType_importType < Base
+  # The <code>namespace</code> attribute.
+  attr_accessor :namespace
+  # The <code>schemaLocation</code> attribute.
+  attr_accessor :schemaLocation
+  def initialize(node)
+    super(node)
+    # Attribute
+    @namespace = nil
+    # Attribute
+    @schemaLocation = nil
+  end
+
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
+
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      if namespace
+        io.print " namespace=\""
+        io.print XSDPrimitives.pcdata(@namespace)
+        io.print '"'
+      end
+      if schemaLocation
+        io.print " schemaLocation=\""
+        io.print XSDPrimitives.pcdata(@schemaLocation)
+        io.print '"'
+      end
+      io.print '/>'
+      io.puts
+    end
+end
+
+#----------------
+
+# Class to represent the complexType: <code>includeType</code>.
+#
+class ComplexType_includeType < Base
+  # The <code>schemaLocation</code> attribute.
+  attr_accessor :schemaLocation
+  def initialize(node)
+    super(node)
+    # Attribute
+    @schemaLocation = nil
+  end
+
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
+
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      if schemaLocation
+        io.print " schemaLocation=\""
+        io.print XSDPrimitives.pcdata(@schemaLocation)
+        io.print '"'
+      end
+      io.print '/>'
+      io.puts
+    end
+end
+
+#----------------
+
+# Class to represent the complexType: <code>restrictionType</code>.
+#
+class ComplexType_restrictionType < Base
+  # The <code>base</code> attribute.
+  attr_accessor :base
+  # An instance of <code>Sequence_in_ComplexType_restrictionType</code>
+  # to represent the sequence which defines the content model
+  # of this complexType. Users of this class will invoke
+  # the methods of the sequence that have been replicated
+  # by this class: they do not need to directly access the sequence.
+  attr_accessor :_sequence
+
+  # Since this is a complexType defined by a sequence,
+  # the members of that sequence can be accessed through
+  # the following getters and setters. They invoke the
+  # corresponding method on the _sequence object, so
+  # the user doesn't have to interact with the underlying
+  # _sequence at all.
+
+  # Gets the child <code>enumeration</code> element.  An array of <code>ComplexType_enumerationType</code>. Can be an empty array.
+  def enumeration; @_sequence.enumeration end
+  # Sets the child <code>enumeration</code> element.  An array of <code>ComplexType_enumerationType</code>. Can be an empty array.
+  def enumeration=(value); @_sequence.enumeration(value) end
+
+  def initialize(node)
+    super(node)
+    # Attribute
+    @base = nil
+    @_sequence = nil
+  end
+
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
+
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      if base
+        io.print " base=\""
+        io.print XSDPrimitives.pcdata(@base)
+        io.print '"'
+      end
+      io.print '>'
+
+      if indent
+        nested_indent = indent + '  '
+      else
+        nested_indent = nil
+      end
+      io.puts
+      _sequence.to_xml(new_inscope_ns, nested_indent, io)
+      if indent
+        io.print indent
+      end
+      io.print "</#{qualifier}#{element_name}>"
+      if indent
+        io.puts
+      end
+    end
+end
+
+#----------------
+
+# Class to represent a sequence.
+#
+class Sequence_in_ComplexType_restrictionType < Base
+  # An array of [0..*] <code>ComplexType_enumerationType</code> objects.
+  attr_accessor :enumeration
+  def initialize(node)
+    super(node)
+    @enumeration = []
+  end
+  def to_xml(inscope_ns, indent, io)
+    @enumeration.each do |i|
+      i.to_xml(XSD::NAMESPACE, 'enumeration', inscope_ns, indent, io)
+    end
+  end
+end
+
+#----------------
+
+# Class to represent the complexType: <code>schemaType</code>.
+#
+class ComplexType_schemaType < Base
+  # The <code>version</code> attribute.
+  attr_accessor :version
+  # The <code>targetNamespace</code> attribute.
+  attr_accessor :targetNamespace
+  # The <code>elementFormDefault</code> attribute.
+  attr_accessor :elementFormDefault
+  # The <code>attributeFormDefault</code> attribute.
+  attr_accessor :attributeFormDefault
+  # The <code></code> attribute.
+  attr_accessor :lang
+  # An instance of <code>Sequence_in_ComplexType_schemaType</code>
+  # to represent the sequence which defines the content model
+  # of this complexType. Users of this class will invoke
+  # the methods of the sequence that have been replicated
+  # by this class: they do not need to directly access the sequence.
+  attr_accessor :_sequence
+
+  # Since this is a complexType defined by a sequence,
+  # the members of that sequence can be accessed through
+  # the following getters and setters. They invoke the
+  # corresponding method on the _sequence object, so
+  # the user doesn't have to interact with the underlying
+  # _sequence at all.
+
+  # Gets the child <code>choice1</code>.  An array of <code>Choice_in_Sequence_in_ComplexType_schemaType</code>. Can be an empty array.
+  def choice1; @_sequence.choice1 end
+  # Sets the child <code>choice1</code>.  An array of <code>Choice_in_Sequence_in_ComplexType_schemaType</code>. Can be an empty array.
+  def choice1=(value); @_sequence.choice1(value) end
+
+  # Gets the child <code>choice2</code>.  An array of <code>Choice_in_Sequence_in_ComplexType_schemaType1</code>. Can be an empty array.
+  def choice2; @_sequence.choice2 end
+  # Sets the child <code>choice2</code>.  An array of <code>Choice_in_Sequence_in_ComplexType_schemaType1</code>. Can be an empty array.
+  def choice2=(value); @_sequence.choice2(value) end
+
+  def initialize(node)
+    super(node)
+    # Attribute
+    @version = nil
+    # Attribute
+    @targetNamespace = nil
+    # Attribute
+    @elementFormDefault = nil
+    # Attribute
+    @attributeFormDefault = nil
+    # Attribute
+    @lang = nil
+    @_sequence = nil
+  end
+
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
+
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      if version
+        io.print " version=\""
+        io.print XSDPrimitives.pcdata(@version)
+        io.print '"'
+      end
+      if targetNamespace
+        io.print " targetNamespace=\""
+        io.print XSDPrimitives.pcdata(@targetNamespace)
+        io.print '"'
+      end
+      if elementFormDefault
+        io.print " elementFormDefault=\""
+        io.print XSDPrimitives.pcdata(@elementFormDefault)
+        io.print '"'
+      end
+      if attributeFormDefault
+        io.print " attributeFormDefault=\""
+        io.print XSDPrimitives.pcdata(@attributeFormDefault)
+        io.print '"'
+      end
+      if lang
+        io.print " =\""
+        io.print XSDPrimitives.pcdata(@lang)
+        io.print '"'
+      end
+      io.print '>'
+
+      if indent
+        nested_indent = indent + '  '
+      else
+        nested_indent = nil
+      end
+      io.puts
+      _sequence.to_xml(new_inscope_ns, nested_indent, io)
+      if indent
+        io.print indent
+      end
+      io.print "</#{qualifier}#{element_name}>"
+      if indent
+        io.puts
+      end
+    end
+end
+
+#----------------
+
+# Class to represent a sequence.
+#
+class Sequence_in_ComplexType_schemaType < Base
+  # An array of [0..*] <code>Choice_in_Sequence_in_ComplexType_schemaType</code> objects.
+  attr_accessor :choice1
+  # An array of [0..*] <code>Choice_in_Sequence_in_ComplexType_schemaType1</code> objects.
+  attr_accessor :choice2
+  def initialize(node)
+    super(node)
+    @choice1 = []
+    @choice2 = []
+  end
+  def to_xml(inscope_ns, indent, io)
+    choice1.each do |i|
+      i.to_xml(inscope_ns, indent, io)
+    end
+    choice2.each do |i|
+      i.to_xml(inscope_ns, indent, io)
+    end
+  end
+end
+
+#----------------
+
+# Class to represent a choice.
+#
+# The choice's option can be determined by the _option method, which
+# will return one of the symbols in the NAMES array. The value of
+# that option can be obtained by calling [] with that symbol or the
+# method with the same name as the symbol. Only one option of the
+# choice will be chosen: attempting to obtain the values of any
+# other option will return +nil+.
+#
+class Choice_in_Sequence_in_ComplexType_schemaType < Base
+  # Names for the options in this choice.
+  NAMES = [ :annotation, :include, :import,]
+
+  def initialize(node)
+
+    super(node)
+    @_index = nil # indicates which option (0..2 or nil)
+    @_value = nil # the value of the option
+  end
+
+  # Indexed accessors
+
+  # Returns a symbol indicating which option for the choice. Result is one of
+  # the symbols from +NAME+, or +nil+ if no option has been set.
+  def _option
+    @_index != nil ? NAMES[@_index] : nil
+  end
+
+  # Set the choice to the option identified by +symbol+ and to have the +value+.
+  # See the +NAMES+ constant for permitted values for +symbol+.
+  def []=(symbol, value)
+    match = NAMES.index(symbol)
+    if match
+      @_index = match
+      @_value = value
+    else
+      raise IndexError, "choice has no option: #{symbol}"
+    end
+  end
+
+  # Get value of the option indicated by +symbol+.
+  # Returns +nil+ if the choice is not set to that option.
+  # See the +NAMES+ constant for permitted values for +symbol+.
+  def [](symbol)
+    match = NAMES.index(symbol)
+    (match == @_index) ? @_value : nil
+  end
+
+  # Named accessors
+
+  # Get the value of option +annotation+.
+# Returns an array of <code>ComplexType_annotationType</code> objects.
+# Returns +nil+ if not the option.
+  def annotation
+    (0 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +annotation+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_annotationType</code> objects.
+  def annotation=(value)
+    @_index = 0
+    @_value = value
+  end
+
+  # Get the value of option +include+.
+# Returns an array of <code>ComplexType_includeType</code> objects.
+# Returns +nil+ if not the option.
+  def include
+    (1 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +include+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_includeType</code> objects.
+  def include=(value)
+    @_index = 1
+    @_value = value
+  end
+
+  # Get the value of option +import+.
+# Returns an array of <code>ComplexType_importType</code> objects.
+# Returns +nil+ if not the option.
+  def import
+    (2 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +import+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_importType</code> objects.
+  def import=(value)
+    @_index = 2
+    @_value = value
+  end
+
+def to_xml(inscope_ns, indent, io)
+  case @_index
+  when 0
+    @_value.each do |i|
+      i.to_xml(XSD::NAMESPACE, 'annotation', inscope_ns, indent, io)
+    end
+  when 1
+    @_value.each do |i|
+      i.to_xml(XSD::NAMESPACE, 'include', inscope_ns, indent, io)
+    end
+  when 2
+    @_value.each do |i|
+      i.to_xml(XSD::NAMESPACE, 'import', inscope_ns, indent, io)
+    end
+  end
+end
+end
+
+#----------------
+
+# Class to represent a choice.
+#
+# The choice's option can be determined by the _option method, which
+# will return one of the symbols in the NAMES array. The value of
+# that option can be obtained by calling [] with that symbol or the
+# method with the same name as the symbol. Only one option of the
+# choice will be chosen: attempting to obtain the values of any
+# other option will return +nil+.
+#
+class Choice_in_Sequence_in_ComplexType_schemaType1 < Base
+  # Names for the options in this choice.
+  NAMES = [ :annotation, :element, :attribute, :simpleType, :complexType, :attributeGroup,]
+
+  def initialize(node)
+
+    super(node)
+    @_index = nil # indicates which option (0..5 or nil)
+    @_value = nil # the value of the option
+  end
+
+  # Indexed accessors
+
+  # Returns a symbol indicating which option for the choice. Result is one of
+  # the symbols from +NAME+, or +nil+ if no option has been set.
+  def _option
+    @_index != nil ? NAMES[@_index] : nil
+  end
+
+  # Set the choice to the option identified by +symbol+ and to have the +value+.
+  # See the +NAMES+ constant for permitted values for +symbol+.
+  def []=(symbol, value)
+    match = NAMES.index(symbol)
+    if match
+      @_index = match
+      @_value = value
+    else
+      raise IndexError, "choice has no option: #{symbol}"
+    end
+  end
+
+  # Get value of the option indicated by +symbol+.
+  # Returns +nil+ if the choice is not set to that option.
+  # See the +NAMES+ constant for permitted values for +symbol+.
+  def [](symbol)
+    match = NAMES.index(symbol)
+    (match == @_index) ? @_value : nil
+  end
+
+  # Named accessors
+
+  # Get the value of option +annotation+.
+# Returns an array of <code>ComplexType_annotationType</code> objects.
+# Returns +nil+ if not the option.
+  def annotation
+    (0 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +annotation+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_annotationType</code> objects.
+  def annotation=(value)
+    @_index = 0
+    @_value = value
+  end
+
+  # Get the value of option +element+.
+# Returns an array of <code>ComplexType_elementType</code> objects.
+# Returns +nil+ if not the option.
+  def element
+    (1 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +element+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_elementType</code> objects.
+  def element=(value)
+    @_index = 1
+    @_value = value
+  end
+
+  # Get the value of option +attribute+.
+# Returns an array of <code>ComplexType_attributeType</code> objects.
+# Returns +nil+ if not the option.
+  def attribute
+    (2 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +attribute+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_attributeType</code> objects.
+  def attribute=(value)
+    @_index = 2
+    @_value = value
+  end
+
+  # Get the value of option +simpleType+.
+# Returns an array of <code>ComplexType_simpleTypeType</code> objects.
+# Returns +nil+ if not the option.
+  def simpleType
+    (3 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +simpleType+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_simpleTypeType</code> objects.
+  def simpleType=(value)
+    @_index = 3
+    @_value = value
+  end
+
+  # Get the value of option +complexType+.
+# Returns an array of <code>ComplexType_complexTypeType</code> objects.
+# Returns +nil+ if not the option.
+  def complexType
+    (4 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +complexType+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_complexTypeType</code> objects.
+  def complexType=(value)
+    @_index = 4
+    @_value = value
+  end
+
+  # Get the value of option +attributeGroup+.
+# Returns an array of <code>ComplexType_attributeGroupType</code> objects.
+# Returns +nil+ if not the option.
+  def attributeGroup
+    (5 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +attributeGroup+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_attributeGroupType</code> objects.
+  def attributeGroup=(value)
+    @_index = 5
+    @_value = value
+  end
+
+def to_xml(inscope_ns, indent, io)
+  case @_index
+  when 0
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'annotation', inscope_ns, indent, io)
+    end
+  when 1
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'element', inscope_ns, indent, io)
+    end
+  when 2
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'attribute', inscope_ns, indent, io)
+    end
+  when 3
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'simpleType', inscope_ns, indent, io)
+    end
+  when 4
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'complexType', inscope_ns, indent, io)
+    end
+  when 5
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'attributeGroup', inscope_ns, indent, io)
+    end
+  end
+end
+end
+
+#----------------
+
+# Class to represent the complexType: <code>sequenceType</code>.
+#
+class ComplexType_sequenceType < Base
+  # An instance of <code>Sequence_in_ComplexType_sequenceType</code>
+  # to represent the sequence which defines the content model
+  # of this complexType. Users of this class will invoke
+  # the methods of the sequence that have been replicated
+  # by this class: they do not need to directly access the sequence.
+  attr_accessor :_sequence
+
+  # Since this is a complexType defined by a sequence,
+  # the members of that sequence can be accessed through
+  # the following getters and setters. They invoke the
+  # corresponding method on the _sequence object, so
+  # the user doesn't have to interact with the underlying
+  # _sequence at all.
+
+  # Gets the child <code>annotation</code> element.  An array of <code>ComplexType_annotationType</code>. Can be an empty array.
+  def annotation; @_sequence.annotation end
+  # Sets the child <code>annotation</code> element.  An array of <code>ComplexType_annotationType</code>. Can be an empty array.
+  def annotation=(value); @_sequence.annotation(value) end
+
+  # Gets the child <code>choice</code>.  An array of <code>Choice_in_Sequence_in_ComplexType_sequenceType</code>. Has a minimum length of #{member.choice.minOccurs}.
+  def choice; @_sequence.choice end
+  # Sets the child <code>choice</code>.  An array of <code>Choice_in_Sequence_in_ComplexType_sequenceType</code>. Has a minimum length of #{member.choice.minOccurs}.
+  def choice=(value); @_sequence.choice(value) end
+
+  def initialize(node)
+    super(node)
+    @_sequence = nil
+  end
+
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
+
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      io.print '>'
+
+      if indent
+        nested_indent = indent + '  '
+      else
+        nested_indent = nil
+      end
+      io.puts
+      _sequence.to_xml(new_inscope_ns, nested_indent, io)
+      if indent
+        io.print indent
+      end
+      io.print "</#{qualifier}#{element_name}>"
+      if indent
+        io.puts
+      end
+    end
+end
+
+#----------------
+
+# Class to represent a sequence.
+#
+class Sequence_in_ComplexType_sequenceType < Base
+  # An array of [0..*] <code>ComplexType_annotationType</code> objects.
+  attr_accessor :annotation
+  # An array of [1..*] <code>Choice_in_Sequence_in_ComplexType_sequenceType</code> objects.
+  attr_accessor :choice
+  def initialize(node)
+    super(node)
+    @annotation = []
+    @choice = []
+  end
+  def to_xml(inscope_ns, indent, io)
+    @annotation.each do |i|
+      i.to_xml(XSD::NAMESPACE, 'annotation', inscope_ns, indent, io)
+    end
+    choice.each do |i|
+      i.to_xml(inscope_ns, indent, io)
+    end
+  end
+end
+
+#----------------
+
+# Class to represent a choice.
+#
+# The choice's option can be determined by the _option method, which
+# will return one of the symbols in the NAMES array. The value of
+# that option can be obtained by calling [] with that symbol or the
+# method with the same name as the symbol. Only one option of the
+# choice will be chosen: attempting to obtain the values of any
+# other option will return +nil+.
+#
+class Choice_in_Sequence_in_ComplexType_sequenceType < Base
+  # Names for the options in this choice.
+  NAMES = [ :element, :sequence, :choice,]
+
+  def initialize(node)
+
+    super(node)
+    @_index = nil # indicates which option (0..2 or nil)
+    @_value = nil # the value of the option
+  end
+
+  # Indexed accessors
+
+  # Returns a symbol indicating which option for the choice. Result is one of
+  # the symbols from +NAME+, or +nil+ if no option has been set.
+  def _option
+    @_index != nil ? NAMES[@_index] : nil
+  end
+
+  # Set the choice to the option identified by +symbol+ and to have the +value+.
+  # See the +NAMES+ constant for permitted values for +symbol+.
+  def []=(symbol, value)
+    match = NAMES.index(symbol)
+    if match
+      @_index = match
+      @_value = value
+    else
+      raise IndexError, "choice has no option: #{symbol}"
+    end
+  end
+
+  # Get value of the option indicated by +symbol+.
+  # Returns +nil+ if the choice is not set to that option.
+  # See the +NAMES+ constant for permitted values for +symbol+.
+  def [](symbol)
+    match = NAMES.index(symbol)
+    (match == @_index) ? @_value : nil
+  end
+
+  # Named accessors
+
+  # Get the value of option +element+.
+# Returns an array of <code>ComplexType_elementType</code> objects.
+# Returns +nil+ if not the option.
+  def element
+    (0 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +element+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_elementType</code> objects.
+  def element=(value)
+    @_index = 0
+    @_value = value
+  end
+
+  # Get the value of option +sequence+.
+# Returns an array of <code>ComplexType_sequenceType</code> objects.
+# Returns +nil+ if not the option.
+  def sequence
+    (1 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +sequence+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_sequenceType</code> objects.
+  def sequence=(value)
+    @_index = 1
+    @_value = value
+  end
+
+  # Get the value of option +choice+.
+# Returns an array of <code>ComplexType_choiceType</code> objects.
+# Returns +nil+ if not the option.
+  def choice
+    (2 == @_index) ? @_value : nil
+  end
+  # Set the choice to be the +choice+ option with the +value+.
+  # The value needs to be an array of <code>ComplexType_choiceType</code> objects.
+  def choice=(value)
+    @_index = 2
+    @_value = value
+  end
+
+def to_xml(inscope_ns, indent, io)
+  case @_index
+  when 0
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'element', inscope_ns, indent, io)
+    end
+  when 1
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'sequence', inscope_ns, indent, io)
+    end
+  when 2
+    i =  @_value
+    if i
+      i.to_xml(XSD::NAMESPACE, 'choice', inscope_ns, indent, io)
+    end
+  end
+end
+end
+
+#----------------
+
+# Class to represent the complexType: <code>simpleContentType</code>.
+#
+class ComplexType_simpleContentType < Base
+  # An instance of <code>Sequence_in_ComplexType_simpleContentType</code>
+  # to represent the sequence which defines the content model
+  # of this complexType. Users of this class will invoke
+  # the methods of the sequence that have been replicated
+  # by this class: they do not need to directly access the sequence.
+  attr_accessor :_sequence
+
+  # Since this is a complexType defined by a sequence,
+  # the members of that sequence can be accessed through
+  # the following getters and setters. They invoke the
+  # corresponding method on the _sequence object, so
+  # the user doesn't have to interact with the underlying
+  # _sequence at all.
+
+  # Gets the child <code>extension</code> element.  A single <code>ComplexType_extensionType</code>. Mandatory element, so is never +nil+.
+  def extension; @_sequence.extension end
+  # Sets the child <code>extension</code> element.  A single <code>ComplexType_extensionType</code>. Mandatory element, so is never +nil+.
+  def extension=(value); @_sequence.extension(value) end
+
+  def initialize(node)
+    super(node)
+    @_sequence = nil
+  end
+
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
+
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      io.print '>'
+
+      if indent
+        nested_indent = indent + '  '
+      else
+        nested_indent = nil
+      end
+      io.puts
+      _sequence.to_xml(new_inscope_ns, nested_indent, io)
+      if indent
+        io.print indent
+      end
+      io.print "</#{qualifier}#{element_name}>"
+      if indent
+        io.puts
+      end
+    end
+end
+
+#----------------
+
+# Class to represent a sequence.
+#
+class Sequence_in_ComplexType_simpleContentType < Base
+  # An instance of <code>ComplexType_extensionType</code> (mandatory element, always has a non-nil value).
+  attr_accessor :extension
+  def initialize(node)
+    super(node)
+    @extension = nil
+  end
+  def to_xml(inscope_ns, indent, io)
+    m = @extension
+    if m
+      m.to_xml(XSD::NAMESPACE, 'extension', inscope_ns, indent, io)
+    end
+  end
+end
+
+#----------------
+
+# Class to represent the complexType: <code>simpleTypeType</code>.
+#
+class ComplexType_simpleTypeType < Base
+  # An instance of <code>Sequence_in_ComplexType_simpleTypeType</code>
+  # to represent the sequence which defines the content model
+  # of this complexType. Users of this class will invoke
+  # the methods of the sequence that have been replicated
+  # by this class: they do not need to directly access the sequence.
+  attr_accessor :_sequence
+
+  # Since this is a complexType defined by a sequence,
+  # the members of that sequence can be accessed through
+  # the following getters and setters. They invoke the
+  # corresponding method on the _sequence object, so
+  # the user doesn't have to interact with the underlying
+  # _sequence at all.
+
+  # Gets the child <code>restriction</code> element.  A single <code>ComplexType_restrictionType</code>. Mandatory element, so is never +nil+.
+  def restriction; @_sequence.restriction end
+  # Sets the child <code>restriction</code> element.  A single <code>ComplexType_restrictionType</code>. Mandatory element, so is never +nil+.
+  def restriction=(value); @_sequence.restriction(value) end
+
+  def initialize(node)
+    super(node)
+    @_sequence = nil
+  end
+
+    def to_xml(element_namespace, element_name, inscope_ns, indent, io)
+
+      if inscope_ns.include?(element_namespace)
+        # Namespace is already in scope, get the prefix for it
+        prefix = inscope_ns[element_namespace]
+
+        new_inscope_ns = inscope_ns
+        ns_def = ''
+
+      else
+        # Namespace is not in scope, add it
+        if inscope_ns.empty?
+          prefix = nil
+        else
+          count = 0
+          begin
+            prefix = "n#{count}"
+          end while inscope_ns.include?(prefix)
+        end
+
+        new_inscope_ns = {}
+        new_inscope_ns.replace(inscope_ns)
+        new_inscope_ns[element_namespace] = prefix
+
+        if prefix
+          ns_def = " xmlns:#{p}=\"#{element_namespace}\""
+        else
+          ns_def = " xmlns=\"#{element_namespace}\""
+        end
+      end
+      if prefix
+        qualifier = "#{prefix}:"
+      else
+        qualifier = ''
+      end
+
+      if indent
+        io.print indent
+      end
+      io.print "<#{qualifier}#{element_name}#{ns_def}"
+      io.print '>'
+
+      if indent
+        nested_indent = indent + '  '
+      else
+        nested_indent = nil
+      end
+      io.puts
+      _sequence.to_xml(new_inscope_ns, nested_indent, io)
+      if indent
+        io.print indent
+      end
+      io.print "</#{qualifier}#{element_name}>"
+      if indent
+        io.puts
+      end
+    end
+end
+
+#----------------
+
+# Class to represent a sequence.
+#
+class Sequence_in_ComplexType_simpleTypeType < Base
+  # An instance of <code>ComplexType_restrictionType</code> (mandatory element, always has a non-nil value).
+  attr_accessor :restriction
+  def initialize(node)
+    super(node)
+    @restriction = nil
+  end
+  def to_xml(inscope_ns, indent, io)
+    m = @restriction
+    if m
+      m.to_xml(XSD::NAMESPACE, 'restriction', inscope_ns, indent, io)
+    end
+  end
+end
+
+  #----------------------------------------------------------------
+
+  # Exception raised when parsing XML and it violates the XML Schema.
+  #
+  class InvalidXMLError < Exception; end
+
+  #----------------------------------------------------------------
+  # Methods used to parse XML
+
+  private
+
+  # Parses the element +node+ for an optional attribute of the given
+  # +name+. If the attribute is present, its value (as a +String+) is
+  # returned, otherwise +nil+ is returned.
+
+  def self.attr_optional(node, name)
+    a = node.attribute(name)
+    a ? a.value : nil
+  end
+
+  # Parses the element +node+ for a required attribute of the given
+  # +name+. If the attribute is present, its value (as a +String+) is
+  # returned, otherwise an exception is raised.
+  def self.attr_required(node, name)
+    a = node.attribute(name)
+    if ! a
+      raise InvalidXMLError, "mandatory attribute missing: #{name}"
+    end
+    a.value
+  end
+
+  # Parses an empty element. Such elements contain no attributes
+  # and no content model.
+  def self.parse_element_empty(node)
+      # TODO: check for no attributes
+
+      node.each_child do |child|
+      if child.is_a?(REXML::Element)
+        raise InvalidXMLError, "unexpected element in empty content model: {#{child.namespace}}#{child.name}"
+      elsif child.is_a?(REXML::Text)
+        expecting_whitespace child
+      elsif child.is_a?(REXML::Comment)
+        # Ignore comments
+      else
+        raise InvalidXMLError, "unknown node type: #{child.class}"
+      end
+    end
+
+  end
+
+  # Checks if the +node+ contains just whitespace text. Assumes that
+  # the +node+ is a +REXML::Text+ object. Raises an exception there are
+  # non-whitespace characters in the text.
+  #
+  def self.expecting_whitespace(node)
+    if node.to_s !~ /^ *$/
+      raise InvalidXMLError, "Unexpected text: #{node.to_s.strip}"
+    end
+  end
+
+  # Skip nodes until the first element
+  #
+  def self.skip_to_element(nodes, offset)
+    while offset < nodes.length do
+      node = nodes[offset]
+      if node.is_a?(REXML::Element)
+        return offset
+      elsif node.is_a?(REXML::Text)
+        expecting_whitespace node
+        offset += 1
+      elsif node.is_a?(REXML::Comment)
+        # Ignore comments
+        offset += 1
+      else
+        raise InvalidXMLError, "Unknown node type: #{node.class}"
+      end
+    end
+    offset
+  end
+
+#----------------------------------------------------------------
+# Parsing methods
+
+private
+# Parser for a sequence.
+#
+# Starting at the +offset+ node in the +nodes+ array.
+# Returns matched object and next offset index after parsed nodes.
+def self.parse_Sequence_in_ComplexType_annotationType(nodes, offset)
+
+  result = Sequence_in_ComplexType_annotationType.new(nil)
+
+
+  # 1: element: documentation
+
+  offset = skip_to_element(nodes, offset)
+
+  r = []
+  while offset < nodes.length &&
+        nodes[offset].name == 'documentation' && nodes[offset].namespace == NAMESPACE
+    r << parse_ComplexType_documentationType(nodes[offset])
+    offset = skip_to_element(nodes, offset + 1)
+  end
+  result.documentation = r
+
+
+  return [result, offset]
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_annotationType</code>
+
+def self.parse_ComplexType_annotationType(node)
+
+  # Create result object
+  result = XSD::ComplexType_annotationType.new(node)
+
+    result.lang = attr_optional(node, '')
+  # Content model
+  result._sequence, offset = parse_Sequence_in_ComplexType_annotationType(node.children, 0)
+  offset = skip_to_element(node.children, offset)
+  if offset < node.children.size
+     raise InvalidXMLError, "complexType sequence has left over elements: ComplexType_annotationType: #{node.children[offset].name}"
+  end
+
+  # Success
+  result
+end
+
+private
+# Parser for choice: <code>Choice_in_Sequence_in_ComplexType_attributeGroupType</code>
+#
+# Returns an array of [0..*] Choice_in_Sequence_in_ComplexType_attributeGroupType objects, since this choice has been defined with a maxOccurs greater than 1 (or unbounded).
+
+def self.parse_Choice_in_Sequence_in_ComplexType_attributeGroupType(nodes, offset)
+
+  results = []
+  reason = ": not enough elements"
+
+  while offset < nodes.length
+    # Move offset to next element node
+
+    offset = skip_to_element(nodes, offset)
+    if offset < nodes.length
+
+      # Match element to one of the choice options
+
+      node = nodes[offset]
+
+      r = XSD::Choice_in_Sequence_in_ComplexType_attributeGroupType.new(node)
+
+      if node.name == 'attribute' && node.namespace == NAMESPACE
+        r.attribute = parse_ComplexType_attributeType(node)
+        offset += 1
+      elsif node.name == 'attributeGroup' && node.namespace == NAMESPACE
+        r.attributeGroup = parse_ComplexType_attributeGroupType(node)
+        offset += 1
+      else
+        reason = ": unexpected element: {#{node.namespace}}#{node.name}"
+        break # element does not match any option
+      end
+
+      results << r
+    end
+  end
+
+  return [ results, offset ]
+end
+
+private
+# Parser for a sequence.
+#
+# Starting at the +offset+ node in the +nodes+ array.
+# Returns matched object and next offset index after parsed nodes.
+def self.parse_Sequence_in_ComplexType_attributeGroupType(nodes, offset)
+
+  result = Sequence_in_ComplexType_attributeGroupType.new(nil)
+
+
+  # 1: element: annotation
+
+  offset = skip_to_element(nodes, offset)
+
+  r = []
+  while offset < nodes.length &&
+        nodes[offset].name == 'annotation' && nodes[offset].namespace == NAMESPACE
+    r << parse_ComplexType_annotationType(nodes[offset])
+    offset = skip_to_element(nodes, offset + 1)
+  end
+  result.annotation = r
+
+
+  # 2: choice: choice
+
+  offset = skip_to_element(nodes, offset)
+
+  r = nil
+  if offset < nodes.length
+    if nodes[offset].name == 'attribute' && nodes[offset].namespace == NAMESPACE || \
+           nodes[offset].name == 'attributeGroup' && nodes[offset].namespace == NAMESPACE
+      r, offset = parse_Choice_in_Sequence_in_ComplexType_attributeGroupType(nodes, offset)
+      result.choice = r
+    end
+  end
+
+
+  return [result, offset]
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_attributeGroupType</code>
+
+def self.parse_ComplexType_attributeGroupType(node)
+
+  # Create result object
+  result = XSD::ComplexType_attributeGroupType.new(node)
+
+    result.name = attr_optional(node, 'name')
+    result.ref = attr_optional(node, 'ref')
+  # Content model
+  result._sequence, offset = parse_Sequence_in_ComplexType_attributeGroupType(node.children, 0)
+  offset = skip_to_element(node.children, offset)
+  if offset < node.children.size
+     raise InvalidXMLError, "complexType sequence has left over elements: ComplexType_attributeGroupType: #{node.children[offset].name}"
+  end
+
+  # Success
+  result
+end
+
+private
+# Parser for a sequence.
+#
+# Starting at the +offset+ node in the +nodes+ array.
+# Returns matched object and next offset index after parsed nodes.
+def self.parse_Sequence_in_ComplexType_attributeType(nodes, offset)
+
+  result = Sequence_in_ComplexType_attributeType.new(nil)
+
+
+  # 1: element: annotation
+
+  offset = skip_to_element(nodes, offset)
+
+  r = []
+  while offset < nodes.length &&
+        nodes[offset].name == 'annotation' && nodes[offset].namespace == NAMESPACE
+    r << parse_ComplexType_annotationType(nodes[offset])
+    offset = skip_to_element(nodes, offset + 1)
+  end
+  result.annotation = r
+
+
+  # 2: element: simpleType
+
+  offset = skip_to_element(nodes, offset)
+
+  r = nil
+  if offset < nodes.length
+    if nodes[offset].name == 'simpleType' && nodes[offset].namespace == NAMESPACE
+      r = parse_ComplexType_simpleTypeType(nodes[offset])
+      offset += 1
+    end
+  end
+  result.simpleType = r
+
+
+  return [result, offset]
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_attributeType</code>
+
+def self.parse_ComplexType_attributeType(node)
+
+  # Create result object
+  result = XSD::ComplexType_attributeType.new(node)
+
+    result.name = attr_optional(node, 'name')
+    result.type_attribute = attr_optional(node, 'type')
+    result.ref = attr_optional(node, 'ref')
+    result.use = attr_optional(node, 'use')
+  # Content model
+  result._sequence, offset = parse_Sequence_in_ComplexType_attributeType(node.children, 0)
+  offset = skip_to_element(node.children, offset)
+  if offset < node.children.size
+     raise InvalidXMLError, "complexType sequence has left over elements: ComplexType_attributeType: #{node.children[offset].name}"
+  end
+
+  # Success
+  result
+end
+
+private
+# Parser for choice: <code>Choice_in_Sequence_in_ComplexType_choiceType</code>
+#
+# Returns an array of [1..*] Choice_in_Sequence_in_ComplexType_choiceType objects, since this choice has been defined with a maxOccurs greater than 1 (or unbounded).
+
+def self.parse_Choice_in_Sequence_in_ComplexType_choiceType(nodes, offset)
+
+  results = []
+  reason = ": not enough elements"
+
+  while offset < nodes.length
+    # Move offset to next element node
+
+    offset = skip_to_element(nodes, offset)
+    if offset < nodes.length
+
+      # Match element to one of the choice options
+
+      node = nodes[offset]
+
+      r = XSD::Choice_in_Sequence_in_ComplexType_choiceType.new(node)
+
+      if node.name == 'element' && node.namespace == NAMESPACE
+        r.element = parse_ComplexType_elementType(node)
+        offset += 1
+      elsif node.name == 'sequence' && node.namespace == NAMESPACE
+        r.sequence = parse_ComplexType_sequenceType(node)
+        offset += 1
+      elsif node.name == 'choice' && node.namespace == NAMESPACE
+        r.choice = parse_ComplexType_choiceType(node)
+        offset += 1
+      else
+        reason = ": unexpected element: {#{node.namespace}}#{node.name}"
+        break # element does not match any option
+      end
+
+      results << r
+    end
+  end
+
+  if results.length < 1
+    raise InvalidXMLError, "choice incomplete#{reason}"
+  end
+
+  return [ results, offset ]
+end
+
+private
+# Parser for a sequence.
+#
+# Starting at the +offset+ node in the +nodes+ array.
+# Returns matched object and next offset index after parsed nodes.
+def self.parse_Sequence_in_ComplexType_choiceType(nodes, offset)
+
+  result = Sequence_in_ComplexType_choiceType.new(nil)
+
+
+  # 1: element: annotation
+
+  offset = skip_to_element(nodes, offset)
+
+  r = []
+  while offset < nodes.length &&
+        nodes[offset].name == 'annotation' && nodes[offset].namespace == NAMESPACE
+    r << parse_ComplexType_annotationType(nodes[offset])
+    offset = skip_to_element(nodes, offset + 1)
+  end
+  result.annotation = r
+
+
+  # 2: choice: choice
+
+  offset = skip_to_element(nodes, offset)
+
+  r = nil
+  if offset < nodes.length
+    if nodes[offset].name == 'element' && nodes[offset].namespace == NAMESPACE || \
+           nodes[offset].name == 'sequence' && nodes[offset].namespace == NAMESPACE || \
+           nodes[offset].name == 'choice' && nodes[offset].namespace == NAMESPACE
+      r, offset = parse_Choice_in_Sequence_in_ComplexType_choiceType(nodes, offset)
+      result.choice = r
+    end
+  end
+
+  # Completeness check
+
+  if result.choice.length < 1
+    raise InvalidXMLError, "incomplete sequence"
+  end
+
+  return [result, offset]
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_choiceType</code>
+
+def self.parse_ComplexType_choiceType(node)
+
+  # Create result object
+  result = XSD::ComplexType_choiceType.new(node)
+
+    result.minOccurs = attr_optional(node, 'minOccurs')
+    result.maxOccurs = attr_optional(node, 'maxOccurs')
+  # Content model
+  result._sequence, offset = parse_Sequence_in_ComplexType_choiceType(node.children, 0)
+  offset = skip_to_element(node.children, offset)
+  if offset < node.children.size
+     raise InvalidXMLError, "complexType sequence has left over elements: ComplexType_choiceType: #{node.children[offset].name}"
+  end
+
+  # Success
+  result
+end
+
+private
+# Parser for choice: <code>Choice_in_Sequence_in_ComplexType_complexTypeType</code>
+#
+# Returns either a Choice_in_Sequence_in_ComplexType_complexTypeType object or +nil+.
+
+def self.parse_Choice_in_Sequence_in_ComplexType_complexTypeType(nodes, offset)
+
+  reason = ": element not found"
+
+  begin
+    # Move offset to next element node
+
+    offset = skip_to_element(nodes, offset)
+    if offset < nodes.length
+
+      # Match element to one of the choice options
+
+      node = nodes[offset]
+  result = XSD::Choice_in_Sequence_in_ComplexType_complexTypeType.new(nodes[offset])
+
+      if node.name == 'simpleContent' && node.namespace == NAMESPACE
+        result.simpleContent = parse_ComplexType_simpleContentType(node)
+        offset += 1
+      elsif node.name == 'sequence' && node.namespace == NAMESPACE
+        result.sequence = parse_ComplexType_sequenceType(node)
+        offset += 1
+      elsif node.name == 'choice' && node.namespace == NAMESPACE
+        result.choice = parse_ComplexType_choiceType(node)
+        offset += 1
+      else
+        reason = ": unexpected element: {#{node.namespace}}#{node.name}"
+      end
+    end
+  end
+
+  if result._option
+    return [ result, offset ]
+  else
+    return [ nil, offset ] # no match
+  end
+end
+
+private
+# Parser for choice: <code>Choice_in_Sequence_in_ComplexType_complexTypeType1</code>
+#
+# Returns an array of [0..*] Choice_in_Sequence_in_ComplexType_complexTypeType1 objects, since this choice has been defined with a maxOccurs greater than 1 (or unbounded).
+
+def self.parse_Choice_in_Sequence_in_ComplexType_complexTypeType1(nodes, offset)
+
+  results = []
+  reason = ": not enough elements"
+
+  while offset < nodes.length
+    # Move offset to next element node
+
+    offset = skip_to_element(nodes, offset)
+    if offset < nodes.length
+
+      # Match element to one of the choice options
+
+      node = nodes[offset]
+
+      r = XSD::Choice_in_Sequence_in_ComplexType_complexTypeType1.new(node)
+
+      if node.name == 'attribute' && node.namespace == NAMESPACE
+        r.attribute = parse_ComplexType_attributeType(node)
+        offset += 1
+      elsif node.name == 'attributeGroup' && node.namespace == NAMESPACE
+        r.attributeGroup = parse_ComplexType_attributeGroupType(node)
+        offset += 1
+      else
+        reason = ": unexpected element: {#{node.namespace}}#{node.name}"
+        break # element does not match any option
+      end
+
+      results << r
+    end
+  end
+
+  return [ results, offset ]
+end
+
+private
+# Parser for a sequence.
+#
+# Starting at the +offset+ node in the +nodes+ array.
+# Returns matched object and next offset index after parsed nodes.
+def self.parse_Sequence_in_ComplexType_complexTypeType(nodes, offset)
+
+  result = Sequence_in_ComplexType_complexTypeType.new(nil)
+
+
+  # 1: element: annotation
+
+  offset = skip_to_element(nodes, offset)
+
+  r = []
+  while offset < nodes.length &&
+        nodes[offset].name == 'annotation' && nodes[offset].namespace == NAMESPACE
+    r << parse_ComplexType_annotationType(nodes[offset])
+    offset = skip_to_element(nodes, offset + 1)
+  end
+  result.annotation = r
+
+
+  # 2: choice: choice1
+
+  offset = skip_to_element(nodes, offset)
+
+  r = nil
+  if offset < nodes.length
+    if nodes[offset].name == 'simpleContent' && nodes[offset].namespace == NAMESPACE || \
+           nodes[offset].name == 'sequence' && nodes[offset].namespace == NAMESPACE || \
+           nodes[offset].name == 'choice' && nodes[offset].namespace == NAMESPACE
+      r, offset = parse_Choice_in_Sequence_in_ComplexType_complexTypeType(nodes, offset)
+      result.choice1 = r
+    end
+  end
+
+
+  # 3: choice: choice2
+
+  offset = skip_to_element(nodes, offset)
+
+  r = nil
+  if offset < nodes.length
+    if nodes[offset].name == 'attribute' && nodes[offset].namespace == NAMESPACE || \
+           nodes[offset].name == 'attributeGroup' && nodes[offset].namespace == NAMESPACE
+      r, offset = parse_Choice_in_Sequence_in_ComplexType_complexTypeType1(nodes, offset)
+      result.choice2 = r
+    end
+  end
+
+
+  return [result, offset]
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_complexTypeType</code>
+
+def self.parse_ComplexType_complexTypeType(node)
+
+  # Create result object
+  result = XSD::ComplexType_complexTypeType.new(node)
+
+    result.name = attr_optional(node, 'name')
+  # Content model
+  result._sequence, offset = parse_Sequence_in_ComplexType_complexTypeType(node.children, 0)
+  offset = skip_to_element(node.children, offset)
+  if offset < node.children.size
+     raise InvalidXMLError, "complexType sequence has left over elements: ComplexType_complexTypeType: #{node.children[offset].name}"
+  end
+
+  # Success
+  result
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_documentationType</code>
+
+def self.parse_ComplexType_documentationType(node)
+
+  # Create result object
+  result = XSD::ComplexType_documentationType.new(node)
+
+  # Content model
+  begin # extension parsing
+    # Parse extension's attributes
+    result.source = attr_optional(node, 'source')
+    result.lang = attr_optional(node, '')
+    # Parse extension's base
+    result._value = XSDPrimitives.parse_string(node)
+  end
+
+  # Success
+  result
+end
+
+private
+# Parser for choice: <code>Choice_in_Sequence_in_ComplexType_elementType</code>
+#
+# Returns either a Choice_in_Sequence_in_ComplexType_elementType object or +nil+.
+
+def self.parse_Choice_in_Sequence_in_ComplexType_elementType(nodes, offset)
+
+  reason = ": element not found"
+
+  begin
+    # Move offset to next element node
+
+    offset = skip_to_element(nodes, offset)
+    if offset < nodes.length
+
+      # Match element to one of the choice options
+
+      node = nodes[offset]
+  result = XSD::Choice_in_Sequence_in_ComplexType_elementType.new(nodes[offset])
+
+      if node.name == 'complexType' && node.namespace == NAMESPACE
+        result.complexType = parse_ComplexType_complexTypeType(node)
+        offset += 1
+      else
+        reason = ": unexpected element: {#{node.namespace}}#{node.name}"
+      end
+    end
+  end
+
+  if result._option
+    return [ result, offset ]
+  else
+    return [ nil, offset ] # no match
+  end
+end
+
+private
+# Parser for a sequence.
+#
+# Starting at the +offset+ node in the +nodes+ array.
+# Returns matched object and next offset index after parsed nodes.
+def self.parse_Sequence_in_ComplexType_elementType(nodes, offset)
+
+  result = Sequence_in_ComplexType_elementType.new(nil)
+
+
+  # 1: element: annotation
+
+  offset = skip_to_element(nodes, offset)
+
+  r = []
+  while offset < nodes.length &&
+        nodes[offset].name == 'annotation' && nodes[offset].namespace == NAMESPACE
+    r << parse_ComplexType_annotationType(nodes[offset])
+    offset = skip_to_element(nodes, offset + 1)
+  end
+  result.annotation = r
+
+
+  # 2: choice: choice
+
+  offset = skip_to_element(nodes, offset)
+
+  r = nil
+  if offset < nodes.length
+    if nodes[offset].name == 'complexType' && nodes[offset].namespace == NAMESPACE
+      r, offset = parse_Choice_in_Sequence_in_ComplexType_elementType(nodes, offset)
+      result.choice = r
+    end
+  end
+
+
+  return [result, offset]
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_elementType</code>
+
+def self.parse_ComplexType_elementType(node)
+
+  # Create result object
+  result = XSD::ComplexType_elementType.new(node)
+
+    result.name = attr_optional(node, 'name')
+    result.type_attribute = attr_optional(node, 'type')
+    result.minOccurs = attr_optional(node, 'minOccurs')
+    result.maxOccurs = attr_optional(node, 'maxOccurs')
+    result.ref = attr_optional(node, 'ref')
+  # Content model
+  result._sequence, offset = parse_Sequence_in_ComplexType_elementType(node.children, 0)
+  offset = skip_to_element(node.children, offset)
+  if offset < node.children.size
+     raise InvalidXMLError, "complexType sequence has left over elements: ComplexType_elementType: #{node.children[offset].name}"
+  end
+
+  # Success
+  result
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_enumerationType</code>
+
+def self.parse_ComplexType_enumerationType(node)
+
+  # Create result object
+  result = XSD::ComplexType_enumerationType.new(node)
+
+  # Content model
+  begin # extension parsing
+    # Parse extension's attributes
+    result.value = attr_optional(node, 'value')
+    # Parse extension's base
+    result._value = XSDPrimitives.parse_string(node)
+  end
+
+  # Success
+  result
+end
+
+private
+# Parser for a sequence.
+#
+# Starting at the +offset+ node in the +nodes+ array.
+# Returns matched object and next offset index after parsed nodes.
+def self.parse_Sequence_in_ComplexType_extensionType(nodes, offset)
+
+  result = Sequence_in_ComplexType_extensionType.new(nil)
+
+
+  # 1: element: attribute
+
+  offset = skip_to_element(nodes, offset)
+
+  r = []
+  while offset < nodes.length &&
+        nodes[offset].name == 'attribute' && nodes[offset].namespace == NAMESPACE
+    r << parse_ComplexType_attributeType(nodes[offset])
+    offset = skip_to_element(nodes, offset + 1)
+  end
+  if r.length < 1
+    raise InvalidXMLError, "sequence not enough attribute elements"
+  end
+  result.attribute = r
+
+
+  # 2: element: annotation
+
+  offset = skip_to_element(nodes, offset)
+
+  r = []
+  while offset < nodes.length &&
+        nodes[offset].name == 'annotation' && nodes[offset].namespace == NAMESPACE
+    r << parse_ComplexType_annotationType(nodes[offset])
+    offset = skip_to_element(nodes, offset + 1)
+  end
+  result.annotation = r
+
+  # Completeness check
+
+  if result.attribute.length < 1
+    raise InvalidXMLError, "incomplete sequence"
+  end
+
+  return [result, offset]
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_extensionType</code>
+
+def self.parse_ComplexType_extensionType(node)
+
+  # Create result object
+  result = XSD::ComplexType_extensionType.new(node)
+
+    result.base = attr_required(node, 'base')
+  # Content model
+  result._sequence, offset = parse_Sequence_in_ComplexType_extensionType(node.children, 0)
+  offset = skip_to_element(node.children, offset)
+  if offset < node.children.size
+     raise InvalidXMLError, "complexType sequence has left over elements: ComplexType_extensionType: #{node.children[offset].name}"
+  end
+
+  # Success
+  result
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_importType</code>
+
+def self.parse_ComplexType_importType(node)
+
+  # Create result object
+  result = XSD::ComplexType_importType.new(node)
+
+    result.namespace = attr_required(node, 'namespace')
+    result.schemaLocation = attr_optional(node, 'schemaLocation')
+  # Content model
+  # Empty content model: must only contain non-significant whitespace
+  offset = 0
+  while offset < node.children.length
+    child = node.children[offset]
+    if child.is_a?(REXML::Element)
+      raise InvalidXMLError, "unexpected element in empty complexType"
+    elsif child.is_a?(REXML::Text)
+      expecting_whitespace child
+      offset += 1
+    elsif child.is_a?(REXML::Comment)
+      # Ignore comments
+      offset += 1
+    else
+      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
+    end
+  end
+
+  # Success
+  result
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_includeType</code>
+
+def self.parse_ComplexType_includeType(node)
+
+  # Create result object
+  result = XSD::ComplexType_includeType.new(node)
+
+    result.schemaLocation = attr_optional(node, 'schemaLocation')
+  # Content model
+  # Empty content model: must only contain non-significant whitespace
+  offset = 0
+  while offset < node.children.length
+    child = node.children[offset]
+    if child.is_a?(REXML::Element)
+      raise InvalidXMLError, "unexpected element in empty complexType"
+    elsif child.is_a?(REXML::Text)
+      expecting_whitespace child
+      offset += 1
+    elsif child.is_a?(REXML::Comment)
+      # Ignore comments
+      offset += 1
+    else
+      raise InvalidXMLError, "internal error: unsupported node type: #{child.class}"
+    end
+  end
+
+  # Success
+  result
+end
+
+private
+# Parser for a sequence.
+#
+# Starting at the +offset+ node in the +nodes+ array.
+# Returns matched object and next offset index after parsed nodes.
+def self.parse_Sequence_in_ComplexType_restrictionType(nodes, offset)
+
+  result = Sequence_in_ComplexType_restrictionType.new(nil)
+
+
+  # 1: element: enumeration
+
+  offset = skip_to_element(nodes, offset)
+
+  r = []
+  while offset < nodes.length &&
+        nodes[offset].name == 'enumeration' && nodes[offset].namespace == NAMESPACE
+    r << parse_ComplexType_enumerationType(nodes[offset])
+    offset = skip_to_element(nodes, offset + 1)
+  end
+  result.enumeration = r
+
+
+  return [result, offset]
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_restrictionType</code>
+
+def self.parse_ComplexType_restrictionType(node)
+
+  # Create result object
+  result = XSD::ComplexType_restrictionType.new(node)
+
+    result.base = attr_optional(node, 'base')
+  # Content model
+  result._sequence, offset = parse_Sequence_in_ComplexType_restrictionType(node.children, 0)
+  offset = skip_to_element(node.children, offset)
+  if offset < node.children.size
+     raise InvalidXMLError, "complexType sequence has left over elements: ComplexType_restrictionType: #{node.children[offset].name}"
+  end
+
+  # Success
+  result
+end
+
+private
+# Parser for choice: <code>Choice_in_Sequence_in_ComplexType_schemaType</code>
+#
+# Returns an array of [0..*] Choice_in_Sequence_in_ComplexType_schemaType objects, since this choice has been defined with a maxOccurs greater than 1 (or unbounded).
+
+def self.parse_Choice_in_Sequence_in_ComplexType_schemaType(nodes, offset)
+
+  results = []
+  reason = ": not enough elements"
+
+  while offset < nodes.length
+    # Move offset to next element node
+
+    offset = skip_to_element(nodes, offset)
+    if offset < nodes.length
+
+      # Match element to one of the choice options
+
+      node = nodes[offset]
+
+      r = XSD::Choice_in_Sequence_in_ComplexType_schemaType.new(node)
+
+      if node.name == 'annotation' && node.namespace == NAMESPACE
+        r.annotation, offset = parse_Choice_in_Sequence_in_ComplexType_schemaType_element1(nodes, offset)
+      elsif node.name == 'include' && node.namespace == NAMESPACE
+        r.include, offset = parse_Choice_in_Sequence_in_ComplexType_schemaType_element2(nodes, offset)
+      elsif node.name == 'import' && node.namespace == NAMESPACE
+        r.import, offset = parse_Choice_in_Sequence_in_ComplexType_schemaType_element3(nodes, offset)
+      else
+        reason = ": unexpected element: {#{node.namespace}}#{node.name}"
+        break # element does not match any option
+      end
+
+      results << r
+    end
+  end
+
+  return [ results, offset ]
+end
+
+# Parser for repeating option's element 1 of choice: <code>Choice_in_Sequence_in_ComplexType_schemaType</code>
+#
+# This method must be called with the nodes[offset] being an element
+# node that matches.
+
+def self.parse_Choice_in_Sequence_in_ComplexType_schemaType_element1(nodes, offset)
+
+  # Create result object
+
+  results = []
+  node = nodes[offset]
+  while offset < nodes.length && node.name == 'annotation' && node.namespace == NAMESPACE
+    results << parse_ComplexType_annotationType(node)
+    offset += 1
+    offset = skip_to_element(nodes, offset)
+    node = nodes[offset]
+  end
+
+  raise 'internal error' if results.empty?
+  [ results, offset ]
+end
+
+# Parser for repeating option's element 2 of choice: <code>Choice_in_Sequence_in_ComplexType_schemaType</code>
+#
+# This method must be called with the nodes[offset] being an element
+# node that matches.
+
+def self.parse_Choice_in_Sequence_in_ComplexType_schemaType_element2(nodes, offset)
+
+  # Create result object
+
+  results = []
+  node = nodes[offset]
+  while offset < nodes.length && node.name == 'include' && node.namespace == NAMESPACE
+    results << parse_ComplexType_includeType(node)
+    offset += 1
+    offset = skip_to_element(nodes, offset)
+    node = nodes[offset]
+  end
+
+  raise 'internal error' if results.empty?
+  [ results, offset ]
+end
+
+# Parser for repeating option's element 3 of choice: <code>Choice_in_Sequence_in_ComplexType_schemaType</code>
+#
+# This method must be called with the nodes[offset] being an element
+# node that matches.
+
+def self.parse_Choice_in_Sequence_in_ComplexType_schemaType_element3(nodes, offset)
+
+  # Create result object
+
+  results = []
+  node = nodes[offset]
+  while offset < nodes.length && node.name == 'import' && node.namespace == NAMESPACE
+    results << parse_ComplexType_importType(node)
+    offset += 1
+    offset = skip_to_element(nodes, offset)
+    node = nodes[offset]
+  end
+
+  raise 'internal error' if results.empty?
+  [ results, offset ]
+end
+
+private
+# Parser for choice: <code>Choice_in_Sequence_in_ComplexType_schemaType1</code>
+#
+# Returns an array of [0..*] Choice_in_Sequence_in_ComplexType_schemaType1 objects, since this choice has been defined with a maxOccurs greater than 1 (or unbounded).
+
+def self.parse_Choice_in_Sequence_in_ComplexType_schemaType1(nodes, offset)
+
+  results = []
+  reason = ": not enough elements"
+
+  while offset < nodes.length
+    # Move offset to next element node
+
+    offset = skip_to_element(nodes, offset)
+    if offset < nodes.length
+
+      # Match element to one of the choice options
+
+      node = nodes[offset]
+
+      r = XSD::Choice_in_Sequence_in_ComplexType_schemaType1.new(node)
+
+      if node.name == 'annotation' && node.namespace == NAMESPACE
+        r.annotation = parse_ComplexType_annotationType(node)
+        offset += 1
+      elsif node.name == 'element' && node.namespace == NAMESPACE
+        r.element = parse_ComplexType_elementType(node)
+        offset += 1
+      elsif node.name == 'attribute' && node.namespace == NAMESPACE
+        r.attribute = parse_ComplexType_attributeType(node)
+        offset += 1
+      elsif node.name == 'simpleType' && node.namespace == NAMESPACE
+        r.simpleType = parse_ComplexType_simpleTypeType(node)
+        offset += 1
+      elsif node.name == 'complexType' && node.namespace == NAMESPACE
+        r.complexType = parse_ComplexType_complexTypeType(node)
+        offset += 1
+      elsif node.name == 'attributeGroup' && node.namespace == NAMESPACE
+        r.attributeGroup = parse_ComplexType_attributeGroupType(node)
+        offset += 1
+      else
+        reason = ": unexpected element: {#{node.namespace}}#{node.name}"
+        break # element does not match any option
+      end
+
+      results << r
+    end
+  end
+
+  return [ results, offset ]
+end
+
+private
+# Parser for a sequence.
+#
+# Starting at the +offset+ node in the +nodes+ array.
+# Returns matched object and next offset index after parsed nodes.
+def self.parse_Sequence_in_ComplexType_schemaType(nodes, offset)
+
+  result = Sequence_in_ComplexType_schemaType.new(nil)
+
+
+  # 1: choice: choice1
+
+  offset = skip_to_element(nodes, offset)
+
+  r = nil
+  if offset < nodes.length
+    if nodes[offset].name == 'annotation' && nodes[offset].namespace == NAMESPACE || \
+           nodes[offset].name == 'include' && nodes[offset].namespace == NAMESPACE || \
+           nodes[offset].name == 'import' && nodes[offset].namespace == NAMESPACE
+      r, offset = parse_Choice_in_Sequence_in_ComplexType_schemaType(nodes, offset)
+      result.choice1 = r
+    end
+  end
+
+
+  # 2: choice: choice2
+
+  offset = skip_to_element(nodes, offset)
+
+  r = nil
+  if offset < nodes.length
+    if nodes[offset].name == 'annotation' && nodes[offset].namespace == NAMESPACE || \
+           nodes[offset].name == 'element' && nodes[offset].namespace == NAMESPACE || \
+           nodes[offset].name == 'attribute' && nodes[offset].namespace == NAMESPACE || \
+           nodes[offset].name == 'simpleType' && nodes[offset].namespace == NAMESPACE || \
+           nodes[offset].name == 'complexType' && nodes[offset].namespace == NAMESPACE || \
+           nodes[offset].name == 'attributeGroup' && nodes[offset].namespace == NAMESPACE
+      r, offset = parse_Choice_in_Sequence_in_ComplexType_schemaType1(nodes, offset)
+      result.choice2 = r
+    end
+  end
+
+
+  return [result, offset]
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_schemaType</code>
+
+def self.parse_ComplexType_schemaType(node)
+
+  # Create result object
+  result = XSD::ComplexType_schemaType.new(node)
+
+    result.version = attr_optional(node, 'version')
+    result.targetNamespace = attr_optional(node, 'targetNamespace')
+    result.elementFormDefault = attr_optional(node, 'elementFormDefault')
+    result.attributeFormDefault = attr_optional(node, 'attributeFormDefault')
+    result.lang = attr_optional(node, '')
+  # Content model
+  result._sequence, offset = parse_Sequence_in_ComplexType_schemaType(node.children, 0)
+  offset = skip_to_element(node.children, offset)
+  if offset < node.children.size
+     raise InvalidXMLError, "complexType sequence has left over elements: ComplexType_schemaType: #{node.children[offset].name}"
+  end
+
+  # Success
+  result
+end
+
+private
+# Parser for choice: <code>Choice_in_Sequence_in_ComplexType_sequenceType</code>
+#
+# Returns an array of [1..*] Choice_in_Sequence_in_ComplexType_sequenceType objects, since this choice has been defined with a maxOccurs greater than 1 (or unbounded).
+
+def self.parse_Choice_in_Sequence_in_ComplexType_sequenceType(nodes, offset)
+
+  results = []
+  reason = ": not enough elements"
+
+  while offset < nodes.length
+    # Move offset to next element node
+
+    offset = skip_to_element(nodes, offset)
+    if offset < nodes.length
+
+      # Match element to one of the choice options
+
+      node = nodes[offset]
+
+      r = XSD::Choice_in_Sequence_in_ComplexType_sequenceType.new(node)
+
+      if node.name == 'element' && node.namespace == NAMESPACE
+        r.element = parse_ComplexType_elementType(node)
+        offset += 1
+      elsif node.name == 'sequence' && node.namespace == NAMESPACE
+        r.sequence = parse_ComplexType_sequenceType(node)
+        offset += 1
+      elsif node.name == 'choice' && node.namespace == NAMESPACE
+        r.choice = parse_ComplexType_choiceType(node)
+        offset += 1
+      else
+        reason = ": unexpected element: {#{node.namespace}}#{node.name}"
+        break # element does not match any option
+      end
+
+      results << r
+    end
+  end
+
+  if results.length < 1
+    raise InvalidXMLError, "choice incomplete#{reason}"
+  end
+
+  return [ results, offset ]
+end
+
+private
+# Parser for a sequence.
+#
+# Starting at the +offset+ node in the +nodes+ array.
+# Returns matched object and next offset index after parsed nodes.
+def self.parse_Sequence_in_ComplexType_sequenceType(nodes, offset)
+
+  result = Sequence_in_ComplexType_sequenceType.new(nil)
+
+
+  # 1: element: annotation
+
+  offset = skip_to_element(nodes, offset)
+
+  r = []
+  while offset < nodes.length &&
+        nodes[offset].name == 'annotation' && nodes[offset].namespace == NAMESPACE
+    r << parse_ComplexType_annotationType(nodes[offset])
+    offset = skip_to_element(nodes, offset + 1)
+  end
+  result.annotation = r
+
+
+  # 2: choice: choice
+
+  offset = skip_to_element(nodes, offset)
+
+  r = nil
+  if offset < nodes.length
+    if nodes[offset].name == 'element' && nodes[offset].namespace == NAMESPACE || \
+           nodes[offset].name == 'sequence' && nodes[offset].namespace == NAMESPACE || \
+           nodes[offset].name == 'choice' && nodes[offset].namespace == NAMESPACE
+      r, offset = parse_Choice_in_Sequence_in_ComplexType_sequenceType(nodes, offset)
+      result.choice = r
+    end
+  end
+
+  # Completeness check
+
+  if result.choice.length < 1
+    raise InvalidXMLError, "incomplete sequence"
+  end
+
+  return [result, offset]
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_sequenceType</code>
+
+def self.parse_ComplexType_sequenceType(node)
+
+  # Create result object
+  result = XSD::ComplexType_sequenceType.new(node)
+
+  # Content model
+  result._sequence, offset = parse_Sequence_in_ComplexType_sequenceType(node.children, 0)
+  offset = skip_to_element(node.children, offset)
+  if offset < node.children.size
+     raise InvalidXMLError, "complexType sequence has left over elements: ComplexType_sequenceType: #{node.children[offset].name}"
+  end
+
+  # Success
+  result
+end
+
+private
+# Parser for a sequence.
+#
+# Starting at the +offset+ node in the +nodes+ array.
+# Returns matched object and next offset index after parsed nodes.
+def self.parse_Sequence_in_ComplexType_simpleContentType(nodes, offset)
+
+  result = Sequence_in_ComplexType_simpleContentType.new(nil)
+
+
+  # 1: element: extension
+
+  offset = skip_to_element(nodes, offset)
+
+  r = nil
+  if offset < nodes.length
+    if nodes[offset].name == 'extension' && nodes[offset].namespace == NAMESPACE
+      r = parse_ComplexType_extensionType(nodes[offset])
+      offset += 1
+    end
+  end
+  if ! r
+    raise InvalidXMLError, "sequence missing 'extension': got '#{nodes[offset].name}'"
+  end
+  result.extension = r
+
+  # Completeness check
+
+  if ! result.extension
+    raise InvalidXMLError, "incomplete sequence"
+  end
+
+  return [result, offset]
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_simpleContentType</code>
+
+def self.parse_ComplexType_simpleContentType(node)
+
+  # Create result object
+  result = XSD::ComplexType_simpleContentType.new(node)
+
+  # Content model
+  result._sequence, offset = parse_Sequence_in_ComplexType_simpleContentType(node.children, 0)
+  offset = skip_to_element(node.children, offset)
+  if offset < node.children.size
+     raise InvalidXMLError, "complexType sequence has left over elements: ComplexType_simpleContentType: #{node.children[offset].name}"
+  end
+
+  # Success
+  result
+end
+
+private
+# Parser for a sequence.
+#
+# Starting at the +offset+ node in the +nodes+ array.
+# Returns matched object and next offset index after parsed nodes.
+def self.parse_Sequence_in_ComplexType_simpleTypeType(nodes, offset)
+
+  result = Sequence_in_ComplexType_simpleTypeType.new(nil)
+
+
+  # 1: element: restriction
+
+  offset = skip_to_element(nodes, offset)
+
+  r = nil
+  if offset < nodes.length
+    if nodes[offset].name == 'restriction' && nodes[offset].namespace == NAMESPACE
+      r = parse_ComplexType_restrictionType(nodes[offset])
+      offset += 1
+    end
+  end
+  if ! r
+    raise InvalidXMLError, "sequence missing 'restriction': got '#{nodes[offset].name}'"
+  end
+  result.restriction = r
+
+  # Completeness check
+
+  if ! result.restriction
+    raise InvalidXMLError, "incomplete sequence"
+  end
+
+  return [result, offset]
+end
+
+public
+
+# Parser for complexType: <code>ComplexType_simpleTypeType</code>
+
+def self.parse_ComplexType_simpleTypeType(node)
+
+  # Create result object
+  result = XSD::ComplexType_simpleTypeType.new(node)
+
+  # Content model
+  result._sequence, offset = parse_Sequence_in_ComplexType_simpleTypeType(node.children, 0)
+  offset = skip_to_element(node.children, offset)
+  if offset < node.children.size
+     raise InvalidXMLError, "complexType sequence has left over elements: ComplexType_simpleTypeType: #{node.children[offset].name}"
+  end
+
+  # Success
+  result
+end
+
+public
+# Parser for top level element +schema+
+# Returns a <code>ComplexType_schemaType</code> object.
+def self.parse_schema(element)
+  if element.name == 'schema' && element.namespace == NAMESPACE
+    parse_ComplexType_schemaType(element)
+  else
+    raise InvalidXMLError, "unexpected element: expecting {NAMESPACE}schema: got {#{element.namespace}}#{element.name}"
+  end
+end
+
+  #----------------
+
+  public
+
+  # Parser for this module. Will parse the +src+ for
+  # top level elements from the XML Schema or raise an
+  # exception if none can be successfully parsed.
+  #
+  # An XML Schema does not indicate which element it expects to be the
+  # root element of an XML document, and this method reflects that. If
+  # the XML Schema declares only one top level element, then that is the
+  # only element that can be successfully matched. But if multiple top
+  # level elements are declared, then this method could successfully
+  # match any one of them.  Unless the schema only defined one top level
+  # element, the caller should check the returned element +name+ is the
+  # expected root element.
+  #
+  # === Parameters
+  # * src Source of XML (either a +File+ or +String+)
+  # === Results
+  # [object, name]
+  # * object the root element
+  # * name the element name of the matched root element
+  #
+  # Possible names:
+  # * <code>schema</code>
+  #
+  # === Exceptions
+  # InvalidXMLError
+  #
+  def self.parse(src)
+    if src.is_a? REXML::Element
+      root = src
+    elsif src.is_a? File
+      root = REXML::Document.new(src).root
+    elsif src.is_a? String
+      root = REXML::Document.new(src).root
+    else
+      e = ArgumentError.new "#{__method__} expects a File, String or REXML::Element"
+      e.set_backtrace caller
+      raise e
+    end
+
+    if root.name == 'schema' && root.namespace == NAMESPACE
+      return [ parse_ComplexType_schemaType(root), 'schema' ]
+    else
+      raise InvalidXMLError, "element not defined in #{NAMESPACE}: {#{root.namespace}}#{root.name}"
+    end
+  end
+
+end
 
 #EOF
